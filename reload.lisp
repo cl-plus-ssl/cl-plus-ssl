@@ -1,0 +1,17 @@
+;;; Copyright (C) 2001, 2003  Eric Marsden
+;;; Copyright (C) 2005  David Lichteblau
+;;; "the conditions and ENSURE-SSL-FUNCALL are by Jochen Schmidt."
+;;;
+;;; See LICENSE for details.
+
+;;; We do this in an extra file so that it happens
+;;;   - after the asd file has been loaded, so that users can
+;;;     customize *libssl-pathname* between loading the asd and LOAD-OPing
+;;;     the actual sources
+;;;   - before ssl.lisp is loaded, which needs the library at compilation
+;;;     time on some implemenations
+;;;   - but not every time ssl.lisp is re-loaded as would happen if we
+;;;     put this directly into ssl.lisp
+
+(in-package :cl+ssl-system)
+(cffi:load-foreign-library *libssl-pathname*)
