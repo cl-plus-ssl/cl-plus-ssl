@@ -74,8 +74,9 @@
 
 (defmethod stream-write-sequence
     ((stream ssl-stream) (thing array)
-     &optional (start 0) (end (length thing)))
+     &optional (start 0) end)
   (check-type thing (simple-array (unsigned-byte 8) (*)))
+  (setf end (or end (length thing)))
   (let ((buf (ssl-stream-io-buffer stream))
         (handle (ssl-stream-handle stream))
 	(socket (ssl-stream-socket stream))
@@ -87,7 +88,8 @@
     ;; argument to WITH-POINTER-TO-VECTOR-DATA, so we need to copy all data:
     (replace buf thing :start2 start :end2 end)
     (cffi-sys::with-pointer-to-vector-data (ptr buf)
-      (ensure-ssl-funcall socket handle #'ssl-write 0.5 handle ptr length))))
+      (ensure-ssl-funcall socket handle #'ssl-write 0.5 handle ptr length)))
+  thing)
 
 
 ;;; minimal character stream implementation
