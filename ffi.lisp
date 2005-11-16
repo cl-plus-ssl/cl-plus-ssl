@@ -232,3 +232,8 @@
     (initialize method))
   (unless *bio-lisp-method*
     (setf *bio-lisp-method* (make-bio-lisp-method))))
+
+(defun reload ()
+  (cffi:load-foreign-library cl+ssl-system:*libssl-pathname*)
+  (setf *ssl-global-context* nil)
+  (setf *ssl-global-method* nil))

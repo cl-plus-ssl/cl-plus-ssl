@@ -10,8 +10,8 @@
 ;;;     the actual sources
 ;;;   - before ssl.lisp is loaded, which needs the library at compilation
 ;;;     time on some implemenations
-;;;   - but not every time ssl.lisp is re-loaded as would happen if we
-;;;     put this directly into ssl.lisp
+;;;   - but not every time ffi.lisp is re-loaded as would happen if we
+;;;     put this directly into ffi.lisp
 
 (in-package :cl+ssl-system)
 (cffi:load-foreign-library *libssl-pathname*)

@@ -113,12 +113,16 @@ $ cvs co trivial-https</pre>
       reads and writes to this server stream will be pushed through the
       OpenSSL library. The SSL connection can be closed using the
       standard <tt>close</tt> function.
-    </p>
-    <p>
       <tt>certificate</tt> is the path to a file containing the PEM-encoded
       certificate for your server. <tt>key</tt> is the path to the PEM-encoded
       key for the server, which must not be associated with a
       passphrase.
+    </p>
+    <p>
+      <div class="def">Function CL+SSL:RELOAD ()</div>
+      Reload <tt>libssl<tt>.  Call this function after restarting a Lisp
+      core with CL+SSL dumped into it on Lisp implementations that do
+      not reload shared libraries automatically.
     </p>
 
     <h3>Portability</h3>
