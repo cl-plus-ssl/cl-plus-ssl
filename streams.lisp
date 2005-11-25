@@ -46,9 +46,9 @@
     :initarg :key
     :accessor ssl-stream-key)))
 
+(defmethod stream-element-type ((stream ssl-stream))
+  '(unsigned-byte 8))
 
-;;; binary stream implementation
-;;;
 (defmethod close ((stream ssl-stream) &key abort)
   (declare (ignore abort))
   (force-output stream)
