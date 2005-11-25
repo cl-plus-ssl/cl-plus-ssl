@@ -33,7 +33,7 @@
 (defun test-nntps-client (&optional (host "snews.gmane.org") (port 563))
   (let* ((fd (trivial-sockets:open-stream host port
 					  :element-type '(unsigned-byte 8)))
-         (nntps (cl+ssl:make-ssl-client-stream fd)))
+         (nntps (cl+ssl:make-ssl-client-stream fd :external-format :iso-8859-1)))
     (format t "NNTPS> ~A~%" (read-line-crlf nntps))
     (write-line "HELP" nntps)
     (force-output nntps)
@@ -47,7 +47,7 @@
 (defun test-https-client (host &optional (port 443))
   (let* ((fd (trivial-sockets:open-stream host port
 					  :element-type '(unsigned-byte 8)))
-         (https (cl+ssl:make-ssl-client-stream fd)))
+         (https (cl+ssl:make-ssl-client-stream fd :external-format :iso-8859-1)))
     (unwind-protect
 	(progn
 	  (format https "HEAD / HTTP/1.0~%Host: ~a~%~%" host)
@@ -76,6 +76,7 @@
 		     (trivial-sockets:accept-connection
 		      server
 		      :element-type '(unsigned-byte 8))
+                     :external-format :iso-8859-1
 		     :certificate cert
 		     :key key)))
 	(unwind-protect

@@ -16,6 +16,9 @@
     </ul>
 
     <h3>Download</h3>
+    <p>
+      Anonymous CVS (<a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/?cvsroot=cl-plus-ssl">browse</a>):
+    </p>
     <pre>$ export CVSROOT=:pserver:anonymous@common-lisp.net:/project/cl-plus-ssl/cvsroot
 $ cvs login
 password: anonymous
@@ -76,13 +79,13 @@ $ cvs co trivial-https</pre>
       <tr>
         <td>CL+SSL</td>
         <td>CFFI</td>
-        <td>gray, non-buffering</td>
+        <td>gray<sup>1</sup>, buffering output</td>
         <td>yes</td>
       </tr>
       <tr>
         <td>CL-SSL</td>
         <td>UFFI</td>
-        <td>gray, buffering [<em>part of ACL-COMPAT</em>]</td>
+        <td>gray, buffering I/O [<em>part of ACL-COMPAT</em>]</td>
         <td>no</td>
       </tr>
       <tr>
@@ -92,6 +95,11 @@ $ cvs co trivial-https</pre>
         <td>no</td>
       </tr>
     </table>
+    <p>
+      <sup>1</sup>&nbsp;Character I/O and external formats in CL+SSL
+      are provided
+      using <a href="http://weitz.de/flexi-streams/">flexi-streams</a>.
+    </p>
 
     <h3>API functions</h3>
     <p>
@@ -102,13 +110,20 @@ $ cvs co trivial-https</pre>
       load-op'ing the system.
     </p>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (stream)</div>
+      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (stream &key external-format)</div>
       Return an SSL stream for the client socket <tt>stream</tt>.
       All reads and writes to this SSL stream will be pushed through the
       SSL connection can be closed using the standard <tt>close</tt> function.
     </p>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-SERVER-STREAM (stream &key certificate key)</div>
+      If <tt>external-format</tt> is <tt>nil</tt> (the default), a plain
+      <tt>(unsigned-byte 8)</tt> SSL stream is returned.  With a
+      non-null <tt>external-format</tt>, a flexi-stream capable of
+      character I/O will be returned instead, with the specified value
+      as its initial external format.
+    </p>
+    <p>
+      <div class="def">Function CL+SSL:MAKE-SSL-SERVER-STREAM (stream &key external-format certificate key)</div>
       Return an SSL stream for the server socket <tt>stream</tt>.  All
       reads and writes to this server stream will be pushed through the
       OpenSSL library. The SSL connection can be closed using the
@@ -116,11 +131,11 @@ $ cvs co trivial-https</pre>
       <tt>certificate</tt> is the path to a file containing the PEM-encoded
       certificate for your server. <tt>key</tt> is the path to the PEM-encoded
       key for the server, which must not be associated with a
-      passphrase.
+      passphrase.  See above for <tt>external-format</tt> handling.
     </p>
     <p>
       <div class="def">Function CL+SSL:RELOAD ()</div>
-      Reload <tt>libssl<tt>.  Call this function after restarting a Lisp
+      Reload <tt>libssl</tt>.  Call this function after restarting a Lisp
       core with CL+SSL dumped into it on Lisp implementations that do
       not reload shared libraries automatically.
     </p>
@@ -165,13 +180,7 @@ $ cvs co trivial-https</pre>
     <h3>TODO</h3>
     <ul>
       <li>Profile and optimize if needed. (CLISP?)</li>
-      <li>Implement remaining gray streams methods.</li>
-      <li>Add external format support on Unicode-capable Lisps.</li>
-    </ul>
-    <h3>Maybe</h3>
-    <ul>
-      <li>Add buffering to gray streams layer?</li>
-      <li>Add simple-streams layer instead of gray streams?</li>
+      <li>CNAME checking!</li>
     </ul>
 
     <a name="trivial-https">
@@ -185,7 +194,7 @@ $ cvs co trivial-https</pre>
     </p>
 
     <p>
-      <a href="">README</a>
+      <a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/*checkout*/trivial-https/README?rev=HEAD&cvsroot=cl-plus-ssl&content-type=text/plain">README</a>
     </p>
 
     <a name="trivial-gray-streams">
@@ -197,7 +206,7 @@ $ cvs co trivial-https</pre>
     </p>
 
     <p>
-      <a href="">README</a>
+      <a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/*checkout*/trivial-gray-streams/README?rev=HEAD&cvsroot=cl-plus-ssl&content-type=text/plain">README</a>
     </p>
   </body>
 </html>

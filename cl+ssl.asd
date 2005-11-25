@@ -15,7 +15,7 @@
 (defparameter *libssl-pathname* "/usr/lib/libssl.so")
 
 (defsystem :cl+ssl
-  :depends-on (:cffi :trivial-gray-streams)
+  :depends-on (:cffi :trivial-gray-streams :flexi-streams)
   :serial t
   :components
    ((:file "reload")

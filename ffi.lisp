@@ -16,6 +16,9 @@
 (defvar *ssl-global-method* nil)
 (defvar *bio-lisp-method* nil)
 
+(defparameter *blockp* t)
+(defparameter *partial-read-p* nil)
+
 (defun ssl-initialized-p ()
   (and *ssl-global-context* *ssl-global-method*))
 
@@ -29,6 +32,12 @@
 (defconstant +ssl-filetype-default+ 3)
 
 (defconstant +SSL_CTRL_SET_SESS_CACHE_MODE+ 44)
+
+
+;;; Misc
+;;;
+(defmacro while (cond &body body)
+  `(do () ((not ,cond)) ,@body))
 
 
 ;;; Function definitions

@@ -85,19 +85,18 @@
 		+BIO_FLAGS_READ+
 		+BIO_FLAGS_SHOULD_RETRY+)))
 
-;; not sure whether we should block or not...
-(defvar *block* t)
-
 (cffi:defcallback lisp-read :int ((bio :pointer) (buf :pointer) (n :int))
   bio buf n
   (let ((i 0))
     (handler-case
 	(unless (or (cffi:null-ptr-p buf) (null n))
 	  (clear-retry-flags bio)
-	  (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
-	  (incf i)
+	  (when (or *blockp* (listen *socket*))
+            (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
+            (incf i))
 	  (loop
-	      while (and (< i n) (or *block* (listen *socket*)))
+	      while (and (< i n)
+                         (or (null *partial-read-p*) (listen *socket*)))
 	      do
 		(setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
 		(incf i))
