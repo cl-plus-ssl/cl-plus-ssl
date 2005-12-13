@@ -185,7 +185,7 @@
   (loop
       for error-code = (err-get-error)
       until (zerop error-code)
-      do (format stream "~a~%" (err-error-string error-code (cffi:null-ptr)))))
+      do (format stream "~a~%" (err-error-string error-code (cffi:null-pointer)))))
 
 (defun ssl-signal-error (handle syscall error-code original-error)
   (let ((queue (with-output-to-string (s) (write-ssl-error-queue s))))

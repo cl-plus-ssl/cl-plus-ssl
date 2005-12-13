@@ -52,11 +52,11 @@
       (setf (slot 'bwrite) (cffi:callback lisp-write))
       (setf (slot 'bread) (cffi:callback lisp-read))
       (setf (slot 'bputs) (cffi:callback lisp-puts))
-      (setf (slot 'bgets) (cffi:null-ptr))
+      (setf (slot 'bgets) (cffi:null-pointer))
       (setf (slot 'ctrl) (cffi:callback lisp-ctrl))
       (setf (slot 'create) (cffi:callback lisp-create))
       (setf (slot 'destroy) (cffi:callback lisp-destroy))
-      (setf (slot 'callback-ctrl) (cffi:null-ptr)))
+      (setf (slot 'callback-ctrl) (cffi:null-pointer)))
     m))
 
 (defun bio-new-lisp ()
@@ -89,7 +89,7 @@
   bio buf n
   (let ((i 0))
     (handler-case
-	(unless (or (cffi:null-ptr-p buf) (null n))
+	(unless (or (cffi:null-pointer-p buf) (null n))
 	  (clear-retry-flags bio)
 	  (when (or *blockp* (listen *socket*))
             (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
@@ -121,13 +121,13 @@
 (cffi:defcallback lisp-create :int ((bio :pointer))
   (setf (cffi:foreign-slot-value bio 'bio 'init) 1)
   (setf (cffi:foreign-slot-value bio 'bio 'num) 0)
-  (setf (cffi:foreign-slot-value bio 'bio 'ptr) (cffi:null-ptr))
+  (setf (cffi:foreign-slot-value bio 'bio 'ptr) (cffi:null-pointer))
   (setf (cffi:foreign-slot-value bio 'bio 'flags) 0)
   1)
 
 (cffi:defcallback lisp-destroy :int ((bio :pointer))
   (cond
-    ((cffi:null-ptr-p bio) 0)
+    ((cffi:null-pointer-p bio) 0)
     (t
       (setf (cffi:foreign-slot-value bio 'bio 'init) 0)
       (setf (cffi:foreign-slot-value bio 'bio 'flags) 0)
