@@ -12,7 +12,9 @@
 
 (in-package :cl+ssl-system)
 
-(defparameter *libssl-pathname* "/usr/lib/libssl.so")
+(defparameter *libssl-pathname*
+    #+(or :win32 :mswindows) "libssl32.dll"
+    #-(or :win32 :mswindows) "/usr/lib/libssl.so")
 
 (defsystem :cl+ssl
   :depends-on (:cffi :trivial-gray-streams :flexi-streams)
