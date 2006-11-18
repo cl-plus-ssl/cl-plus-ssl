@@ -7,21 +7,16 @@
 ;;; See LICENSE for details.
 
 (defpackage :cl+ssl-system
-  (:use :cl :asdf)
-  (:export #:*libssl-pathname*))
+  (:use :cl :asdf))
 
 (in-package :cl+ssl-system)
-
-(defparameter *libssl-pathname*
-    #+(or :win32 :mswindows) "libssl32.dll"
-    #-(or :win32 :mswindows) "/usr/lib/libssl.so")
 
 (defsystem :cl+ssl
   :depends-on (:cffi :trivial-gray-streams :flexi-streams)
   :serial t
   :components
-   ((:file "reload")
-    (:file "package")
+   ((:file "package")
+    (:file "reload")
     (:file "conditions")
     (:file "ffi")
     (:file "streams")

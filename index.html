@@ -105,13 +105,6 @@ $ cvs co trivial-https</pre>
 
     <h3>API functions</h3>
     <p>
-      <div class="def">Variable CL+SSL-SYSTEM:*LIBSSL-PATHNAME*</div>
-      Full pathname of the SSL library.  Defaults
-      to <tt>/usr/lib/libssl.so</tt>. If the default is not correct for
-      your system, set this variable between loading the .asd file and
-      load-op'ing the system.
-    </p>
-    <p>
       <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (stream &key external-format)</div>
       Return an SSL stream for the client socket <tt>stream</tt>.
       All reads and writes to this SSL stream will be pushed through the

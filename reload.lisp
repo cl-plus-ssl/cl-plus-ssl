@@ -13,5 +13,10 @@
 ;;;   - but not every time ffi.lisp is re-loaded as would happen if we
 ;;;     put this directly into ffi.lisp
 
-(in-package :cl+ssl-system)
-(cffi:load-foreign-library *libssl-pathname*)
+(in-package :cl+ssl)
+
+(cffi:define-foreign-library libssl
+  (:windows "libssl32.dll")
+  (t (:default "libssl")))
+
+(cffi:use-foreign-library libssl)

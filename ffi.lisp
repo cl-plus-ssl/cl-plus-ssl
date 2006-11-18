@@ -9,7 +9,6 @@
 
 (in-package :cl+ssl)
 
-
 ;;; Global state
 ;;;
 (defvar *ssl-global-context* nil)
@@ -243,6 +242,6 @@
     (setf *bio-lisp-method* (make-bio-lisp-method))))
 
 (defun reload ()
-  (cffi:load-foreign-library cl+ssl-system:*libssl-pathname*)
+  (cffi:load-foreign-library 'libssl)
   (setf *ssl-global-context* nil)
   (setf *ssl-global-method* nil))

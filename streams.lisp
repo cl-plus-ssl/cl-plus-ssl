@@ -118,8 +118,7 @@
 
 (defmethod stream-write-sequence ((stream ssl-stream) thing start end &key)
   (check-type thing (simple-array (unsigned-byte 8) (*)))
-  (let ((buf (ssl-stream-output-buffer stream))
-	(socket (ssl-stream-socket stream)))
+  (let ((buf (ssl-stream-output-buffer stream)))
     (when (> (+ (- end start) (ssl-stream-output-pointer stream)) (length buf))
       ;; not enough space left?  flush buffer.
       (force-output stream)
