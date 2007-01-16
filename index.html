@@ -15,6 +15,11 @@
       <li><a href="#trivial-gray-streams">trivial-gray-streams</a></li>
     </ul>
 
+    <h3>News</h3>
+    <p>
+      2007-01-16: CL+SSL is now available under an MIT-style license.
+    </p>
+
     <h3>Download</h3>
     <p>
       Anonymous CVS (<a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/?cvsroot=cl-plus-ssl">browse</a>):
@@ -26,7 +31,9 @@ $ cvs co cl+ssl
 $ cvs co trivial-gray-streams
 $ cvs co trivial-https</pre>
     <p>
-      <a href="http://common-lisp.net/project/cl-plus-ssl/download/">Tarballs</a> are also available.
+      <a
+      href="http://common-lisp.net/project/cl-plus-ssl/download/">Tarballs</a>
+      are also available (but not always up-to-date).
     </p>
     <p>
       Note that you need the <tt>libssl-dev</tt> package on Debian to
@@ -52,7 +59,7 @@ $ cvs co trivial-https</pre>
       This library is a fork of <a
       href="http://www.cliki.net/SSL-CMUCL">SSL-CMUCL</a>.  The original
       SSL-CMUCL source code was written by Eric Marsden and includes
-      contributions by Jochen Schmidt.  License: Lisp-LGPL.
+      contributions by Jochen Schmidt.  License: MIT-style.
     </p>
 
     <ul>
@@ -186,6 +193,15 @@ $ cvs co trivial-https</pre>
       Mastenbrook's <a
       href="http://www.cliki.net/trivial-http">trivial-http</a> adding
       support for HTTPS using CL+SSL.  License: MIT-style.
+    </p>
+
+    <p>
+      <b>
+	Note: The <a href="http://weitz.de/drakma/">Drakma</a> HTTP
+	client library by Weitz supports HTTPS using CL+SSL.
+	trivial-https will not be developed further; please use Drakma
+	instead.
+      </b>
     </p>
 
     <p>
