@@ -45,9 +45,13 @@
 ;; open an HTTPS connection to a secure web server and make a
 ;; HEAD request
 (defun test-https-client (host &optional (port 443))
-  (let* ((fd (trivial-sockets:open-stream host port
-					  :element-type '(unsigned-byte 8)))
-         (https (cl+ssl:make-ssl-client-stream fd :external-format :iso-8859-1)))
+  (let* ((socket (trivial-sockets:open-stream
+		  host
+		  port
+		  :element-type '(unsigned-byte 8)))
+         (https (cl+ssl:make-ssl-client-stream
+		 (cl+ssl:stream-fd socket)
+		 :external-format :iso-8859-1)))
     (unwind-protect
 	(progn
 	  (format https "HEAD / HTTP/1.0~%Host: ~a~%~%" host)
@@ -55,6 +59,7 @@
 	  (loop :for line = (read-line-crlf https nil)
 			    :while line :do
 			    (format t "HTTPS> ~a~%" line)))
+      (close socket)
       (close https))))
 
 ;; start a simple HTTPS server. See the mod_ssl documentation at
@@ -72,13 +77,14 @@
   (format t "~&SSL server listening on port ~d~%" port)
   (trivial-sockets:with-server (server (:port port))
     (loop
-      (let ((client (cl+ssl:make-ssl-server-stream
-		     (trivial-sockets:accept-connection
+      (let* ((socket (trivial-sockets:accept-connection
 		      server
-		      :element-type '(unsigned-byte 8))
-                     :external-format :iso-8859-1
-		     :certificate cert
-		     :key key)))
+		      :element-type '(unsigned-byte 8)))
+	     (client (cl+ssl:make-ssl-server-stream
+		      (cl+ssl:stream-fd socket)
+		      :external-format :iso-8859-1
+		      :certificate cert
+		      :key key)))
 	(unwind-protect
 	    (progn
 	      (loop :for line = (read-line-crlf client nil)
@@ -93,4 +99,5 @@
 	      (format client "CL+SSL running in ~A ~A~%"
 		      (lisp-implementation-type)
 		      (lisp-implementation-version)))
+	  (close socket)
 	  (close client))))))

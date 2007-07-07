@@ -53,7 +53,8 @@
   (force-output stream)
   (ssl-free (ssl-stream-handle stream))
   (setf (ssl-stream-handle stream) nil)
-  (close (ssl-stream-socket stream)))
+  (when (streamp (ssl-stream-socket stream))
+    (close (ssl-stream-socket stream))))
 
 (defmethod open-stream-p ((stream ssl-stream))
   (and (ssl-stream-handle stream) t))
@@ -160,7 +161,9 @@ must not be associated with a passphrase."
   (let ((stream (make-instance 'ssl-stream :socket socket))
         (handle (ssl-new *ssl-global-context*)))
     (setf (ssl-stream-handle stream) handle)
-    (ssl-set-bio handle (bio-new-lisp) (bio-new-lisp))
+    (etypecase socket
+      (integer (ssl-set-fd handle socket))
+      (stream (ssl-set-bio handle (bio-new-lisp) (bio-new-lisp))))
     (ssl-set-connect-state handle)
     (when key
       (unless (eql 1 (ssl-use-rsa-privatekey-file handle
@@ -190,10 +193,14 @@ must not be associated with a passphrase."
 		 :socket socket
 		 :certificate certificate
 		 :key key))
-        (handle (ssl-new *ssl-global-context*))
-	(bio (bio-new-lisp)))
+        (handle (ssl-new *ssl-global-context*)))
     (setf (ssl-stream-handle stream) handle)
-    (ssl-set-bio handle bio bio)
+    (etypecase socket
+      (integer
+       (ssl-set-fd handle socket))
+      (stream
+       (let ((bio (bio-new-lisp)))
+	 (ssl-set-bio handle bio bio))))
     (ssl-set-accept-state handle)
     (when (zerop (ssl-set-cipher-list handle "ALL"))
       (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
@@ -213,3 +220,23 @@ must not be associated with a passphrase."
         (flexi-streams:make-flexi-stream stream
                                          :external-format external-format)
         stream)))
+
+(defgeneric stream-fd (stream))
+(defmethod stream-fd (stream) stream)
+
+#+sbcl
+(defmethod stream-fd ((stream sb-sys:fd-stream))
+  (sb-sys:fd-stream-fd stream))
+
+#+cmu
+(defmethod stream-fd ((stream system:fd-stream))
+  (system:fd-stream-fd stream))
+
+#+openmcl
+(defmethod stream-fd ((stream ccl::basic-stream))
+  (ccl::ioblock-device (ccl::stream-ioblock stream t)))
+
+#+clisp
+(defmethod stream-fd ((stream stream))
+  ;; sockets appear to be direct instances of STREAM
+  (ignore-errors (socket:stream-handles stream)))

@@ -10,5 +10,6 @@
   (:use :common-lisp :trivial-gray-streams)
   (:export #:ensure-initialized
            #:reload
+	   #:stream-fd
 	   #:make-ssl-client-stream
            #:make-ssl-server-stream))

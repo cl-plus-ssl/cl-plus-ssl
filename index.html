@@ -17,11 +17,20 @@
 
     <h3>News</h3>
     <p>
-      2007-07-07: Improved clisp support, thanks
-      to <a
-      href="http://web.kepibu.org/code/lisp/cl+ssl/">Pixel
-      // pinterface</a>, as well as client certificate support.
+      2007-07-07
     </p>
+    <ul>
+      <li>
+	Improved clisp support, thanks
+	to <a
+	      href="http://web.kepibu.org/code/lisp/cl+ssl/">Pixel
+	  // pinterface</a>, as well as client certificate support.
+      </li>
+      <li>
+	Re-introduced support for direct access to file descriptors as
+	an optimization.  New function <tt>stream-fd</tt>.
+      </li>
+    </ul>
     <p>
       2007-01-16: CL+SSL is now available under an MIT-style license.
     </p>
@@ -118,8 +127,17 @@ $ cvs co trivial-https</pre>
 
     <h3>API functions</h3>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (stream &key external-format certificate key)</div>
-      Return an SSL stream for the client socket <tt>stream</tt>.
+      <div class="def">Function CL+SSL:STREAM-FD (stream)
+	Return <tt>stream</tt>'s file descriptor as an integer, if
+	known.  Otherwise return <tt>stream</tt> itself.  Pass the
+	return value of this function to <tt>make-ssl-client-stream</tt>
+	or <tt>make-ssl-servre-stream</tt>, which are faster when
+	accessing file descriptors directly.
+      </div>
+    </p>
+    <p>
+      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &key external-format certificate key)</div>
+      Return an SSL stream for the client socket <tt>fd-or-stream</tt>.
       All reads and writes to this SSL stream will be pushed through the
       SSL connection can be closed using the standard <tt>close</tt> function.
       <tt>certificate</tt> is the path to a file containing the PEM-encoded
@@ -134,8 +152,8 @@ $ cvs co trivial-https</pre>
       as its initial external format.
     </p>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-SERVER-STREAM (stream &key external-format certificate key)</div>
-      Return an SSL stream for the server socket <tt>stream</tt>.  All
+      <div class="def">Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &key external-format certificate key)</div>
+      Return an SSL stream for the server socket <tt>fd-or-stream</tt>.  All
       reads and writes to this server stream will be pushed through the
       OpenSSL library. The SSL connection can be closed using the
       standard <tt>close</tt> function.
