@@ -151,14 +151,28 @@
 ;;; interface functions
 ;;;
 (defun make-ssl-client-stream
-    (socket &key (method 'ssl-v23-method) external-format)
-  "Returns an SSL stream for the client socket descriptor SOCKET."
+    (socket &key certificate key (method 'ssl-v23-method) external-format)
+  "Returns an SSL stream for the client socket descriptor SOCKET.
+CERTIFICATE is the path to a file containing the PEM-encoded certificate for
+ your client. KEY is the path to the PEM-encoded key for the client, which
+must not be associated with a passphrase."
   (ensure-initialized method)
   (let ((stream (make-instance 'ssl-stream :socket socket))
         (handle (ssl-new *ssl-global-context*)))
     (setf (ssl-stream-handle stream) handle)
     (ssl-set-bio handle (bio-new-lisp) (bio-new-lisp))
     (ssl-set-connect-state handle)
+    (when key
+      (unless (eql 1 (ssl-use-rsa-privatekey-file handle
+						  key
+						  +ssl-filetype-pem+))
+        (error 'ssl-error-initialize :reason "Can't load RSA private key ~A")))
+    (when certificate
+      (unless (eql 1 (ssl-use-certificate-file handle
+					       certificate
+					       +ssl-filetype-pem+))
+        (error 'ssl-error-initialize
+	       :reason "Can't load certificate ~A" certificate)))
     (ensure-ssl-funcall socket handle #'ssl-connect 0.25 handle)
     (if external-format
         (flexi-streams:make-flexi-stream stream

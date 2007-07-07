@@ -19,8 +19,8 @@
     <p>
       2007-07-07: Improved clisp support, thanks
       to <a
-      href="http://web.kepibu.org/code/lisp/cl+ssl/#faster-clisp">Pixel
-      // pinterface</a>.
+      href="http://web.kepibu.org/code/lisp/cl+ssl/">Pixel
+      // pinterface</a>, as well as client certificate support.
     </p>
     <p>
       2007-01-16: CL+SSL is now available under an MIT-style license.
@@ -118,10 +118,13 @@ $ cvs co trivial-https</pre>
 
     <h3>API functions</h3>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (stream &key external-format)</div>
+      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (stream &key external-format certificate key)</div>
       Return an SSL stream for the client socket <tt>stream</tt>.
       All reads and writes to this SSL stream will be pushed through the
       SSL connection can be closed using the standard <tt>close</tt> function.
+      <tt>certificate</tt> is the path to a file containing the PEM-encoded
+      certificate for your client. <tt>key</tt> is the path to the PEM-encoded
+      key for the client, which must not be associated with a passphrase.
     </p>
     <p>
       If <tt>external-format</tt> is <tt>nil</tt> (the default), a plain
