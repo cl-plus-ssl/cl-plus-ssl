@@ -28,7 +28,8 @@
       </li>
       <li>
 	Re-introduced support for direct access to file descriptors as
-	an optimization.  New function <tt>stream-fd</tt>.
+	an optimization.  New function <tt>stream-fd</tt>.  New keyword
+	argument <tt>close-callback</tt>.
       </li>
     </ul>
     <p>
@@ -136,10 +137,15 @@ $ cvs co trivial-https</pre>
       </div>
     </p>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &key external-format certificate key)</div>
+      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key close-callback)</div>
       Return an SSL stream for the client socket <tt>fd-or-stream</tt>.
       All reads and writes to this SSL stream will be pushed through the
-      SSL connection can be closed using the standard <tt>close</tt> function.
+      SSL connection.  If <tt>fd-or-stream</tt> is a lisp stream, it can
+      the SSL stream will close it automatically.  File descriptors are
+      not closed automatically.  However, if <tt>close-callback</tt> is
+      non-nil, it will be called with zero arguments when the SSL stream
+      is closed.
+      
       <tt>certificate</tt> is the path to a file containing the PEM-encoded
       certificate for your client. <tt>key</tt> is the path to the PEM-encoded
       key for the client, which must not be associated with a passphrase.
@@ -152,11 +158,15 @@ $ cvs co trivial-https</pre>
       as its initial external format.
     </p>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &key external-format certificate key)</div>
+      <div class="def">Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &amp;key external-format certificate key close-callback)</div>
       Return an SSL stream for the server socket <tt>fd-or-stream</tt>.  All
       reads and writes to this server stream will be pushed through the
-      OpenSSL library. The SSL connection can be closed using the
-      standard <tt>close</tt> function.
+      OpenSSL library. If <tt>fd-or-stream</tt> is a lisp stream, it can
+      the SSL stream will close it automatically.  File descriptors are
+      not closed automatically.  However, if <tt>close-callback</tt> is
+      non-nil, it will be called with zero arguments when the SSL stream
+      is closed.
+      
       <tt>certificate</tt> is the path to a file containing the PEM-encoded
       certificate for your server. <tt>key</tt> is the path to the PEM-encoded
       key for the server, which must not be associated with a
@@ -188,11 +198,7 @@ $ cvs co trivial-https</pre>
       <tr><td>OpenMCL</td><td class="working">Working</td></tr>
       <tr><td>SBCL</td><td class="working">Working</td></tr>
       <tr><td>CMU CL</td><td class="working">Working</td></tr>
-      <tr>
-        <td>CLISP</td>
-        <td class="incomplete">Working</td>
-        <td>Extremely slow?</td>
-      </tr>
+      <tr><td>CLISP</td><td class="working">Working</td></tr>
       <tr><td>LispWorks</td><td class="working">Working</td></tr>
       <tr>
         <td>Allegro</td>
@@ -208,7 +214,6 @@ $ cvs co trivial-https</pre>
 
     <h3>TODO</h3>
     <ul>
-      <li>Profile and optimize if needed. (CLISP?)</li>
       <li>CNAME checking!</li>
     </ul>
 
@@ -232,7 +237,7 @@ $ cvs co trivial-https</pre>
     </p>
 
     <p>
-      <a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/*checkout*/trivial-https/README?rev=HEAD&cvsroot=cl-plus-ssl&content-type=text/plain">README</a>
+      <a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/*checkout*/trivial-https/README?rev=HEAD&amp;cvsroot=cl-plus-ssl&amp;content-type=text/plain">README</a>
     </p>
 
     <a name="trivial-gray-streams">
@@ -244,7 +249,7 @@ $ cvs co trivial-https</pre>
     </p>
 
     <p>
-      <a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/*checkout*/trivial-gray-streams/README?rev=HEAD&cvsroot=cl-plus-ssl&content-type=text/plain">README</a>
+      <a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/*checkout*/trivial-gray-streams/README?rev=HEAD&amp;cvsroot=cl-plus-ssl&amp;content-type=text/plain">README</a>
     </p>
   </body>
 </html>

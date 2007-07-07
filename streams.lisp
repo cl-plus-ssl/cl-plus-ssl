@@ -17,6 +17,9 @@
   ((ssl-stream-socket
     :initarg :socket
     :accessor ssl-stream-socket)
+   (close-callback
+    :initarg :close-callback
+    :accessor ssl-close-callback)
    (handle
     :initform nil
     :accessor ssl-stream-handle)
@@ -54,7 +57,9 @@
   (ssl-free (ssl-stream-handle stream))
   (setf (ssl-stream-handle stream) nil)
   (when (streamp (ssl-stream-socket stream))
-    (close (ssl-stream-socket stream))))
+    (close (ssl-stream-socket stream)))
+  (when (functionp (ssl-close-callback stream))
+    (funcall (ssl-close-callback stream))))
 
 (defmethod open-stream-p ((stream ssl-stream))
   (and (ssl-stream-handle stream) t))
@@ -152,13 +157,16 @@
 ;;; interface functions
 ;;;
 (defun make-ssl-client-stream
-    (socket &key certificate key (method 'ssl-v23-method) external-format)
+    (socket &key certificate key (method 'ssl-v23-method) external-format
+                 close-callback)
   "Returns an SSL stream for the client socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your client. KEY is the path to the PEM-encoded key for the client, which
 must not be associated with a passphrase."
   (ensure-initialized method)
-  (let ((stream (make-instance 'ssl-stream :socket socket))
+  (let ((stream (make-instance 'ssl-stream
+			       :socket socket
+			       :close-callback close-callback))
         (handle (ssl-new *ssl-global-context*)))
     (setf (ssl-stream-handle stream) handle)
     (etypecase socket
@@ -183,7 +191,8 @@ must not be associated with a passphrase."
         stream)))
 
 (defun make-ssl-server-stream
-    (socket &key certificate key (method 'ssl-v23-method) external-format)
+    (socket &key certificate key (method 'ssl-v23-method) external-format
+                 close-callback)
   "Returns an SSL stream for the server socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your server. KEY is the path to the PEM-encoded key for the server, which
@@ -191,6 +200,7 @@ must not be associated with a passphrase."
   (ensure-initialized method)
   (let ((stream (make-instance 'ssl-server-stream
 		 :socket socket
+		 :close-callback close-callback
 		 :certificate certificate
 		 :key key))
         (handle (ssl-new *ssl-global-context*)))
