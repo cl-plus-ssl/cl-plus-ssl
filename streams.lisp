@@ -1,5 +1,6 @@
 ;;; Copyright (C) 2001, 2003  Eric Marsden
 ;;; Copyright (C) 2005  David Lichteblau
+;;; Copyright (C) 2007  Pixel // pinterface
 ;;; "the conditions and ENSURE-SSL-FUNCALL are by Jochen Schmidt."
 ;;;
 ;;; See LICENSE for details.
@@ -8,8 +9,6 @@
  (optimize (speed 3) (space 1) (safety 1) (debug 0) (compilation-speed 0)))
 
 (in-package :cl+ssl)
-
-(defconstant +initial-buffer-size+ 2048)
 
 (defclass ssl-stream
     (fundamental-binary-input-stream
@@ -22,13 +21,13 @@
     :initform nil
     :accessor ssl-stream-handle)
    (output-buffer
-    :initform (cffi-sys::make-shareable-byte-vector +initial-buffer-size+)
+    :initform (make-buffer +initial-buffer-size+)
     :accessor ssl-stream-output-buffer)
    (output-pointer
     :initform 0
     :accessor ssl-stream-output-pointer)
    (input-buffer
-    :initform (cffi-sys::make-shareable-byte-vector +initial-buffer-size+)
+    :initform (make-buffer +initial-buffer-size+)
     :accessor ssl-stream-input-buffer)
    (peeked-byte
     :initform nil
@@ -70,7 +69,7 @@
   (or (ssl-stream-peeked-byte stream)
       (let ((buf (ssl-stream-input-buffer stream)))
         (handler-case
-            (cffi-sys::with-pointer-to-vector-data (ptr buf)
+            (with-pointer-to-vector-data (ptr buf)
               (ensure-ssl-funcall (ssl-stream-socket stream)
                                   (ssl-stream-handle stream)
                                   #'ssl-read
@@ -78,7 +77,7 @@
                                   (ssl-stream-handle stream)
                                   ptr
                                   1)
-              (elt buf 0))
+              (buffer-elt buf 0))
           (ssl-error-zero-return ()     ;SSL_read returns 0 on end-of-file
             :eof)))))
 
@@ -90,11 +89,11 @@
     (incf start))
   (let ((buf (ssl-stream-input-buffer stream)))
     (loop
-        for length = (min (- end start) (length buf))
+        for length = (min (- end start) (buffer-length buf))
         while (plusp length)
         do
           (handler-case
-              (cffi-sys::with-pointer-to-vector-data (ptr buf)
+              (with-pointer-to-vector-data (ptr buf)
                 (ensure-ssl-funcall (ssl-stream-socket stream)
                                     (ssl-stream-handle stream)
                                     #'ssl-read
@@ -102,7 +101,7 @@
                                     (ssl-stream-handle stream)
                                     ptr
                                     length)
-                (replace thing buf :start1 start :end1 (+ start length))
+                (v/b-replace thing buf :start1 start :end1 (+ start length))
                 (incf start length))
             (ssl-error-zero-return ()   ;SSL_read returns 0 on end-of-file
               (return))))
@@ -110,28 +109,28 @@
 
 (defmethod stream-write-byte ((stream ssl-stream) b)
   (let ((buf (ssl-stream-output-buffer stream)))
-    (when (eql (length buf) (ssl-stream-output-pointer stream))
+    (when (eql (buffer-length buf) (ssl-stream-output-pointer stream))
       (force-output stream))
-    (setf (elt buf (ssl-stream-output-pointer stream)) b)
+    (setf (buffer-elt buf (ssl-stream-output-pointer stream)) b)
     (incf (ssl-stream-output-pointer stream)))
   b)
 
 (defmethod stream-write-sequence ((stream ssl-stream) thing start end &key)
   (check-type thing (simple-array (unsigned-byte 8) (*)))
   (let ((buf (ssl-stream-output-buffer stream)))
-    (when (> (+ (- end start) (ssl-stream-output-pointer stream)) (length buf))
+    (when (> (+ (- end start) (ssl-stream-output-pointer stream)) (buffer-length buf))
       ;; not enough space left?  flush buffer.
       (force-output stream)
       ;; still doesn't fit?
-      (while (> (- end start) (length buf))
-        (replace buf thing :start2 start)
-        (incf start (length buf))
-        (setf (ssl-stream-output-pointer stream) (length buf))
+      (while (> (- end start) (buffer-length buf))
+        (b/v-replace buf thing :start2 start)
+        (incf start (buffer-length buf))
+        (setf (ssl-stream-output-pointer stream) (buffer-length buf))
         (force-output stream)))
-    (replace buf thing
-             :start1 (ssl-stream-output-pointer stream)
-             :start2 start
-             :end2 end)
+    (b/v-replace buf thing
+                 :start1 (ssl-stream-output-pointer stream)
+                 :start2 start
+                 :end2 end)
     (incf (ssl-stream-output-pointer stream) (- end start)))
   thing)
 
@@ -144,7 +143,7 @@
         (handle (ssl-stream-handle stream))
 	(socket (ssl-stream-socket stream)))
     (when (plusp fill-ptr)
-      (cffi-sys::with-pointer-to-vector-data (ptr buf)
+      (with-pointer-to-vector-data (ptr buf)
         (ensure-ssl-funcall socket handle #'ssl-write 0.5 handle ptr fill-ptr))
       (setf (ssl-stream-output-pointer stream) 0))))
 
