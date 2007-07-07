@@ -128,19 +128,24 @@ $ cvs co trivial-https</pre>
 
     <h3>API functions</h3>
     <p>
-      <div class="def">Function CL+SSL:STREAM-FD (stream)
-	Return <tt>stream</tt>'s file descriptor as an integer, if
-	known.  Otherwise return <tt>stream</tt> itself.  Pass the
-	return value of this function to <tt>make-ssl-client-stream</tt>
-	or <tt>make-ssl-servre-stream</tt>, which are faster when
-	accessing file descriptors directly.
-      </div>
+      <div class="def">Function CL+SSL:STREAM-FD (stream)</div>
+      Return <tt>stream</tt>'s file descriptor as an integer, if
+      known.  Otherwise return <tt>stream</tt> itself.
+    </p>
+    <p>
+      Pass the
+      return value of this function to <tt>make-ssl-client-stream</tt>
+      or <tt>make-ssl-servre-stream</tt>, which are faster when
+      accessing file descriptors directly.
     </p>
     <p>
       <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key close-callback)</div>
       Return an SSL stream for the client socket <tt>fd-or-stream</tt>.
       All reads and writes to this SSL stream will be pushed through the
-      SSL connection.  If <tt>fd-or-stream</tt> is a lisp stream, it can
+      SSL connection.
+    </p>
+    <p>
+      If <tt>fd-or-stream</tt> is a lisp stream, it can
       the SSL stream will close it automatically.  File descriptors are
       not closed automatically.  However, if <tt>close-callback</tt> is
       non-nil, it will be called with zero arguments when the SSL stream
@@ -161,7 +166,10 @@ $ cvs co trivial-https</pre>
       <div class="def">Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &amp;key external-format certificate key close-callback)</div>
       Return an SSL stream for the server socket <tt>fd-or-stream</tt>.  All
       reads and writes to this server stream will be pushed through the
-      OpenSSL library. If <tt>fd-or-stream</tt> is a lisp stream, it can
+      OpenSSL library.
+    </p>
+    <p>
+      If <tt>fd-or-stream</tt> is a lisp stream, it can
       the SSL stream will close it automatically.  File descriptors are
       not closed automatically.  However, if <tt>close-callback</tt> is
       non-nil, it will be called with zero arguments when the SSL stream
