@@ -243,5 +243,6 @@
 
 (defun reload ()
   (cffi:load-foreign-library 'libssl)
+  (cffi:load-foreign-library 'libeay32)
   (setf *ssl-global-context* nil)
   (setf *ssl-global-method* nil))

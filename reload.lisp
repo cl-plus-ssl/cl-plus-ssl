@@ -17,6 +17,12 @@
 
 (cffi:define-foreign-library libssl
   (:windows "libssl32.dll")
-  (t (:default "libssl")))
+  (:unix (:or "libssl.so.0.9.8" "libssl.so"))
+  (t (:default "libssl3")))
 
 (cffi:use-foreign-library libssl)
+
+(cffi:define-foreign-library libeay32
+  (:windows "libeay32.dll"))
+
+(cffi:use-foreign-library libeay32)
