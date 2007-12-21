@@ -205,10 +205,8 @@
 	  (ssl-signal-error handle func (ssl-get-error handle rc) rc))
       (ssl-error-want-something (condition)
 	(declare (ignore condition))
-	;; FIXME: what is this SLEEP business for?
-	;; Do we still need this?
-	(warn "sleeping in ensure-ssl-funcall")
-	(sleep sleep-time)))))
+	;; FIXME
+	(warn "busy waiting in ensure-ssl-funcall")))))
 
 
 ;;; Initialization
