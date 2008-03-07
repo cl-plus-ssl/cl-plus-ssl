@@ -21,9 +21,12 @@ body {
 }
 
 h1,h2 {
-  background-color: darkred;
-  color: white;
   margin-left: -30px;
+}
+
+h3 {
+  margin-top: 2em;
+  margin-left: -20px;
 }
 
 th {
@@ -40,8 +43,11 @@ pre {
 }
 
 .def {
-  background-color: #ddddff;
+  background-color: #eeeeee;
+  width: 90%;
   font-weight: bold;
+  border: solid 1px #d0d0d0;
+  padding: 3px;
 }
 
 .nomargin {

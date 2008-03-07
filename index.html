@@ -6,54 +6,35 @@
     <link rel="stylesheet" type="text/css" href="index.css"/>
   </head>
   <body>
-    <h1>CL<em style="font-weight: normal">plus</em>SSL</h1>
+    <h1>CL+SSL</h1>
 
-    <h3>Subprojects</h3>
-    <ul>
-      <li><a href="#cl+ssl">CL+SSL</a></li>
-      <li><a href="#trivial-https">trivial-https</a></li>
-      <li><a href="#trivial-gray-streams">trivial-gray-streams</a></li>
-    </ul>
+    <p>
+      A Common Lisp interface to OpenSSL.
+    </p>
 
-    <h3>News</h3>
+    <h3>About</h3>
+
     <p>
-      2007-xx-yy
+      This library is a fork
+      of <a href="http://www.cliki.net/SSL-CMUCL">SSL-CMUCL</a>.  The
+      original SSL-CMUCL source code was written by Eric Marsden and
+      includes contributions by Jochen Schmidt. Development into CL+SSL
+      was done by David Lichteblau.  License: MIT-style.
     </p>
-    <ul>
-      <li>
-	Fixed windows support, thanks to Matthew Kennedy and Vodonosov Anton.
-      </li>
-    </ul>
+
     <p>
-      2007-07-07
-    </p>
-    <ul>
-      <li>
-	Improved clisp support, thanks
-	to <a
-	      href="http://web.kepibu.org/code/lisp/cl+ssl/">Pixel
-	  // pinterface</a>, as well as client certificate support.
-      </li>
-      <li>
-	Re-introduced support for direct access to file descriptors as
-	an optimization.  New function <tt>stream-fd</tt>.  New keyword
-	argument <tt>close-callback</tt>.
-      </li>
-    </ul>
-    <p>
-      2007-01-16: CL+SSL is now available under an MIT-style license.
+      Distinguishing features: CL+SSL is portable code based on CFFI and
+      gray streams.  It defines its own libssl BIO method, so that SSL
+      I/O can be written over portable Lisp streams instead of bypassing
+      the streams and sending data over Unix file descriptors directly.
+      (But the traditional approach is still used if possible.)
     </p>
 
     <h3>Download</h3>
     <p>
       Anonymous CVS (<a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/?cvsroot=cl-plus-ssl">browse</a>):
     </p>
-    <pre>$ export CVSROOT=:pserver:anonymous@common-lisp.net:/project/cl-plus-ssl/cvsroot
-$ cvs login
-password: anonymous
-$ cvs co cl+ssl
-$ cvs co trivial-gray-streams
-$ cvs co trivial-https</pre>
+    <pre>$ cvs -d :pserver:anonymous:anonymous@common-lisp.net:/project/cl-plus-ssl/cvsroot cl+ssl</pre>
     <p>
       <a
       href="http://common-lisp.net/project/cl-plus-ssl/download/">Tarballs</a>
@@ -72,31 +53,7 @@ $ cvs co trivial-https</pre>
       information</a>).
     </p>
 
-    <a name="cl+ssl">
-    <h2>CL+SSL</h2>
-
-    <p>A simple Common Lisp interface to OpenSSL.</p>
-
-    <h3>About</h3>
-
-    <p>
-      This library is a fork of <a
-      href="http://www.cliki.net/SSL-CMUCL">SSL-CMUCL</a>.  The original
-      SSL-CMUCL source code was written by Eric Marsden and includes
-      contributions by Jochen Schmidt.  License: MIT-style.
-    </p>
-
-    <ul>
-      <li>
-        CL+SSL is portable code based on CFFI and gray streams.
-      </li>
-      <li>
-        It defines its own libssl BIO method, so that SSL I/O is
-        actually written over portable Lisp streams instead of bypassing
-	the streams and sending data over Unix file descriptors directly.
-      </li>
-    </ul>
-
+<!--
     <p>
       Comparison chart:
     </p>
@@ -133,32 +90,36 @@ $ cvs co trivial-https</pre>
       are provided
       using <a href="http://weitz.de/flexi-streams/">flexi-streams</a>.
     </p>
+-->
 
     <h3>API functions</h3>
     <p>
-      <div class="def">Function CL+SSL:STREAM-FD (stream)</div>
-      Return <tt>stream</tt>'s file descriptor as an integer, if
-      known.  Otherwise return <tt>stream</tt> itself.
+      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key close-callback (unwrap-streams-p t))<br/><br/>
+      Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &amp;key external-format certificate key close-callback (unwrap-streams-p t))</div>
+      Return an SSL stream for the client (server)
+      socket <tt>fd-or-stream</tt>.  All reads and writes to this
+      stream will be pushed through the OpenSSL library.
     </p>
     <p>
-      Pass the
-      return value of this function to <tt>make-ssl-client-stream</tt>
-      or <tt>make-ssl-servre-stream</tt>, which are faster when
-      accessing file descriptors directly.
+      Keyword arguments:
     </p>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key close-callback)</div>
-      Return an SSL stream for the client socket <tt>fd-or-stream</tt>.
-      All reads and writes to this SSL stream will be pushed through the
-      SSL connection.
+      If <tt>fd-or-stream</tt> is a lisp stream, the SSL stream will
+      close it automatically.  File descriptors are not closed
+      automatically.  However, if <tt>close-callback</tt> is non-nil, it
+      will be called with zero arguments when the SSL stream is closed.
     </p>
     <p>
-      If <tt>fd-or-stream</tt> is a lisp stream, it can
-      the SSL stream will close it automatically.  File descriptors are
-      not closed automatically.  However, if <tt>close-callback</tt> is
-      non-nil, it will be called with zero arguments when the SSL stream
-      is closed.
-      
+      If <tt>unwrap-stream-p</tt> is true (the default), a stream for a
+      file descriptor will be replaced by that file descriptor
+      automatically.  This is similar to passing the result
+      of <tt>stream-fd</tt> as an argument, except that a deadline
+      associated with the stream object will be taken into account, and
+      that the stream will be closed automatically.  As with file
+      descriptor arguments, no I/O will actually be done on the stream
+      object.
+    </p>
+    <p>
       <tt>certificate</tt> is the path to a file containing the PEM-encoded
       certificate for your client. <tt>key</tt> is the path to the PEM-encoded
       key for the client, which must not be associated with a passphrase.
@@ -171,28 +132,17 @@ $ cvs co trivial-https</pre>
       as its initial external format.
     </p>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &amp;key external-format certificate key close-callback)</div>
-      Return an SSL stream for the server socket <tt>fd-or-stream</tt>.  All
-      reads and writes to this server stream will be pushed through the
-      OpenSSL library.
-    </p>
-    <p>
-      If <tt>fd-or-stream</tt> is a lisp stream, it can
-      the SSL stream will close it automatically.  File descriptors are
-      not closed automatically.  However, if <tt>close-callback</tt> is
-      non-nil, it will be called with zero arguments when the SSL stream
-      is closed.
-      
-      <tt>certificate</tt> is the path to a file containing the PEM-encoded
-      certificate for your server. <tt>key</tt> is the path to the PEM-encoded
-      key for the server, which must not be associated with a
-      passphrase.  See above for <tt>external-format</tt> handling.
-    </p>
-    <p>
       <div class="def">Function CL+SSL:RELOAD ()</div>
       Reload <tt>libssl</tt>.  Call this function after restarting a Lisp
       core with CL+SSL dumped into it on Lisp implementations that do
       not reload shared libraries automatically.
+    </p>
+    <p>
+      <div class="def">Function CL+SSL:STREAM-FD (stream)</div>
+      Return <tt>stream</tt>'s file descriptor as an integer, if known.
+      Otherwise return <tt>stream</tt> itself.  The result of this
+      function can be passed to <tt>make-ssl-client-stream</tt>
+      and <tt>make-ssl-server-stream</tt>.
     </p>
 
     <h3>Portability</h3>
@@ -230,42 +180,47 @@ $ cvs co trivial-https</pre>
 
     <h3>TODO</h3>
     <ul>
-      <li>CNAME checking!</li>
+      <li>CNAME checking</li>
+      <li>session caching</li>
+      <li>The FFI code for all platforms except clisp needs to be
+      rewritten.</li>
     </ul>
 
-    <a name="trivial-https">
-    <h2>trivial-https</h2>
-
+    <h3>News</h3>
     <p>
-      trivial-https is a fork of Brian
-      Mastenbrook's <a
-      href="http://www.cliki.net/trivial-http">trivial-http</a> adding
-      support for HTTPS using CL+SSL.  License: MIT-style.
+      2008-xx-yy
     </p>
-
+    <ul>
+      <li>
+	Support for I/O deadlines (Clozure CL and SBCL).
+      </li>
+    </ul>
     <p>
-      <b>
-	Note: The <a href="http://weitz.de/drakma/">Drakma</a> HTTP
-	client library by Weitz supports HTTPS using CL+SSL.
-	trivial-https will not be developed further; please use Drakma
-	instead.
-      </b>
+      2007-xx-yy
     </p>
-
+    <ul>
+      <li>
+	Fixed windows support, thanks to Matthew Kennedy and Vodonosov Anton.
+      </li>
+    </ul>
     <p>
-      <a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/*checkout*/trivial-https/README?rev=HEAD&amp;cvsroot=cl-plus-ssl&amp;content-type=text/plain">README</a>
+      2007-07-07
     </p>
-
-    <a name="trivial-gray-streams">
-    <h2>trivial-gray-streams</h2>
-
+    <ul>
+      <li>
+	Improved clisp support, thanks
+	to <a
+	      href="http://web.kepibu.org/code/lisp/cl+ssl/">Pixel
+	  // pinterface</a>, as well as client certificate support.
+      </li>
+      <li>
+	Re-introduced support for direct access to file descriptors as
+	an optimization.  New function <tt>stream-fd</tt>.  New keyword
+	argument <tt>close-callback</tt>.
+      </li>
+    </ul>
     <p>
-      trivial-gray-streams provides an extremely thin compatibility
-      layer for gray streams.  License: MIT-style.
-    </p>
-
-    <p>
-      <a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/*checkout*/trivial-gray-streams/README?rev=HEAD&amp;cvsroot=cl-plus-ssl&amp;content-type=text/plain">README</a>
+      2007-01-16: CL+SSL is now available under an MIT-style license.
     </p>
   </body>
 </html>
