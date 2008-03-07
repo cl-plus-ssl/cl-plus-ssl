@@ -13,7 +13,7 @@
 (in-package :cl+ssl-system)
 
 (defsystem :cl+ssl
-  :depends-on (:cffi :trivial-gray-streams :flexi-streams)
+  :depends-on (:cffi :trivial-gray-streams :flexi-streams #+sbcl :sb-posix)
   :serial t
   :components
    ((:file "package")

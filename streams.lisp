@@ -23,6 +23,10 @@
    (handle
     :initform nil
     :accessor ssl-stream-handle)
+   (deadline
+    :initform nil
+    :initarg :deadline
+    :accessor ssl-stream-deadline)
    (output-buffer
     :initform (make-buffer +initial-buffer-size+)
     :accessor ssl-stream-output-buffer)
@@ -52,14 +56,19 @@
   '(unsigned-byte 8))
 
 (defmethod close ((stream ssl-stream) &key abort)
-  (declare (ignore abort))
-  (force-output stream)
-  (ssl-free (ssl-stream-handle stream))
-  (setf (ssl-stream-handle stream) nil)
-  (when (streamp (ssl-stream-socket stream))
-    (close (ssl-stream-socket stream)))
-  (when (functionp (ssl-close-callback stream))
-    (funcall (ssl-close-callback stream))))
+  (cond
+    ((ssl-stream-handle stream)
+     (unless abort
+       (force-output stream))
+     (ssl-free (ssl-stream-handle stream))
+     (setf (ssl-stream-handle stream) nil)
+     (when (streamp (ssl-stream-socket stream))
+       (close (ssl-stream-socket stream)))
+     (when (functionp (ssl-close-callback stream))
+       (funcall (ssl-close-callback stream)))
+     t)
+    (t
+     nil)))
 
 (defmethod open-stream-p ((stream ssl-stream))
   (and (ssl-stream-handle stream) t))
@@ -76,10 +85,9 @@
       (let ((buf (ssl-stream-input-buffer stream)))
         (handler-case
             (with-pointer-to-vector-data (ptr buf)
-              (ensure-ssl-funcall (ssl-stream-socket stream)
+              (ensure-ssl-funcall stream
                                   (ssl-stream-handle stream)
                                   #'ssl-read
-                                  5.5
                                   (ssl-stream-handle stream)
                                   ptr
                                   1)
@@ -100,10 +108,9 @@
         do
           (handler-case
               (with-pointer-to-vector-data (ptr buf)
-                (ensure-ssl-funcall (ssl-stream-socket stream)
+                (ensure-ssl-funcall stream
                                     (ssl-stream-handle stream)
                                     #'ssl-read
-                                    5.5
                                     (ssl-stream-handle stream)
                                     ptr
                                     length)
@@ -111,6 +118,7 @@
                 (incf start length))
             (ssl-error-zero-return ()   ;SSL_read returns 0 on end-of-file
               (return))))
+    ;; fixme: kein out-of-file wenn (zerop start)?
     start))
 
 (defmethod stream-write-byte ((stream ssl-stream) b)
@@ -146,19 +154,73 @@
 (defmethod stream-force-output ((stream ssl-stream))
   (let ((buf (ssl-stream-output-buffer stream))
         (fill-ptr (ssl-stream-output-pointer stream))
-        (handle (ssl-stream-handle stream))
-	(socket (ssl-stream-socket stream)))
+        (handle (ssl-stream-handle stream)))
     (when (plusp fill-ptr)
+      (unless handle
+	(error "output operation on closed SSL stream"))
       (with-pointer-to-vector-data (ptr buf)
-        (ensure-ssl-funcall socket handle #'ssl-write 0.5 handle ptr fill-ptr))
+        (ensure-ssl-funcall stream handle #'ssl-write handle ptr fill-ptr))
       (setf (ssl-stream-output-pointer stream) 0))))
+
+#+clozure-common-lisp
+(defun install-nonblock-flag (fd)
+  (ccl::fd-set-flags fd (logior (ccl::fd-get-flags fd) #$O_NONBLOCK)))
+
+#+sbcl
+(defun install-nonblock-flag (fd)
+  (sb-posix:fcntl fd
+		  sb-posix::f-setfl
+		  (logior (sb-posix:fcntl fd sb-posix::f-getfl)
+			  sb-posix::o-nonblock)))
+
+#-(or clozure-common-lisp sbcl)
+(defun install-nonblock-flag (fd)
+  (declare (ignore fd)))
 
 
 ;;; interface functions
 ;;;
+
+(defun install-handle-and-bio (stream handle socket unwrap-stream-p)
+  (setf (ssl-stream-handle stream) handle)
+  (when unwrap-stream-p
+    (let ((fd (stream-fd socket)))
+      (when fd
+	(setf socket fd))))
+  (etypecase socket
+    (integer
+     (install-nonblock-flag socket)
+     (ssl-set-fd handle socket))
+    (stream
+     (ssl-set-bio handle (bio-new-lisp) (bio-new-lisp))))
+  (ssl-ctx-ctrl handle
+		+SSL_CTRL_MODE+
+		+SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER+
+		0)
+  socket)
+
+(defun install-key-and-cert (handle key certificate)
+  (when key
+    (unless (eql 1 (ssl-use-rsa-privatekey-file handle
+						key
+						+ssl-filetype-pem+))
+      (error 'ssl-error-initialize :reason "Can't load RSA private key ~A")))
+  (when certificate
+    (unless (eql 1 (ssl-use-certificate-file handle
+					     certificate
+					     +ssl-filetype-pem+))
+      (error 'ssl-error-initialize
+	     :reason "Can't load certificate ~A" certificate))))
+
+(defun handle-external-format (stream ef)
+  (if ef
+      (flexi-streams:make-flexi-stream stream :external-format ef)
+      stream))
+
+;; fixme: free the context when errors happen in this function
 (defun make-ssl-client-stream
     (socket &key certificate key (method 'ssl-v23-method) external-format
-                 close-callback)
+                 close-callback (unwrap-stream-p t))
   "Returns an SSL stream for the client socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your client. KEY is the path to the PEM-encoded key for the client, which
@@ -168,31 +230,16 @@ must not be associated with a passphrase."
 			       :socket socket
 			       :close-callback close-callback))
         (handle (ssl-new *ssl-global-context*)))
-    (setf (ssl-stream-handle stream) handle)
-    (etypecase socket
-      (integer (ssl-set-fd handle socket))
-      (stream (ssl-set-bio handle (bio-new-lisp) (bio-new-lisp))))
+    (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
     (ssl-set-connect-state handle)
-    (when key
-      (unless (eql 1 (ssl-use-rsa-privatekey-file handle
-						  key
-						  +ssl-filetype-pem+))
-        (error 'ssl-error-initialize :reason "Can't load RSA private key ~A")))
-    (when certificate
-      (unless (eql 1 (ssl-use-certificate-file handle
-					       certificate
-					       +ssl-filetype-pem+))
-        (error 'ssl-error-initialize
-	       :reason "Can't load certificate ~A" certificate)))
-    (ensure-ssl-funcall socket handle #'ssl-connect 0.25 handle)
-    (if external-format
-        (flexi-streams:make-flexi-stream stream
-                                         :external-format external-format)
-        stream)))
+    (install-key-and-cert handle key certificate)
+    (ensure-ssl-funcall stream handle #'ssl-connect handle)
+    (handle-external-format stream external-format)))
 
+;; fixme: free the context when errors happen in this function
 (defun make-ssl-server-stream
     (socket &key certificate key (method 'ssl-v23-method) external-format
-                 close-callback)
+                 close-callback (unwrap-stream-p t))
   "Returns an SSL stream for the server socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your server. KEY is the path to the PEM-encoded key for the server, which
@@ -204,32 +251,21 @@ must not be associated with a passphrase."
 		 :certificate certificate
 		 :key key))
         (handle (ssl-new *ssl-global-context*)))
-    (setf (ssl-stream-handle stream) handle)
-    (etypecase socket
-      (integer
-       (ssl-set-fd handle socket))
-      (stream
-       (let ((bio (bio-new-lisp)))
-	 (ssl-set-bio handle bio bio))))
+    (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
     (ssl-set-accept-state handle)
     (when (zerop (ssl-set-cipher-list handle "ALL"))
       (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
-    (when key
-      (unless (eql 1 (ssl-use-rsa-privatekey-file handle
-						  key
-						  +ssl-filetype-pem+))
-        (error 'ssl-error-initialize :reason "Can't load RSA private key ~A")))
-    (when certificate
-      (unless (eql 1 (ssl-use-certificate-file handle
-					       certificate
-					       +ssl-filetype-pem+))
-        (error 'ssl-error-initialize
-	       :reason "Can't load certificate ~A" certificate)))
-    (ensure-ssl-funcall socket handle #'ssl-accept 0.25 handle)
-    (if external-format
-        (flexi-streams:make-flexi-stream stream
-                                         :external-format external-format)
-        stream)))
+    (install-key-and-cert handle key certificate)
+    (ensure-ssl-funcall stream handle #'ssl-accept handle)
+    (handle-external-format stream external-format)))
+
+#+openmcl
+(defmethod stream-deadline ((stream ccl::basic-stream))
+  (ccl::ioblock-deadline (ccl::stream-ioblock stream t)))
+#+openmcl
+(defmethod stream-deadline ((stream t))
+  nil)
+
 
 (defgeneric stream-fd (stream))
 (defmethod stream-fd (stream) stream)

@@ -31,7 +31,9 @@
 (defconstant +ssl-filetype-default+ 3)
 
 (defconstant +SSL_CTRL_SET_SESS_CACHE_MODE+ 44)
+(defconstant +SSL_CTRL_MODE+ 33)
 
+(defconstant +SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER+ 2)
 
 ;;; Misc
 ;;;
@@ -81,6 +83,9 @@
 (cffi:defcfun ("SSL_new" ssl-new)
     ssl-pointer
   (ctx ssl-ctx))
+(cffi:defcfun ("SSL_get_fd" ssl-get-fd)
+    :int
+  (ssl ssl-pointer))
 (cffi:defcfun ("SSL_set_fd" ssl-set-fd)
     :int
   (ssl ssl-pointer)
@@ -196,17 +201,105 @@
 (defvar *socket*)
 
 (declaim (inline ensure-ssl-funcall))
-(defun ensure-ssl-funcall (*socket* handle func sleep-time &rest args)
+(defun ensure-ssl-funcall (stream handle func &rest args)
   (loop
-    (handler-case
-	(let ((rc (apply func args)))
-	  (when (plusp rc)
-	    (return rc))
-	  (ssl-signal-error handle func (ssl-get-error handle rc) rc))
-      (ssl-error-want-something (condition)
-	(declare (ignore condition))
-	;; FIXME
-	(warn "busy waiting in ensure-ssl-funcall")))))
+     (let ((nbytes
+	    (let ((*socket* stream))	;for Lisp-BIO callbacks
+	      (apply func args))))
+       (when (plusp nbytes)
+	 (return nbytes))
+       (let ((error (ssl-get-error handle nbytes)))
+	 (case error
+	   (#.+ssl-error-want-read+
+	    (input-wait stream
+			(ssl-get-fd handle)
+			(ssl-stream-deadline stream)))
+	   (#.+ssl-error-want-write+
+	    (output-wait stream
+			 (ssl-get-fd handle)
+			 (ssl-stream-deadline stream)))
+	   (t
+	    (ssl-signal-error handle func error nbytes)))))))
+
+
+;;; Waiting for output to be possible
+
+#+clozure-common-lisp
+(defun milliseconds-until-deadline (deadline stream)
+  (let* ((now (get-internal-real-time)))
+    (if (> now deadline)
+	(error 'ccl::communication-deadline-expired :stream stream)
+	(values
+	 (round (- deadline now) (/ internal-time-units-per-second 1000))))))
+
+#+clozure-common-lisp
+(defun output-wait (stream fd deadline)
+  (unless deadline
+    (setf deadline (stream-deadline (ssl-stream-socket stream))))
+  (let* ((timeout
+	  (if deadline
+	      (milliseconds-until-deadline deadline stream)
+	      nil)))
+    (multiple-value-bind (win timedout error)
+	(ccl::process-output-wait fd timeout)
+      (unless win
+	(if timedout
+	    (error 'ccl::communication-deadline-expired :stream stream)
+	    (ccl::stream-io-error stream (- error) "write"))))))
+
+#+sbcl
+(defun output-wait (stream fd deadline)
+  (declare (ignore stream))
+  (let ((timeout
+	 ;; *deadline* is handled by wait-until-fd-usable automatically,
+	 ;; but we need to turn a user-specified deadline into a timeout
+	 (when deadline
+	   (/ (- deadline (get-internal-real-time))
+	      internal-time-units-per-second))))
+    (sb-sys:wait-until-fd-usable fd :output timeout)))
+
+#-(or clozure-common-lisp sbcl)
+(defun output-wait (stream fd deadline)
+  (declare (ignore stream fd deadline))
+  ;; This situation means that the lisp set our fd to non-blocking mode,
+  ;; and streams.lisp didn't know how to undo that.
+  (warn "non-blocking stream encountered unexpectedly"))
+
+
+;;; Waiting for input to be possible
+
+#+clozure-common-lisp
+(defun input-wait (stream fd deadline)
+  (unless deadline
+    (setf deadline (stream-deadline (ssl-stream-socket stream))))
+  (let* ((timeout
+	  (if deadline
+	      (milliseconds-until-deadline deadline stream)
+	      nil)))
+    (multiple-value-bind (win timedout error)
+	(ccl::process-input-wait fd timeout)
+      (unless win
+	(if timedout
+	    (error 'ccl::communication-deadline-expired :stream stream)
+	    (ccl::stream-io-error stream (- error) "read"))))))
+
+#+sbcl
+(defun input-wait (stream fd deadline)
+  (declare (ignore stream))
+  (let ((timeout
+	 ;; *deadline* is handled by wait-until-fd-usable automatically,
+	 ;; but we need to turn a user-specified deadline into a timeout
+	 (when deadline
+	   (/ (- deadline (get-internal-real-time))
+	      internal-time-units-per-second))))
+    (sb-sys:wait-until-fd-usable fd :input timeout)))
+
+#-(or clozure-common-lisp sbcl)
+(defun input-wait (stream fd deadline)
+  (declare (ignore stream fd deadline))
+  ;; This situation means that the lisp set our fd to non-blocking mode,
+  ;; and streams.lisp didn't know how to undo that.
+  (warn "non-blocking stream encountered unexpectedly"))
 
 
 ;;; Initialization
