@@ -4,8 +4,9 @@
 ;;;
 ;;; See LICENSE for details.
 
-(declaim
- (optimize (speed 3) (space 1) (safety 1) (debug 0) (compilation-speed 0)))
+(eval-when (:compile-toplevel)
+  (declaim
+   (optimize (speed 3) (space 1) (safety 1) (debug 0) (compilation-speed 0))))
 
 (in-package :cl+ssl)
 
