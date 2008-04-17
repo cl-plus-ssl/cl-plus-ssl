@@ -19,6 +19,12 @@
 
 ;;; Condition hierarchy
 ;;;
+
+(defun write-queued-errors (condition stream)
+  (let ((queue (ssl-error-queue condition)))
+    (when queue
+      (write-sequence queue stream))))
+
 (define-condition ssl-error (error)
   ((queue :initform nil :initarg :queue :reader ssl-error-queue)))
 
@@ -39,7 +45,7 @@
   (:report (lambda (condition stream)
              (format stream "SSL initialization error: ~A"
                      (ssl-error-reason condition))
-	     (write-sequence (ssl-error-queue condition) stream))))
+	     (write-queued-errors condition stream))))
 
 
 (define-condition ssl-error-want-something (ssl-error/handle)
@@ -55,7 +61,7 @@
              (format stream "The TLS/SSL operation on handle ~A completed. (return code:  ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	     (write-sequence (ssl-error-queue condition) stream))))
+	     (write-queued-errors condition stream))))
 
 ;; SSL_ERROR_ZERO_RETURN
 (define-condition ssl-error-zero-return (ssl-error/handle)
@@ -71,7 +77,7 @@
              (format stream "The TLS/SSL connection on handle ~A has been closed. (return code:  ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	     (write-sequence (ssl-error-queue condition) stream))))
+	     (write-queued-errors condition stream))))
 
 ;; SSL_ERROR_WANT_READ
 (define-condition ssl-error-want-read (ssl-error-want-something)
@@ -90,7 +96,7 @@
              (format stream "The TLS/SSL operation on handle ~A did not complete: It wants a READ. (return code:  ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	     (write-sequence (ssl-error-queue condition) stream))))
+	     (write-queued-errors condition stream))))
 
 ;; SSL_ERROR_WANT_WRITE
 (define-condition ssl-error-want-write (ssl-error-want-something)
@@ -109,7 +115,7 @@
              (format stream "The TLS/SSL operation on handle ~A did not complete: It wants a WRITE. (return code:  ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	     (write-sequence (ssl-error-queue condition) stream))))
+	     (write-queued-errors condition stream))))
 
 ;; SSL_ERROR_WANT_CONNECT
 (define-condition ssl-error-want-connect (ssl-error-want-something)
@@ -128,7 +134,7 @@
             (format stream "The TLS/SSL operation on handle ~A did not complete: It wants a connect first. (return code:  ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	    (write-sequence (ssl-error-queue condition) stream))))
+	    (write-queued-errors condition stream))))
 
 ;; SSL_ERROR_WANT_X509_LOOKUP
 (define-condition ssl-error-want-x509-lookup (ssl-error-want-something)
@@ -142,7 +148,7 @@
              (format stream "The TLS/SSL operation on handle ~A did not complete: An application callback wants to be called again. (return code:  ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	     (write-sequence (ssl-error-queue condition) stream))))
+	     (write-queued-errors condition stream))))
 
 ;; SSL_ERROR_SYSCALL
 (define-condition ssl-error-syscall (ssl-error/handle)
@@ -165,7 +171,7 @@
                                       (ssl-error-ret condition))))
                  (format stream "An UNKNOWN I/O error occurred in the underlying BIO. (return code:  ~A)"
                          (ssl-error-ret condition)))
-	     (write-sequence (ssl-error-queue condition) stream))))
+	     (write-queued-errors condition stream))))
 
 ;; SSL_ERROR_SSL
 (define-condition ssl-error-ssl (ssl-error/handle)
@@ -178,7 +184,7 @@
 		     "A failure in the SSL library occurred on handle ~A. (Return code: ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	     (write-sequence (ssl-error-queue condition) stream))))
+	     (write-queued-errors condition stream))))
 
 (defun write-ssl-error-queue (stream)
   (format stream "SSL error queue: ~%")

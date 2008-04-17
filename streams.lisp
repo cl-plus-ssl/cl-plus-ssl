@@ -204,13 +204,13 @@
     (unless (eql 1 (ssl-use-rsa-privatekey-file handle
 						key
 						+ssl-filetype-pem+))
-      (error 'ssl-error-initialize :reason "Can't load RSA private key ~A")))
+      (error 'ssl-error-initialize :reason (format nil "Can't load RSA private key file ~A" key))))
   (when certificate
     (unless (eql 1 (ssl-use-certificate-file handle
 					     certificate
 					     +ssl-filetype-pem+))
       (error 'ssl-error-initialize
-	     :reason "Can't load certificate ~A" certificate))))
+	     :reason (format nil "Can't load certificate ~A" certificate)))))
 
 (defun handle-external-format (stream ef)
   (if ef
