@@ -167,14 +167,14 @@
 (defun install-nonblock-flag (fd)
   (ccl::fd-set-flags fd (logior (ccl::fd-get-flags fd) #$O_NONBLOCK)))
 
-#+sbcl
+#+(and sbcl (not win32))
 (defun install-nonblock-flag (fd)
   (sb-posix:fcntl fd
 		  sb-posix::f-setfl
 		  (logior (sb-posix:fcntl fd sb-posix::f-getfl)
 			  sb-posix::o-nonblock)))
 
-#-(or clozure-common-lisp sbcl)
+#-(or clozure-common-lisp (and sbcl (not win32)))
 (defun install-nonblock-flag (fd)
   (declare (ignore fd)))
 
