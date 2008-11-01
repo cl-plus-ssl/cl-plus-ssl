@@ -165,8 +165,14 @@
 
 #+clozure-common-lisp
 (defun install-nonblock-flag (fd)
-  (ccl::fd-set-flags fd (logior (ccl::fd-get-flags fd) #$O_NONBLOCK)))
-
+  (ccl::fd-set-flags fd (logior (ccl::fd-get-flags fd) 
+                     #.(read-from-string "#$O_NONBLOCK"))))
+                     ;; read-from-string is necessary because
+                     ;; CLISP and perhaps other Lisps are confused
+                     ;; by #$, signaling"undefined dispatch character $", 
+                     ;; even though the defun in conditionalized by 
+                     ;; #+clozure-common-lisp
+                    
 #+(and sbcl (not win32))
 (defun install-nonblock-flag (fd)
   (sb-posix:fcntl fd
