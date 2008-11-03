@@ -307,24 +307,10 @@
   (warn "non-blocking stream encountered unexpectedly"))
 
 
-;;; Initialization
+;;; Encrypted PEM files support
 ;;;
-(defun init-prng ()
-  ;; this initialization of random entropy is not necessary on
-  ;; Linux, since the OpenSSL library automatically reads from
-  ;; /dev/urandom if it exists. On Solaris it is necessary.
-  (let ((buf (cffi-sys::make-shareable-byte-vector +random-entropy+)))
-    (dotimes (i +random-entropy+)
-      (setf (elt buf i) (random 256)))
-    (cffi-sys::with-pointer-to-vector-data (ptr buf)
-      (rand-seed ptr +random-entropy+))))
 
-(defun ssl-ctx-set-session-cache-mode (ctx mode)
-  (ssl-ctx-ctrl ctx +SSL_CTRL_SET_SESS_CACHE_MODE+ mode 0))
-
-;;;;; Encrypted PEM files support
-
-;; see http://www.openssl.org/docs/ssl/SSL_CTX_set_default_passwd_cb.html
+;; based on http://www.openssl.org/docs/ssl/SSL_CTX_set_default_passwd_cb.html
 
 (defvar *pem-password* ""
   "The callback registered with SSL_CTX_set_default_passwd_cb
@@ -349,7 +335,21 @@ will use this value.")
   `(let ((*pem-password* (or ,password "")))
          ,@body))
 
-;;;;; Initialization
+
+;;; Initialization
+;;;
+(defun init-prng ()
+  ;; this initialization of random entropy is not necessary on
+  ;; Linux, since the OpenSSL library automatically reads from
+  ;; /dev/urandom if it exists. On Solaris it is necessary.
+  (let ((buf (cffi-sys::make-shareable-byte-vector +random-entropy+)))
+    (dotimes (i +random-entropy+)
+      (setf (elt buf i) (random 256)))
+    (cffi-sys::with-pointer-to-vector-data (ptr buf)
+      (rand-seed ptr +random-entropy+))))
+
+(defun ssl-ctx-set-session-cache-mode (ctx mode)
+  (ssl-ctx-ctrl ctx +SSL_CTRL_SET_SESS_CACHE_MODE+ mode 0))
 
 (defun initialize (&optional (method 'ssl-v23-method))
   (setf *bio-lisp-method* (make-bio-lisp-method))
