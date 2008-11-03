@@ -196,6 +196,10 @@
   (larg :long)
   (parg :long))
 
+(cffi:defcfun ("SSL_CTX_set_default_passwd_cb" ssl-ctx-set-default-passwd-cb)
+    :void
+  (ctx ssl-ctx)
+  (pem_passwd_cb :pointer))
 
 ;;; Funcall wrapper
 ;;;
@@ -318,6 +322,35 @@
 (defun ssl-ctx-set-session-cache-mode (ctx mode)
   (ssl-ctx-ctrl ctx +SSL_CTRL_SET_SESS_CACHE_MODE+ mode 0))
 
+;;;;; Encrypted PEM files support
+
+;; see http://www.openssl.org/docs/ssl/SSL_CTX_set_default_passwd_cb.html
+
+(defvar *pem-password* ""
+  "The callback registered with SSL_CTX_set_default_passwd_cb
+will use this value.")
+
+;; The callback itself
+(cffi:defcallback pem-password-callback :int
+    ((buf :pointer) (size :int) (rwflag :int) (unused :pointer))
+  (let* ((password-str (coerce *pem-password* 'base-string))
+         (tmp (cffi:foreign-string-alloc password-str)))
+    (cffi:foreign-funcall "strncpy"
+                          :pointer buf
+                          :pointer tmp
+                          :int size)
+    (cffi:foreign-string-free tmp)
+    (setf (cffi:mem-ref buf :char (1- size)) 0)
+    (cffi:foreign-funcall "strlen" :pointer buf :int)))
+
+;; The macro to be used by other code to provide password
+;; when loading PEM file.
+(defmacro with-pem-password ((password) &body body)
+  `(let ((*pem-password* (or ,password "")))
+         ,@body))
+
+;;;;; Initialization
+
 (defun initialize (&optional (method 'ssl-v23-method))
   (setf *bio-lisp-method* (make-bio-lisp-method))
   (ssl-load-error-strings)
@@ -325,7 +358,9 @@
   (init-prng)
   (setf *ssl-global-method* (funcall method))
   (setf *ssl-global-context* (ssl-ctx-new *ssl-global-method*))
-  (ssl-ctx-set-session-cache-mode *ssl-global-context* 3))
+  (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
+  (ssl-ctx-set-default-passwd-cb *ssl-global-context* 
+                                 (cffi:callback pem-password-callback)))
 
 (defun ensure-initialized (&optional (method 'ssl-v23-method))
   (unless (ssl-initialized-p)
