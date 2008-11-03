@@ -176,6 +176,10 @@
   (ssl ssl-pointer)
   (str :string)
   (type :int))
+(cffi:defcfun ("SSL_CTX_use_certificate_chain_file" ssl-ctx-use-certificate-chain-file)
+    :int
+  (ctx ssl-ctx)
+  (str :string))
 (cffi:defcfun ("SSL_CTX_load_verify_locations" ssl-ctx-load-verify-locations)
     :int
   (ctx ssl-ctx)
@@ -367,6 +371,16 @@ will use this value.")
     (initialize method))
   (unless *bio-lisp-method*
     (setf *bio-lisp-method* (make-bio-lisp-method))))
+
+(defun use-certificate-chain-file (certificate-chain-file)
+  "Loads a PEM encoded certificate chain file CERTIFICATE-CHAIN-FILE
+and adds the chain to global context. The certificates must be sorted 
+starting with the subject's certificate (actual client or server certificate),
+followed by intermediate CA certificates if applicable, and ending at 
+the highest level (root) CA. Note: the RELOAD function clears the global 
+context and in particular the loaded certificate chain."
+  (ensure-initialized)
+  (ssl-ctx-use-certificate-chain-file *ssl-global-context* certificate-chain-file))
 
 (defun reload ()
   (cffi:load-foreign-library 'libssl)

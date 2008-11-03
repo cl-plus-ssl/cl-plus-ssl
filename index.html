@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
   <head>
@@ -123,8 +123,8 @@
       <tt>certificate</tt> is the path to a file containing the PEM-encoded
       certificate. 
     </p>
-	<p>
-	  <tt>key</tt> is the path to the PEM-encoded key, which may be associated 
+    <p>
+      <tt>key</tt> is the path to the PEM-encoded key, which may be associated 
       with the passphrase <tt>password</tt>.
     </p>
     <p>
@@ -133,6 +133,18 @@
       non-null <tt>external-format</tt>, a flexi-stream capable of
       character I/O will be returned instead, with the specified value
       as its initial external format.
+    </p>
+    <p>
+      <div class="def">Function CL+SSL:USE-CERTIFICATE-CHAIN-FILE (certificate-chain-file)</div>
+      Loads a PEM encoded certificate chain file CERTIFICATE-CHAIN-FILE
+      and adds the chain to global context. The certificates must be sorted 
+      starting with the subject's certificate (actual client or server certificate),
+      followed by intermediate CA certificates if applicable, and ending at 
+      the highest level (root) CA. 
+    </p>
+    <p>
+      Note: the RELOAD function clears the global 
+      context and in particular the loaded certificate chain.
     </p>
     <p>
       <div class="def">Function CL+SSL:RELOAD ()</div>
@@ -199,6 +211,9 @@
       </li>
       <li>
 	Support for encrypted keys, thanks to Vsevolod Dyomkin.
+      </li>
+      <li>
+	 Chained certificates support, thanks to Juhani Ränkimies.
       </li>
     </ul>
     <p>

@@ -12,4 +12,5 @@
            #:reload
            #:stream-fd
            #:make-ssl-client-stream
-           #:make-ssl-server-stream))
+           #:make-ssl-server-stream
+           #:use-certificate-chain-file))
