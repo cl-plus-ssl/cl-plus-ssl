@@ -94,6 +94,30 @@
 
     <h3>API functions</h3>
     <p>
+      <div class="def">Function CL+SSL:ENSURE-INITIALIZED (&key (method 'ssl-v23-method) (rand-seed nil))</div>
+      In most cases you <strong>do not</strong> need to call this function, because it is called
+      automatically. The only reason to call it explicitly is to supply the <tt>rand-seed</tt> parameter.
+      In this case do it before calling any other functions.
+    </p>
+    <p>
+      Keyword arguments:
+    </p>
+    <p>
+      <tt>method</tt>. Just leave its default value.
+    </p>
+    <p>
+      <tt>rand-seed</tt> is an octet sequence to initialize OpenSSL random number generator. 
+      On many platforms, including Linux and Windows, it may be leaved NIL (default), 
+      because OpenSSL initializes the random number generator from OS specific service. But for 
+      example on Solaris it may be necessary to supply this value. The minimum length required
+      by OpenSSL is 128 bits. See here <a href="http://www.openssl.org/support/faq.html#USER1">
+        http://www.openssl.org/support/faq.html#USER1</a> for the details.
+    </p>
+    <p>
+      Hint: do not use Common Lisp RANDOM function to generate the <tt>rand-seed</tt>, because the function
+      usually returns predictable values.
+    </p>
+    <p>
       <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-streams-p t))<br/><br/>
       Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-streams-p t))</div>
       Return an SSL stream for the client (server)
@@ -213,7 +237,13 @@
 	Support for encrypted keys, thanks to Vsevolod Dyomkin.
       </li>
       <li>
-	 Chained certificates support, thanks to Juhani Ränkimies.
+	Chained certificates support, thanks to Juhani Ränkimies.
+      </li>
+      <li>
+	More secure initialization of OpenSSL random number generator.
+      </li>
+      <li>
+        Minor CLISP-specific fixes.
       </li>
     </ul>
     <p>
@@ -229,7 +259,7 @@
     </p>
     <ul>
       <li>
-	Improved clisp support, thanks
+	Improved CLISP support, thanks
 	to <a
 	      href="http://web.kepibu.org/code/lisp/cl+ssl/">Pixel
 	  // pinterface</a>, as well as client certificate support.

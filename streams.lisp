@@ -232,7 +232,7 @@
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your client. KEY is the path to the PEM-encoded key for the client, which
 may be associated with the passphrase PASSWORD."
-  (ensure-initialized method)
+  (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-stream
 			       :socket socket
 			       :close-callback close-callback))
@@ -252,7 +252,7 @@ may be associated with the passphrase PASSWORD."
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your server. KEY is the path to the PEM-encoded key for the server, which
 may be associated with the passphrase PASSWORD."
-  (ensure-initialized method)
+  (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-server-stream
 		 :socket socket
 		 :close-callback close-callback

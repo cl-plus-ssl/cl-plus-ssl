@@ -25,8 +25,6 @@
 
 ;;; Constants
 ;;;
-(defconstant +random-entropy+ 256)
-
 (defconstant +ssl-filetype-pem+ 1)
 (defconstant +ssl-filetype-asn1+ 2)
 (defconstant +ssl-filetype-default+ 3)
@@ -342,33 +340,49 @@ will use this value.")
 
 ;;; Initialization
 ;;;
-(defun init-prng ()
-  ;; this initialization of random entropy is not necessary on
-  ;; Linux, since the OpenSSL library automatically reads from
-  ;; /dev/urandom if it exists. On Solaris it is necessary.
-  (let ((buf (cffi-sys::make-shareable-byte-vector +random-entropy+)))
-    (dotimes (i +random-entropy+)
-      (setf (elt buf i) (random 256)))
+
+(defun init-prng (seed-byte-sequence)
+  (let* ((length (length seed-byte-sequence))
+         (buf (cffi-sys::make-shareable-byte-vector length)))
+    (dotimes (i length)
+      (setf (elt buf i) (elt seed-byte-sequence i)))
     (cffi-sys::with-pointer-to-vector-data (ptr buf)
-      (rand-seed ptr +random-entropy+))))
+      (rand-seed ptr length))))
 
 (defun ssl-ctx-set-session-cache-mode (ctx mode)
   (ssl-ctx-ctrl ctx +SSL_CTRL_SET_SESS_CACHE_MODE+ mode 0))
 
-(defun initialize (&optional (method 'ssl-v23-method))
+(defun initialize (&key (method 'ssl-v23-method) rand-seed)
   (setf *bio-lisp-method* (make-bio-lisp-method))
   (ssl-load-error-strings)
   (ssl-library-init)
-  (init-prng)
+  (when rand-seed
+    (init-prng rand-seed))
   (setf *ssl-global-method* (funcall method))
   (setf *ssl-global-context* (ssl-ctx-new *ssl-global-method*))
   (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
   (ssl-ctx-set-default-passwd-cb *ssl-global-context* 
                                  (cffi:callback pem-password-callback)))
 
-(defun ensure-initialized (&optional (method 'ssl-v23-method))
+(defun ensure-initialized (&key (method 'ssl-v23-method) (rand-seed nil))
+  "In most cases you do *not* need to call this function, because it 
+is called automatically by all other functions. The only reason to 
+call it explicitly is to supply the RAND-SEED parameter. In this case
+do it before calling any other functions.
+
+Just leave the default value for the METHOD parameter.
+
+RAND-SEED is an octet sequence to initialize OpenSSL random number generator. 
+On many platforms, including Linux and Windows, it may be leaved NIL (default), 
+because OpenSSL initializes the random number generator from OS specific service. 
+But for example on Solaris it may be necessary to supply this value.
+The minimum length required by OpenSSL is 128 bits.
+See ttp://www.openssl.org/support/faq.html#USER1 for details.
+
+Hint: do not use Common Lisp RANDOM function to generate the RAND-SEED, 
+because the function usually returns predictable values."
   (unless (ssl-initialized-p)
-    (initialize method))
+    (initialize :method method :rand-seed rand-seed))
   (unless *bio-lisp-method*
     (setf *bio-lisp-method* (make-bio-lisp-method))))
 
