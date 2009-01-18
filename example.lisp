@@ -68,8 +68,8 @@
 	  (loop :for line = (read-line-crlf https nil)
 			    :while line :do
 			    (format t "HTTPS> ~a~%" line)))
-      (close socket)
-      (close https))))
+      (close https)
+	  (close socket))))
 
 ;; start a simple HTTPS server. See the mod_ssl documentation at
 ;; <URL:http://www.modssl.org/> for information on generating the
@@ -108,5 +108,5 @@
 	      (format client "CL+SSL running in ~A ~A~%"
 		      (lisp-implementation-type)
 		      (lisp-implementation-version)))
-	  (close socket)
-	  (close client))))))
+	  (close client)
+	  (close socket))))))
