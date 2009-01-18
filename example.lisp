@@ -68,7 +68,7 @@
 	  (loop :for line = (read-line-crlf https nil)
 			    :while line :do
 			    (format t "HTTPS> ~a~%" line)))
-      (close https)
+	  (close https)
 	  (close socket))))
 
 ;; start a simple HTTPS server. See the mod_ssl documentation at
