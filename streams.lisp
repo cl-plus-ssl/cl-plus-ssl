@@ -163,7 +163,7 @@
         (ensure-ssl-funcall stream handle #'ssl-write handle ptr fill-ptr))
       (setf (ssl-stream-output-pointer stream) 0))))
 
-#+clozure-common-lisp
+#+(and clozure-common-lisp (not windows))
 (defun install-nonblock-flag (fd)
   (ccl::fd-set-flags fd (logior (ccl::fd-get-flags fd) 
                      #.(read-from-string "#$O_NONBLOCK"))))
@@ -180,7 +180,7 @@
 		  (logior (sb-posix:fcntl fd sb-posix::f-getfl)
 			  sb-posix::o-nonblock)))
 
-#-(or clozure-common-lisp (and sbcl (not win32)))
+#-(or (and clozure-common-lisp (not windows)) (and sbcl (not win32)))
 (defun install-nonblock-flag (fd)
   (declare (ignore fd)))
 
