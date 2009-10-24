@@ -1,3 +1,5 @@
+#+xcvb (module (:depends-on ("package" "reload" "conditions" "ffi" "ffi-buffer-all")))
+
 (in-package :cl+ssl)
 
 (defun make-buffer (size)

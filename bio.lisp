@@ -2,6 +2,8 @@
 ;;;
 ;;; See LICENSE for details.
 
+#+xcvb (module (:depends-on ("package")))
+
 (in-package cl+ssl)
 
 (defconstant +bio-type-socket+ (logior 5 #x0400 #x0100))

@@ -5,6 +5,12 @@
 ;;;
 ;;; See LICENSE for details.
 
+#+xcvb
+(module
+ (:depends-on ("package" "conditions" "ffi"
+                         (:cond ((:featurep :clisp) "ffi-buffer-clisp")
+                                (t "ffi-buffer")))))
+
 (eval-when (:compile-toplevel)
   (declaim
    (optimize (speed 3) (space 1) (safety 1) (debug 0) (compilation-speed 0))))

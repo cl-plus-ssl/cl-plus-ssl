@@ -4,6 +4,8 @@
 ;;;
 ;;; See LICENSE for details.
 
+#+xcvb (module (:depends-on ((:when (:featurep :sbcl) (:require :sb-posix)))))
+
 (in-package :cl-user)
 
 (defpackage :cl+ssl

@@ -1,3 +1,5 @@
+#+xcvb (module (:depends-on ("package")))
+
 (in-package :cl+ssl)
 
 (defconstant +initial-buffer-size+ 2048)

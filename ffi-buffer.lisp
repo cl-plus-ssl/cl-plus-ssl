@@ -1,3 +1,5 @@
+#+xcvb (module (:depends-on ("package")))
+
 (in-package :cl+ssl)
 
 (defun make-buffer (size)
