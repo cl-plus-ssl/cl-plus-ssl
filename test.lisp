@@ -365,7 +365,23 @@
 		 (assert (> n 100))))
 	  (handler-case
 	      (close-socket socket :abort t)
-	    (sb-sys:deadline-timeout ())))))))
+	    (sb-sys:deadline-timeout ()))))))
+
+  #+sbcl
+  (deftests read-char-no-hang/test (usp nil t :caller)
+    (with-thread ("echo server for read-char-no-hang test"
+		  (lambda () (init-server :unwrap-stream-p usp))
+		  #'test-server)
+      (sb-sys:with-deadline (:seconds 3)
+	(with-open-stream (socket (init-client :unwrap-stream-p usp))
+	  (write-line "test" socket)
+	  (force-output socket)
+	  (assert (equal (read-line socket) "(echo test)"))
+	  (handler-case
+	      (when (read-char-no-hang socket)
+		(error "unexpected data"))
+	    (sb-sys:deadline-timeout ()
+	      (error "read-char-no-hang hangs"))))))))
 
 #+(or)
 (run-all-tests)

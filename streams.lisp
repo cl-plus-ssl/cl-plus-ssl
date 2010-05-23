@@ -83,12 +83,21 @@
 (defmethod stream-listen ((stream ssl-stream))
   (or (ssl-stream-peeked-byte stream)
       (setf (ssl-stream-peeked-byte stream)
-            (let* ((*blockp* nil)
-                   (b (stream-read-byte stream)))
-              (if (eql b :eof) nil b)))))
+	    (let ((buf (ssl-stream-input-buffer stream)))
+	      (with-pointer-to-vector-data (ptr buf)
+		(let* ((*blockp* nil) ;; for the Lisp-BIO
+		       (n (nonblocking-ssl-funcall stream
+						   (ssl-stream-handle stream)
+						   #'ssl-read
+						   (ssl-stream-handle stream)
+						   ptr
+						   1)))
+		  (and (> n 0) (buffer-elt buf 0))))))))
 
 (defmethod stream-read-byte ((stream ssl-stream))
-  (or (ssl-stream-peeked-byte stream)
+  (or (prog1 
+	  (ssl-stream-peeked-byte stream) 
+	(setf (ssl-stream-peeked-byte stream) nil))
       (let ((buf (ssl-stream-input-buffer stream)))
         (handler-case
             (with-pointer-to-vector-data (ptr buf)

@@ -230,6 +230,21 @@
 	   (t
 	    (ssl-signal-error handle func error nbytes)))))))
 
+(declaim (inline nonblocking-ssl-funcall))
+(defun nonblocking-ssl-funcall (stream handle func &rest args)
+  (loop
+     (let ((nbytes
+	    (let ((*socket* stream))	;for Lisp-BIO callbacks
+	      (apply func args))))
+       (when (plusp nbytes)
+	 (return nbytes))
+       (let ((error (ssl-get-error handle nbytes)))
+	 (case error
+	   ((#.+ssl-error-want-read+ #.+ssl-error-want-write+)
+	    (return nbytes))
+	   (t
+	    (ssl-signal-error handle func error nbytes)))))))
+
 
 ;;; Waiting for output to be possible
 
