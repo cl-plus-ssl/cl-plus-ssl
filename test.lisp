@@ -212,6 +212,35 @@
      :close-callback callback
      :external-format :iso-8859-1)))
 
+;; CCL requires specifying the 
+;; deadline at the socket cration (
+;; in constrast to SBCL which has
+;; the WITH-TIMEOUT macro).
+;; 
+;; Therefore a separate INIT-CLIENT
+;; function is needed for CCL when 
+;; we need read/write deadlines on
+;; the SSL client stream.
+#+clozure-common-lisp
+(defun ccl-init-client-with-deadline (&key (unwrap-stream-p t)
+				      seconds)
+  (let* ((deadline
+	  (+ (get-internal-real-time)
+	     (* seconds internal-time-units-per-second)))
+	 (low
+	  (record-socket
+	   (ccl:make-socket
+	    :address-family :internet
+	    :connect :active
+	    :type :stream
+	    :remote-host "127.0.0.1"
+	    :remote-port *port*
+	    :deadline deadline))))
+    (cl+ssl:make-ssl-client-stream
+     low
+     :unwrap-stream-p unwrap-stream-p
+     :external-format :iso-8859-1)))
+
 ;;; Simple echo-server test.  Write a line and check that the result
 ;;; watches, three times in a row.
 (deftest echo
@@ -258,32 +287,19 @@
     (with-thread ("echo server for deadline test"
 		  (lambda () (init-server :unwrap-stream-p usp))
 		  #'test-server)
-      (let* ((deadline
-	      (+ (get-internal-real-time)
-		 (* 3 internal-time-units-per-second)))
-	     (low
-	      (record-socket
-	       (ccl:make-socket
-		:address-family :internet
-		:connect :active
-		:type :stream
-		:remote-host "127.0.0.1"
-		:remote-port *port*
-		:deadline deadline))))
-	(with-open-stream
-	    (socket
-	     (cl+ssl:make-ssl-client-stream
-	      low
-	      :unwrap-stream-p usp
-	      :external-format :iso-8859-1))
-	  (write-line "test" socket)
-	  (force-output socket)
-	  (assert (equal (read-line socket) "(echo test)"))
-	  (handler-case
-	      (progn
-		(read-char socket)
-		(error "unexpected data"))
-	    (ccl::communication-deadline-expired ()))))))
+      (with-open-stream
+	  (socket
+	   (ccl-init-client-with-deadline 
+	    :unwrap-stream-p usp
+	    :seconds 3))
+	(write-line "test" socket)
+	(force-output socket)
+	(assert (equal (read-line socket) "(echo test)"))
+	(handler-case
+	    (progn
+	      (read-char socket)
+	      (error "unexpected data"))
+	  (ccl::communication-deadline-expired ())))))
 
   #+sbcl
   (deftests read-deadline (usp nil t :caller)
@@ -306,41 +322,29 @@
     (with-thread ("echo server for deadline test"
 		  (lambda () (init-server :unwrap-stream-p usp))
 		  #'test-server)
-      (let* ((deadline
-	      (+ (get-internal-real-time)
-		 (* 3 internal-time-units-per-second)))
-	     (low
-	      (record-socket
-	       (ccl:make-socket
-		:address-family :internet
-		:connect :active
-		:type :stream
-		:remote-host "127.0.0.1"
-		:remote-port *port*
-		:deadline deadline)))
-	     (socket
-	      (cl+ssl:make-ssl-client-stream
-	       low
-	       :unwrap-stream-p usp
-	       :external-format :iso-8859-1)))
-	(unwind-protect
-	    (progn
-	      (write-line "test" socket)
-	      (force-output socket)
-	      (assert (equal (read-line socket) "(echo test)"))
-	      (write-line "freeze" socket)
-	      (force-output socket)
-	      (let ((n 0))
-		(handler-case
-		    (loop
-		       (write-line "deadbeef" socket)
-		       (incf n))
-		  (ccl::communication-deadline-expired ()))
-		;; should have written a couple of lines before the deadline:
-		(assert (> n 100))))
-	  (handler-case
-	      (close-socket socket :abort t)
-	    (ccl::communication-deadline-expired ()))))))
+      (with-open-stream 
+	  (socket
+	   (ccl-init-client-with-deadline 
+	    :unwrap-stream-p usp
+	    :seconds 3))
+      (unwind-protect
+	   (progn
+	     (write-line "test" socket)
+	     (force-output socket)
+	     (assert (equal (read-line socket) "(echo test)"))
+	     (write-line "freeze" socket)
+	     (force-output socket)
+	     (let ((n 0))
+	       (handler-case
+		   (loop
+		      (write-line "deadbeef" socket)
+		      (incf n))
+		 (ccl::communication-deadline-expired ()))
+	       ;; should have written a couple of lines before the deadline:
+	       (assert (> n 100))))
+	(handler-case
+	    (close-socket socket :abort t)
+	  (ccl::communication-deadline-expired ()))))))
 
   #+sbcl
   (deftests write-deadline (usp nil t)
@@ -366,6 +370,24 @@
 	  (handler-case
 	      (close-socket socket :abort t)
 	    (sb-sys:deadline-timeout ()))))))
+
+  #+clozure-common-lisp
+  (deftests read-char-no-hang/test (usp nil t :caller)
+    (with-thread ("echo server for read-char-no-hang test"
+		  (lambda () (init-server :unwrap-stream-p usp))
+		  #'test-server)
+      (with-open-stream 
+	  (socket (ccl-init-client-with-deadline 
+		   :unwrap-stream-p usp
+		   :seconds 3))
+	(write-line "test" socket)
+	(force-output socket)
+	(assert (equal (read-line socket) "(echo test)"))
+	(handler-case
+	    (when (read-char-no-hang socket)
+	      (error "unexpected data"))
+	  (ccl::communication-deadline-expired ()
+	    (error "read-char-no-hang hangs"))))))
 
   #+sbcl
   (deftests read-char-no-hang/test (usp nil t :caller)
