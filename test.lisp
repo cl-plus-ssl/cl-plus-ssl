@@ -283,7 +283,7 @@
 	(assert (equal (read-line socket) "(echo test)")))))
 
   #+clozure-common-lisp
-  (deftests read-deadline (usp nil t)
+  (deftests read-deadline (usp nil t :caller)
     (with-thread ("echo server for deadline test"
 		  (lambda () (init-server :unwrap-stream-p usp))
 		  #'test-server)
