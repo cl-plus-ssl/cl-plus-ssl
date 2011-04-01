@@ -205,6 +205,14 @@
   (ctx ssl-ctx)
   (pem_passwd_cb :pointer))
 
+(cffi:defcfun ("CRYPTO_num_locks" crypto-num-locks) :int)
+(cffi:defcfun ("CRYPTO_set_locking_callback" crypto-set-locking-callback)
+    :void
+  (fun :pointer))
+(cffi:defcfun ("CRYPTO_set_id_callback" crypto-set-id-callback)
+    :void
+  (fun :pointer))
+
 ;;; Funcall wrapper
 ;;;
 (defvar *socket*)
@@ -369,7 +377,54 @@ will use this value.")
 (defun ssl-ctx-set-session-cache-mode (ctx mode)
   (ssl-ctx-ctrl ctx +SSL_CTRL_SET_SESS_CACHE_MODE+ mode 0))
 
+(defvar *locks*)
+(defconstant +CRYPTO-LOCK+ 1)
+(defconstant +CRYPTO-UNLOCK+ 2)
+(defconstant +CRYPTO-READ+ 4)
+(defconstant +CRYPTO-WRITE+ 8)
+
+;; zzz as of early 2011, bxthreads is totally broken on SBCL wrt. explicit
+;; locking of recursive locks.  with-recursive-lock works, but acquire/release
+;; don't.  Hence we use non-recursize locks here (but can use a recursive
+;; lock for the global lock).
+
+(cffi:defcallback locking-callback :void
+    ((mode :int)
+     (n :int)
+     (file :string)
+     (line :int))
+  (declare (ignore file line))
+  ;; (assert (logtest mode (logior +CRYPTO-READ+ +CRYPTO-WRITE+)))
+  (let ((lock (elt *locks* n)))
+    (cond
+      ((logtest mode +CRYPTO-LOCK+)
+       (bt:acquire-lock lock))
+      ((logtest mode +CRYPTO-UNLOCK+)
+       (bt:release-lock lock))
+      (t
+       (error "fell through")))))
+
+(defvar *threads* (trivial-garbage:make-weak-hash-table :weakness :key))
+(defvar *thread-counter* 0)
+
+(defparameter *global-lock*
+  (bordeaux-threads:make-recursive-lock "SSL initialization"))
+
+;; zzz BUG: On a 32-bit system and under non-trivial load, this counter
+;; is likely to wrap in less than a year.
+(cffi:defcallback threadid-callback :unsigned-long ()
+  (bordeaux-threads:with-recursive-lock-held (*global-lock*)
+    (let ((self (bt:current-thread)))
+      (or (gethash self *threads*)
+	  (setf (gethash self *threads*)
+		(incf *thread-counter*))))))
+
 (defun initialize (&key (method 'ssl-v23-method) rand-seed)
+  (setf *locks* (loop
+		   repeat (crypto-num-locks)
+		   collect (bt:make-lock)))
+  (crypto-set-locking-callback (cffi:callback locking-callback))
+  (crypto-set-id-callback (cffi:callback threadid-callback))
   (setf *bio-lisp-method* (make-bio-lisp-method))
   (ssl-load-error-strings)
   (ssl-library-init)
@@ -398,10 +453,11 @@ See ttp://www.openssl.org/support/faq.html#USER1 for details.
 
 Hint: do not use Common Lisp RANDOM function to generate the RAND-SEED, 
 because the function usually returns predictable values."
-  (unless (ssl-initialized-p)
-    (initialize :method method :rand-seed rand-seed))
-  (unless *bio-lisp-method*
-    (setf *bio-lisp-method* (make-bio-lisp-method))))
+  (bordeaux-threads:with-recursive-lock-held (*global-lock*)
+    (unless (ssl-initialized-p)
+      (initialize :method method :rand-seed rand-seed))
+    (unless *bio-lisp-method*
+      (setf *bio-lisp-method* (make-bio-lisp-method)))))
 
 (defun use-certificate-chain-file (certificate-chain-file)
   "Loads a PEM encoded certificate chain file CERTIFICATE-CHAIN-FILE
