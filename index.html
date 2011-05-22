@@ -32,20 +32,13 @@
 
     <h3>Download</h3>
     <p>
-      Anonymous CVS (<a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/?cvsroot=cl-plus-ssl">browse</a>, 
-                     <a href="http://common-lisp.net/cgi-bin/viewcvs.cgi/cl%2Bssl.tar.gz?root=cl-plus-ssl&view=tar">download snapshot</a>):
-    </p>
-    <pre>$ cvs -z3 -d :pserver:anonymous:anonymous@common-lisp.net:/project/cl-plus-ssl/cvsroot co cl+ssl</pre>
-    <p>
-      <a
-      href="http://common-lisp.net/project/cl-plus-ssl/download/">Release tarballs</a>
-      are also available, but not always up-to-date.
-    </p>
-    <p>
-      Note that you need the <tt>libssl-dev</tt> package on Debian to
-      load this package without manual configuration.
+      The library is available via <a href="http://www.quicklisp.org/">Quicklisp</a>.
     </p>
 
+    <p>
+      The Git repository: <a href="https://gitorious.org/cl-plus-ssl/cl-plus-ssl">https://gitorious.org/cl-plus-ssl/cl-plus-ssl</a>.
+                      (<a href="https://gitorious.org/cl-plus-ssl/cl-plus-ssl/archive-tarball/master">download snapshot</a>).
+    </p>
     <p>
       Send bug reports to <a
       href="mailto:cl-plus-ssl-devel@common-lisp.net">cl-plus-ssl-devel@common-lisp.net</a>
@@ -53,6 +46,19 @@
       href="http://common-lisp.net/cgi-bin/mailman/listinfo/cl-plus-ssl-devel">list
       information</a>).
     </p>
+
+    <p>
+      <i>Note</i> that you need the <tt>libssl-dev</tt> package on Debian to
+      load this package without manual configuration.
+    </p>
+
+    <p>
+      OpenSSL binaries for Windows may be found at 
+      <a href="http://www.slproweb.com/products/Win32OpenSSL.html">http://www.slproweb.com/products/Win32OpenSSL.html</a>
+      (slproweb.com is a 3rd party; if you have questions about the OpenSSL installer they provide, 
+      please ask in the mailing list specified on the linked page).
+    </p>
+
 
 <!--
     <p>
@@ -184,6 +190,14 @@
       function can be passed to <tt>make-ssl-client-stream</tt>
       and <tt>make-ssl-server-stream</tt>.
     </p>
+    <p>
+      <div class="def">Function CL+SSL:RANDOM-BYTES (count)</div>
+      Generates <tt>count</tt> cryptographically strong pseudo-random bytes. Returns
+      the bytes as a <tt>simple-array</tt> with <tt>element-type '(unsigned-byte 8)</tt>. 
+      Signals an <tt>error</tt> in case of problems, for example when the OpenSSL 
+      random number generator has not been seeded with enough randomness to ensure 
+      an unpredictable byte sequence.
+    </p>
 
     <h3>Portability</h3>
     <p>
@@ -227,6 +241,22 @@
     </ul>
 
     <h3>News</h3>
+    <p>
+      2011-05-22
+    </p>
+    <ul>
+      <li>
+        Added new public function RANDOM-BYTES.
+      </li>
+    </ul>
+    <p>
+      2011-05-22
+    </p>
+    <ul>
+      <li>
+        The source code repository is moved to Git.
+      </li>
+    </ul>
     <p>
       2011-03-25
     </p>
