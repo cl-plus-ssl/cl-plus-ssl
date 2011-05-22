@@ -1,0 +1,13 @@
+- Fix the CCL crash.
+- Remove the ENSURE-INITIALIZED function from the public API. 
+  It was only intoroduced to provide users access to the RAND-SEEND
+  which we decided to pass as a parameter to the ENSURE-INITIALIZED. 
+  We did this because solaris users complained, as Solaris doesn't 
+  have /dev/random, /dev/urnandom files which OpenSSL uses to initialize 
+  it's random number generator. But now we know that on Solaris people can
+  use EGD: The Entropy Gathering Daemon: http://egd.sourceforge.net/,
+  and OpenSSL uses it if it's running on a systems without /dev/random.
+  Therefore we should get rid of the ENSURE-INITIALIZED and just
+  put an excerpt from the OpenSSL docs about what software should
+  be installed on the systems without /dev/random.
+- Fix LispBIO.
