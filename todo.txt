@@ -1,4 +1,5 @@
 - Fix the CCL crash.
+- Separate project page and a Git repo for trivial-gray-streams.
 - Remove the ENSURE-INITIALIZED function from the public API. 
   It was only intoroduced to provide users access to the RAND-SEEND
   which we decided to pass as a parameter to the ENSURE-INITIALIZED. 
