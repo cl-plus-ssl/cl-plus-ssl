@@ -15,4 +15,5 @@
            #:stream-fd
            #:make-ssl-client-stream
            #:make-ssl-server-stream
-           #:use-certificate-chain-file))
+           #:use-certificate-chain-file
+           #:random-bytes))

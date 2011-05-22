@@ -25,4 +25,5 @@
     #-clisp (:file "ffi-buffer")
     #+clisp (:file "ffi-buffer-clisp")
     (:file "streams")
-    (:file "bio")))
+    (:file "bio")
+    (:file "random")))

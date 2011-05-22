@@ -9,7 +9,8 @@
 (module
  (:depends-on ("package" "conditions" "ffi"
                          (:cond ((:featurep :clisp) "ffi-buffer-clisp")
-                                (t "ffi-buffer")))))
+                                (t "ffi-buffer"))
+                         "ffi-buffer-all")))
 
 (eval-when (:compile-toplevel)
   (declaim

@@ -131,10 +131,6 @@
 (cffi:defcfun ("SSL_CTX_free" ssl-ctx-free)
     :void
   (ctx ssl-ctx))
-(cffi:defcfun ("RAND_seed" rand-seed)
-    :void
-  (buf :pointer)
-  (num :int))
 (cffi:defcfun ("BIO_ctrl" bio-set-fd)
     :long
   (bio :pointer)
@@ -212,6 +208,15 @@
 (cffi:defcfun ("CRYPTO_set_id_callback" crypto-set-id-callback)
     :void
   (fun :pointer))
+
+(cffi:defcfun ("RAND_seed" rand-seed)
+    :void
+  (buf :pointer)
+  (num :int))
+(cffi:defcfun ("RAND_bytes" rand-bytes)
+    :int
+  (buf :pointer)
+  (num :int))
 
 ;;; Funcall wrapper
 ;;;

@@ -19,7 +19,8 @@
 	       (:cond ((:featurep :clisp) "ffi-buffer-clisp")
                       ((:featurep (:not :clisp)) "ffi-buffer"))
 	       "streams"
-	       "bio")
+	       "bio"
+	       "random")
   :build-depends-on ("flexi-streams" "trivial-gray-streams" "cffi")
   :supersedes-asdf ("cl+ssl")))
 
