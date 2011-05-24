@@ -72,7 +72,7 @@
      (setf (ssl-stream-handle stream) nil)
      (when (streamp (ssl-stream-socket stream))
        (close (ssl-stream-socket stream)))
-     (when (functionp (ssl-close-callback stream))
+     (when (ssl-close-callback stream)
        (funcall (ssl-close-callback stream)))
      t)
     (t
