@@ -23,6 +23,9 @@
 - Fix LispBIO.
 - Extract the low-level SSL code into a separate library that supports
   both OpenSSL and GnuTLS (maybe into two thin FFI libraries).
-- Implement SSL in iolib adding an API system that only defines stubs that
+- Implement SSL in IOLib adding an API system that only defines stubs that
   signal an error, and adding implementation systems using the before
-  mentioned thin FFI wrapper libraries.
+  mentioned thin FFI wrapper libraries. IOLib doesn't support windows,
+  therefore with this plan we will either need to drop Windows support
+  (at tleast for the IOLib based asynch subset of features), or
+  implement Windows support in IOLib.
