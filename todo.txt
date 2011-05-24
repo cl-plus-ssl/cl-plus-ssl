@@ -12,3 +12,8 @@
   put an excerpt from the OpenSSL docs about what software should
   be installed on the systems without /dev/random.
 - Fix LispBIO.
+- Extract the low-level SSL code into a separate library that supports
+  both OpenSSL and GnuTLS (maybe into two thin FFI libraries).
+- Implement SSL in iolib adding an API system that only defines stubs that
+  signal an error, and adding implementation systems using the before
+  mentioned thin FFI wrapper libraries.
