@@ -19,7 +19,7 @@ unpredictable byte sequence."
                 (rand-bytes ptr count))))
     (when (/= 1 ret)
       (error "RANDOM-BYTES failed: error reported by the OpenSSL RAND_bytes function. ~A."
-             (with-output-to-string (s) (write-ssl-error-queue s))))
+             (format-ssl-error-queue nil (read-ssl-error-queue))))
     (v/b-replace result buf)))
 
 ;; TODO: Should we define random-specific constants and condition classes for 

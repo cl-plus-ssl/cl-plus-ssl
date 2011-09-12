@@ -22,13 +22,42 @@
 ;;; Condition hierarchy
 ;;;
 
-(defun write-queued-errors (condition stream)
-  (let ((queue (ssl-error-queue condition)))
-    (when queue
-      (write-sequence queue stream))))
+(defun read-ssl-error-queue ()
+  (loop
+    :for error-code = (err-get-error)
+    :until (zerop error-code)
+    :collect error-code))
+
+(defun format-ssl-error-queue (stream-designator queue-designator)
+  "STREAM-DESIGNATOR is the same as CL:FORMAT accepts: T, NIL, or a stream.
+QUEUE-DESIGNATOR is either a list of error codes (as returned
+by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
+  (flet ((body (stream)
+           (let ((queue (etypecase queue-designator
+                          (ssl-error (ssl-error-queue queue-designator))
+                          (list queue-designator))))
+             (format stream "SSL error queue")
+             (if queue
+                 (progn
+                   (format stream ":~%")
+                   (loop
+                     :for error-code :in queue
+                     :do (format stream "~a~%" (err-error-string error-code (cffi:null-pointer)))))
+                 (format stream " is empty.")))))
+    (case stream-designator
+      ((t) (body *standard-output*))
+      ((nil) (let ((s (make-string-output-stream :element-type 'character)))
+               (unwind-protect
+                    (body s)
+                 (close s))
+               (get-output-stream-string s)))
+      (otherwise (body stream-designator)))))
 
 (define-condition ssl-error (error)
-  ((queue :initform nil :initarg :queue :reader ssl-error-queue)))
+  (
+   ;; Stores list of error codes
+   ;; (as returned by the READ-SSL-ERROR-QUEUE function)
+   (queue :initform nil :initarg :queue :reader ssl-error-queue)))
 
 (define-condition ssl-error/handle (ssl-error)
   ((ret :initarg :ret
@@ -39,7 +68,7 @@
              (format stream "Unspecified error ~A on handle ~A" 
                      (ssl-error-ret condition)
                      (ssl-error-handle condition))
-	     (write-sequence (ssl-error-queue condition) stream))))
+	     (format-ssl-error-queue stream condition))))
 
 (define-condition ssl-error-initialize (ssl-error)
   ((reason  :initarg :reason
@@ -47,7 +76,7 @@
   (:report (lambda (condition stream)
              (format stream "SSL initialization error: ~A"
                      (ssl-error-reason condition))
-	     (write-queued-errors condition stream))))
+	     (format-ssl-error-queue stream condition))))
 
 
 (define-condition ssl-error-want-something (ssl-error/handle)
@@ -63,7 +92,7 @@
              (format stream "The TLS/SSL operation on handle ~A completed. (return code:  ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	     (write-queued-errors condition stream))))
+	     (format-ssl-error-queue stream condition))))
 
 ;; SSL_ERROR_ZERO_RETURN
 (define-condition ssl-error-zero-return (ssl-error/handle)
@@ -79,7 +108,7 @@
              (format stream "The TLS/SSL connection on handle ~A has been closed. (return code:  ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	     (write-queued-errors condition stream))))
+	     (format-ssl-error-queue stream condition))))
 
 ;; SSL_ERROR_WANT_READ
 (define-condition ssl-error-want-read (ssl-error-want-something)
@@ -98,7 +127,7 @@
              (format stream "The TLS/SSL operation on handle ~A did not complete: It wants a READ. (return code:  ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	     (write-queued-errors condition stream))))
+	     (format-ssl-error-queue stream condition))))
 
 ;; SSL_ERROR_WANT_WRITE
 (define-condition ssl-error-want-write (ssl-error-want-something)
@@ -117,7 +146,7 @@
              (format stream "The TLS/SSL operation on handle ~A did not complete: It wants a WRITE. (return code:  ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	     (write-queued-errors condition stream))))
+	     (format-ssl-error-queue stream condition))))
 
 ;; SSL_ERROR_WANT_CONNECT
 (define-condition ssl-error-want-connect (ssl-error-want-something)
@@ -136,7 +165,7 @@
             (format stream "The TLS/SSL operation on handle ~A did not complete: It wants a connect first. (return code:  ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	    (write-queued-errors condition stream))))
+	    (format-ssl-error-queue stream condition))))
 
 ;; SSL_ERROR_WANT_X509_LOOKUP
 (define-condition ssl-error-want-x509-lookup (ssl-error-want-something)
@@ -150,7 +179,7 @@
              (format stream "The TLS/SSL operation on handle ~A did not complete: An application callback wants to be called again. (return code:  ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	     (write-queued-errors condition stream))))
+	     (format-ssl-error-queue stream condition))))
 
 ;; SSL_ERROR_SYSCALL
 (define-condition ssl-error-syscall (ssl-error/handle)
@@ -162,7 +191,7 @@
     violates the protocol. If ret == -1, the underlying BIO reported an I/O error (for socket
     I/O on Unix systems, consult errno for details).")
   (:report (lambda (condition stream)
-             (if (zerop (err-get-error))
+             (if (zerop (length (ssl-error-queue condition)))
                  (case (ssl-error-ret condition)
                    (0 (format stream "An I/O error occurred: An unexpected EOF was observed on handle ~A. (return code:  ~A)"
                               (ssl-error-handle condition)
@@ -173,7 +202,7 @@
                                       (ssl-error-ret condition))))
                  (format stream "An UNKNOWN I/O error occurred in the underlying BIO. (return code:  ~A)"
                          (ssl-error-ret condition)))
-	     (write-queued-errors condition stream))))
+	     (format-ssl-error-queue stream condition))))
 
 ;; SSL_ERROR_SSL
 (define-condition ssl-error-ssl (ssl-error/handle)
@@ -186,17 +215,10 @@
 		     "A failure in the SSL library occurred on handle ~A. (Return code: ~A)"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-	     (write-queued-errors condition stream))))
-
-(defun write-ssl-error-queue (stream)
-  (format stream "SSL error queue: ~%")
-  (loop
-      for error-code = (err-get-error)
-      until (zerop error-code)
-      do (format stream "~a~%" (err-error-string error-code (cffi:null-pointer)))))
+	     (format-ssl-error-queue stream condition))))
 
 (defun ssl-signal-error (handle syscall error-code original-error)
-  (let ((queue (with-output-to-string (s) (write-ssl-error-queue s))))
+  (let ((queue (read-ssl-error-queue)))
     (if (and (eql error-code #.+ssl-error-syscall+)
 	     (not (zerop original-error)))
 	(error 'ssl-error-syscall
@@ -212,7 +234,7 @@
 	       (#.+ssl-error-want-x509-lookup+ 'ssl-error-want-x509-lookup)
 	       (#.+ssl-error-zero-return+ 'ssl-error-zero-return)
 	       (#.+ssl-error-want-connect+ 'ssl-error-want-connect)
-	       (#.+ssl-error-syscall+ 'ssl-error-zero-return)
+	       (#.+ssl-error-syscall+ 'ssl-error-zero-return) ; this is intentional here. we got an EOF from the syscall (ret is 0)
 	       (t 'ssl-error/handle))
 	     :handle handle
 	     :ret error-code
