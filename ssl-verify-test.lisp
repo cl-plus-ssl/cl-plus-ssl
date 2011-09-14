@@ -115,8 +115,8 @@ T6MVYory7prWbBaGPKsGw0VgrV9OGbxhbw9EOEYSOgdejvbi9VhgMvEpDYFN7Hnq
 (defun test-loom-client (&optional show-text-p)
   (test-https-client-2 "secure.loom.cc" :show-text-p show-text-p))
 
-(defun test-google-client (&optional show-text-p)
-  (test-https-client-2 "encrypted.google.com" :show-text-p show-text-p))
+(defun test-yahoo-client (&optional show-text-p)
+  (test-https-client-2 "yahoo.com" :show-text-p show-text-p))
 
 (defmacro expecting-no-errors (&body body)
   `(handler-case
@@ -135,17 +135,29 @@ T6MVYory7prWbBaGPKsGw0VgrV9OGbxhbw9EOEYSOgdejvbi9VhgMvEpDYFN7Hnq
      (unless got-error-p
        (error "Did not get expected error."))))
 
-(defun test-verify ()
-  (expecting-no-errors
-    (reload)
-    (test-loom-client)
-    (test-google-client)
-    (setf (ssl-check-verify-p) t))
-  (expecting-no-errors
-    (test-google-client))
-  (expecting-error (ssl-error-verify)
-    (test-loom-client))
-  (install-rayservers-ca-certificate)
-  (expecting-no-errors
-    (test-loom-client)))
-    
+(defun test-verify (&optional quietly)
+  (let ((*standard-output*
+         ;; test-https-client-2 prints the certificate names
+         (if quietly (make-broadcast-stream) *standard-output*)))
+    (expecting-no-errors
+      (reload)
+      (test-loom-client)
+      (test-yahoo-client)
+      (setf (ssl-check-verify-p) t))
+    ;; The Mac appears to have no way to get rid of the default CA certificates
+    ;; #+darwin-host is only true in Clozure Common Lisp running on a Mac,
+    ;; So this test will fail in SBCL on a Mac
+    #-darwin-host
+    (expecting-error (ssl-error-verify)
+      (test-yahoo-client))
+    #+darwin-host
+    (expecting-no-errors
+      (test-yahoo-client))
+    (expecting-error (ssl-error-verify)
+      (test-loom-client))
+    (expecting-no-errors
+      (install-rayservers-ca-certificate)
+      (test-loom-client))
+    (expecting-no-errors
+      (ssl-set-global-default-verify-paths)
+      (test-yahoo-client))))

@@ -245,18 +245,9 @@
     :pointer                            ; *X509_NAME
   (x509 :pointer))
 
-(cffi:defcfun ("SSL_CTX_get_cert_store" ssl-ctx-get-cert-store)
-    :pointer
-  (ctx :pointer))
-(cffi:defcfun ("SSL_CTX_set_cert_store" ssl-ctx-set-cert-store)
-    :void
-  (ctx :pointer)
-  (x509-store :pointer))
-(cffi:defcfun ("X509_STORE_new" x509-store-new)
-    :pointer)
-(cffi:defcfun("X509_STORE_set_default_paths" x509-store-set-default-paths)
+(cffi:defcfun ("SSL_CTX_set_default_verify_paths" ssl-ctx-set-default-verify-paths)
     :int
-  (x509-store :pointer))
+  (ctx :pointer))
 
 ;;; Funcall wrapper
 ;;;

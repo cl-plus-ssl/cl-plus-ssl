@@ -258,6 +258,7 @@
   "PATHNAMES is a list of pathnames to PEM files containing server and CA certificates.
 Install these certificates to use for verifying on all SSL connections.
 After RELOAD, you need to call this again."
+  (ensure-initialized)
   (dolist (path pathnames)
     (let ((namestring (namestring (truename path))))
       (cffi:with-foreign-strings ((cafile namestring))
@@ -266,6 +267,13 @@ After RELOAD, you need to call this again."
                         cafile
                         (cffi:null-pointer)))
           (error "ssl-ctx-load-verify-locations failed."))))))
+
+(defun ssl-set-global-default-verify-paths ()
+  "Load the system default verification certificates.
+After RELOAD, you need to call this again."
+  (ensure-initialized)
+  (unless (eql 1 (ssl-ctx-set-default-verify-paths *ssl-global-context*))
+    (error "ssl-ctx-set-default-verify-paths failed.")))
 
 (defun ssl-check-verify-p ()
   "Return true if SSL connections will error if the certificate doesn't verify."

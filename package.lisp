@@ -19,6 +19,7 @@
            #:random-bytes
            #:ssl-check-verify-p
            #:ssl-load-global-verify-locations
+           #:ssl-set-global-default-verify-paths
            #:ssl-error-verify
            #:ssl-error-stream
            #:ssl-error-code))
