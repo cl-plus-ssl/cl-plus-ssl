@@ -218,6 +218,46 @@
   (buf :pointer)
   (num :int))
 
+(cffi:defcfun ("SSL_CTX_set_verify_depth" ssl-ctx-set-verify-depth)
+    :void
+  (ctx :pointer)
+  (depth :int))
+
+(cffi:defcfun ("SSL_get_verify_result" ssl-get-verify-result)
+    :long
+  (ssl ssl-pointer))
+
+(cffi:defcfun ("SSL_get_peer_certificate" ssl-get-peer-certificate)
+    :pointer
+  (ssl ssl-pointer))
+
+(cffi:defcfun ("X509_NAME_oneline" x509-name-oneline)
+    :pointer
+  (x509-name :pointer)
+  (buf :pointer)
+  (size :int))
+
+(cffi:defcfun ("X509_get_issuer_name" x509-get-issuer-name)
+    :pointer                            ; *X509_NAME
+  (x509 :pointer))
+
+(cffi:defcfun ("X509_get_subject_name" x509-get-subject-name)
+    :pointer                            ; *X509_NAME
+  (x509 :pointer))
+
+(cffi:defcfun ("SSL_CTX_get_cert_store" ssl-ctx-get-cert-store)
+    :pointer
+  (ctx :pointer))
+(cffi:defcfun ("SSL_CTX_set_cert_store" ssl-ctx-set-cert-store)
+    :void
+  (ctx :pointer)
+  (x509-store :pointer))
+(cffi:defcfun ("X509_STORE_new" x509-store-new)
+    :pointer)
+(cffi:defcfun("X509_STORE_set_default_paths" x509-store-set-default-paths)
+    :int
+  (x509-store :pointer))
+
 ;;; Funcall wrapper
 ;;;
 (defvar *socket*)
@@ -351,6 +391,7 @@ will use this value.")
 ;; The callback itself
 (cffi:defcallback pem-password-callback :int
     ((buf :pointer) (size :int) (rwflag :int) (unused :pointer))
+  (declare (ignore rwflag unused))
   (let* ((password-str (coerce *pem-password* 'base-string))
          (tmp (cffi:foreign-string-alloc password-str)))
     (cffi:foreign-funcall "strncpy"
@@ -424,6 +465,8 @@ will use this value.")
 	  (setf (gethash self *threads*)
 		(incf *thread-counter*))))))
 
+(defvar *ssl-check-verify-p* :unspecified)
+
 (defun initialize (&key (method 'ssl-v23-method) rand-seed)
   (setf *locks* (loop
 		   repeat (crypto-num-locks)
@@ -435,6 +478,7 @@ will use this value.")
   (ssl-library-init)
   (when rand-seed
     (init-prng rand-seed))
+  (setf *ssl-check-verify-p* :unspecified)
   (setf *ssl-global-method* (funcall method))
   (setf *ssl-global-context* (ssl-ctx-new *ssl-global-method*))
   (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)

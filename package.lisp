@@ -16,4 +16,9 @@
            #:make-ssl-client-stream
            #:make-ssl-server-stream
            #:use-certificate-chain-file
-           #:random-bytes))
+           #:random-bytes
+           #:ssl-check-verify-p
+           #:ssl-load-global-verify-locations
+           #:ssl-error-verify
+           #:ssl-error-stream
+           #:ssl-error-code))

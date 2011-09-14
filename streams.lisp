@@ -235,6 +235,66 @@
       (error 'ssl-error-initialize
 	     :reason (format nil "Can't load certificate ~A" certificate)))))
 
+(defun x509-certificate-names (x509-certificate)
+  (unless (cffi:null-pointer-p x509-certificate)
+    (cffi:with-foreign-pointer (buf 1024)
+      (let ((issuer-name (x509-get-issuer-name x509-certificate))
+            (subject-name (x509-get-subject-name x509-certificate)))
+        (values
+         (unless (cffi:null-pointer-p issuer-name)
+           (x509-name-oneline issuer-name buf 1024)
+           (cffi:foreign-string-to-lisp buf))
+         (unless (cffi:null-pointer-p subject-name)
+           (x509-name-oneline subject-name buf 1024)
+           (cffi:foreign-string-to-lisp buf)))))))
+
+(defmethod ssl-stream-handle ((stream flexi-streams:flexi-stream))
+  (ssl-stream-handle (flexi-streams:flexi-stream-stream stream)))
+
+(defun ssl-stream-x509-certificate (ssl-stream)
+  (ssl-get-peer-certificate (ssl-stream-handle ssl-stream)))
+
+(defun ssl-load-global-verify-locations (&rest pathnames)
+  "PATHNAMES is a list of pathnames to PEM files containing server and CA certificates.
+Install these certificates to use for verifying on all SSL connections.
+After RELOAD, you need to call this again."
+  (dolist (path pathnames)
+    (let ((namestring (namestring (truename path))))
+      (cffi:with-foreign-strings ((cafile namestring))
+        (unless (eql 1 (ssl-ctx-load-verify-locations
+                        *ssl-global-context*
+                        cafile
+                        (cffi:null-pointer)))
+          (error "ssl-ctx-load-verify-locations failed."))))))
+
+(defun ssl-check-verify-p ()
+  "Return true if SSL connections will error if the certificate doesn't verify."
+  (and *ssl-check-verify-p* (not (eq *ssl-check-verify-p* :unspecified))))
+
+(defun (setf ssl-check-verify-p) (check-verify-p)
+  "If CHECK-VERIFY-P is true, signal connection errors if the server certificate doesn't verify."
+  (setf *ssl-check-verify-p* (not (null check-verify-p))))
+
+(defun ssl-verify-init (&key
+                        (verify-depth nil)
+                        (verify-locations nil))
+  (check-type verify-depth (or null integer))
+  (ensure-initialized)
+  (when verify-depth
+    (ssl-ctx-set-verify-depth *ssl-global-context* verify-depth))
+  (when verify-locations
+    (apply #'ssl-load-global-verify-locations verify-locations)
+    ;; This makes (setf (ssl-check-verify) nil) persistent
+    (unless (null *ssl-check-verify-p*)
+      (setf (ssl-check-verify-p) t))
+    t))
+
+(defun ssl-stream-check-verify (ssl-stream)
+  (let* ((handle (ssl-stream-handle ssl-stream))
+         (err (ssl-get-verify-result handle)))
+    (unless (eql err 0)
+      (error 'ssl-error-verify :stream ssl-stream :error-code err))))
+
 (defun handle-external-format (stream ef)
   (if ef
       (flexi-streams:make-flexi-stream stream :external-format ef)
@@ -258,6 +318,8 @@ may be associated with the passphrase PASSWORD."
     (with-pem-password (password)
       (install-key-and-cert handle key certificate))
     (ensure-ssl-funcall stream handle #'ssl-connect handle)
+    (when (ssl-check-verify-p)
+      (ssl-stream-check-verify stream))
     (handle-external-format stream external-format)))
 
 ;; fixme: free the context when errors happen in this function
