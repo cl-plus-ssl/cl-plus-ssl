@@ -24,9 +24,12 @@
   (let* ((ssl (ssl-stream-handle ssl-stream))
          (cert (ssl-get-peer-certificate ssl)))
     (unless (cffi:null-pointer-p cert)
-      (multiple-value-bind (issuer subject)
-          (x509-certificate-names cert)
-        (format output-stream "  issuer: ~a~%  subject: ~a~%" issuer subject)))))
+      (unwind-protect
+           (multiple-value-bind (issuer subject)
+               (x509-certificate-names cert)
+             (format output-stream
+                     "  issuer: ~a~%  subject: ~a~%" issuer subject))
+        (x509-free cert)))))
 
 ;; from cl+ssl/example.lisp
 (defun test-https-client-2 (host &key (port 443) show-text-p)
