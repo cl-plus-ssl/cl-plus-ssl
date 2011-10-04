@@ -284,12 +284,12 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
 (define-condition ssl-error-verify (ssl-error)
   ((stream :initarg :stream
            :reader ssl-error-stream
-           :documentation "The SSL stream whose server certificate didn't verify.")
+           :documentation "The SSL stream whose peer certificate didn't verify.")
    (error-code :initarg :error-code
                :reader ssl-error-code
-               :documentation "The server certificate verification error code."))
+               :documentation "The peer certificate verification error code."))
   (:report (lambda (condition stream)
              (let ((code (ssl-error-code condition)))
                (format stream "SSL verify error: ~d~@[ ~a~]"
                        code (ssl-verify-error-keyword code)))))
-  (:documentation "This condition is signalled on SSL connection when a server certificate doesn't verify."))
+  (:documentation "This condition is signalled on SSL connection when a peer certificate doesn't verify."))
