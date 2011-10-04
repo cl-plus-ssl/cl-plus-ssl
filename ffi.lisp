@@ -231,6 +231,10 @@
     :pointer
   (ssl ssl-pointer))
 
+(cffi:defcfun ("X509_free" x509-free)
+    :void
+  (x509 :pointer))
+
 (cffi:defcfun ("X509_NAME_oneline" x509-name-oneline)
     :pointer
   (x509-name :pointer)
