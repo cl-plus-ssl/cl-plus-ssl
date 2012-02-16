@@ -380,4 +380,4 @@ may be associated with the passphrase PASSWORD."
 #+clisp
 (defmethod stream-fd ((stream stream))
   ;; sockets appear to be direct instances of STREAM
-  (ignore-errors (socket:stream-handles stream)))
+  (ext:stream-handles stream))
