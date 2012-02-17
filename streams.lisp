@@ -196,10 +196,14 @@
 		  (logior (sb-posix:fcntl fd sb-posix::f-getfl)
 			  sb-posix::o-nonblock)))
 
-#-(or (and clozure-common-lisp (not windows)) (and sbcl (not win32)))
+#-(or (and clozure-common-lisp (not windows)) sbcl)
 (defun install-nonblock-flag (fd)
   (declare (ignore fd)))
 
+#+(and sbcl win32)
+(defun install-nonblock-flag (fd)
+  (when (boundp 'sockint::fionbio)
+    (sockint::ioctl fd sockint::fionbio 1)))
 
 ;;; interface functions
 ;;;
