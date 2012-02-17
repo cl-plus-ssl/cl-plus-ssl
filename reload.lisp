@@ -21,7 +21,7 @@
   (:windows "libssl32.dll")
   (:darwin "libssl.dylib")
   (:openbsd (:or "libssl3.so" "libssl.so.16.0" "libssl.so.15.1"))
-  (:unix (:or "libssl.so.0.9.8" "libssl.so" "libssl.so.4"))
+  (:unix (:or "libssl.so.1.0.0" "libssl.so.0.9.8" "libssl.so" "libssl.so.4"))
   (t (:default "libssl3")))
 
 (cffi:use-foreign-library libssl)
