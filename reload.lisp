@@ -17,10 +17,21 @@
 
 (in-package :cl+ssl)
 
+;; OpenBSD needs to load libcrypto before libssl
+#+openbsd
+(progn
+  (cffi:define-foreign-library libcrypto
+    (:openbsd (:or "libcrypto.so.20.1"
+                   "libcrypto.so.19.0"
+                   "libcrypto.so.18.0")))
+  (cffi:use-foreign-library libcrypto))
+
 (cffi:define-foreign-library libssl
   (:windows "libssl32.dll")
   (:darwin "libssl.dylib")
   (:openbsd (:or "libssl3.so" "libssl.so.16.0" "libssl.so.15.1"))
+  (:openbsd (:or "libssl.so.18.0" "libssl.so.17.1"
+                 "libssl.so.16.0" "libssl.so.15.1"))
   (:solaris (:or "/lib/64/libssl.so"
                  "libssl.so.0.9.8" "libssl.so" "libssl.so.4"))
   (:unix (:or "libssl.so.1.0.0" "libssl.so.0.9.8" "libssl.so" "libssl.so.4"))
