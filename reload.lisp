@@ -29,7 +29,6 @@
 (cffi:define-foreign-library libssl
   (:windows "libssl32.dll")
   (:darwin "libssl.dylib")
-  (:openbsd (:or "libssl3.so" "libssl.so.16.0" "libssl.so.15.1"))
   (:openbsd (:or "libssl.so.18.0" "libssl.so.17.1"
                  "libssl.so.16.0" "libssl.so.15.1"))
   (:solaris (:or "/lib/64/libssl.so"
