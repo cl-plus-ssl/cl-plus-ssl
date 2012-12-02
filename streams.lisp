@@ -385,3 +385,7 @@ may be associated with the passphrase PASSWORD."
 (defmethod stream-fd ((stream stream))
   ;; sockets appear to be direct instances of STREAM
   (ext:stream-handles stream))
+
+#+ecl
+(defmethod stream-fd ((stream two-way-stream))
+  (si:file-stream-fd (two-way-stream-input-stream stream)))
