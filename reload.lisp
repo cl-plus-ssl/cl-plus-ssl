@@ -35,7 +35,10 @@
                  "libssl.so.16.0" "libssl.so.15.1"))
   (:solaris (:or "/lib/64/libssl.so"
                  "libssl.so.0.9.8" "libssl.so" "libssl.so.4"))
-  (:unix (:or "libssl.so.1.0.0" "libssl.so.0.9.8" "libssl.so" "libssl.so.4"))
+  ((and :unix (not :cygwin)) (:or "libssl.so.1.0.0"
+                                  "libssl.so.0.9.8"
+                                  "libssl.so"
+                                  "libssl.so.4"))
   (:cygwin "cygssl-1.0.0.dll")
   (t (:default "libssl3")))
 
