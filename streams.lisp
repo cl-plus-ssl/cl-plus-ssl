@@ -19,9 +19,9 @@
 (in-package :cl+ssl)
 
 (defclass ssl-stream
-    (fundamental-binary-input-stream
-     fundamental-binary-output-stream 
-     trivial-gray-stream-mixin)
+    (trivial-gray-stream-mixin
+     fundamental-binary-input-stream
+     fundamental-binary-output-stream)
   ((ssl-stream-socket
     :initarg :socket
     :accessor ssl-stream-socket)
