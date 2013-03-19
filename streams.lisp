@@ -113,7 +113,6 @@
             :eof)))))
 
 (defmethod stream-read-sequence ((stream ssl-stream) thing start end &key)
-  (check-type thing (simple-array (unsigned-byte 8) (*)))
   (when (and (< start end) (ssl-stream-peeked-byte stream))
     (setf (elt thing start) (ssl-stream-peeked-byte stream))
     (setf (ssl-stream-peeked-byte stream) nil)
@@ -131,7 +130,7 @@
                                     (ssl-stream-handle stream)
                                     ptr
                                     length)
-                (v/b-replace thing buf :start1 start :end1 (+ start length))
+                (s/b-replace thing buf :start1 start :end1 (+ start length))
                 (incf start length))
             (ssl-error-zero-return ()   ;SSL_read returns 0 on end-of-file
               (return))))
@@ -147,18 +146,17 @@
   b)
 
 (defmethod stream-write-sequence ((stream ssl-stream) thing start end &key)
-  (check-type thing (simple-array (unsigned-byte 8) (*)))
   (let ((buf (ssl-stream-output-buffer stream)))
     (when (> (+ (- end start) (ssl-stream-output-pointer stream)) (buffer-length buf))
       ;; not enough space left?  flush buffer.
       (force-output stream)
       ;; still doesn't fit?
       (while (> (- end start) (buffer-length buf))
-        (b/v-replace buf thing :start2 start)
+        (b/s-replace buf thing :start2 start)
         (incf start (buffer-length buf))
         (setf (ssl-stream-output-pointer stream) (buffer-length buf))
         (force-output stream)))
-    (b/v-replace buf thing
+    (b/s-replace buf thing
                  :start1 (ssl-stream-output-pointer stream)
                  :start2 start
                  :end2 end)

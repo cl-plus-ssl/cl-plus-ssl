@@ -10,5 +10,5 @@
   buffer-length
   buffer-elt
   set-buffer-elt
-  v/b-replace
-  b/v-replace))
+  s/b-replace
+  b/s-replace))
