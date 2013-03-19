@@ -112,9 +112,9 @@
           (ssl-error-zero-return ()     ;SSL_read returns 0 on end-of-file
             :eof)))))
 
-(defmethod stream-read-sequence ((stream ssl-stream) thing start end &key)
+(defmethod stream-read-sequence ((stream ssl-stream) seq start end &key)
   (when (and (< start end) (ssl-stream-peeked-byte stream))
-    (setf (elt thing start) (ssl-stream-peeked-byte stream))
+    (setf (elt seq start) (ssl-stream-peeked-byte stream))
     (setf (ssl-stream-peeked-byte stream) nil)
     (incf start))
   (let ((buf (ssl-stream-input-buffer stream)))
@@ -130,7 +130,7 @@
                                     (ssl-stream-handle stream)
                                     ptr
                                     length)
-                (s/b-replace thing buf :start1 start :end1 (+ start length))
+                (s/b-replace seq buf :start1 start :end1 (+ start length))
                 (incf start length))
             (ssl-error-zero-return ()   ;SSL_read returns 0 on end-of-file
               (return))))
@@ -145,23 +145,23 @@
     (incf (ssl-stream-output-pointer stream)))
   b)
 
-(defmethod stream-write-sequence ((stream ssl-stream) thing start end &key)
+(defmethod stream-write-sequence ((stream ssl-stream) seq start end &key)
   (let ((buf (ssl-stream-output-buffer stream)))
     (when (> (+ (- end start) (ssl-stream-output-pointer stream)) (buffer-length buf))
       ;; not enough space left?  flush buffer.
       (force-output stream)
       ;; still doesn't fit?
       (while (> (- end start) (buffer-length buf))
-        (b/s-replace buf thing :start2 start)
+        (b/s-replace buf seq :start2 start)
         (incf start (buffer-length buf))
         (setf (ssl-stream-output-pointer stream) (buffer-length buf))
         (force-output stream)))
-    (b/s-replace buf thing
+    (b/s-replace buf seq
                  :start1 (ssl-stream-output-pointer stream)
                  :start2 start
                  :end2 end)
     (incf (ssl-stream-output-pointer stream) (- end start)))
-  thing)
+  seq)
 
 (defmethod stream-finish-output ((stream ssl-stream))
   (stream-force-output stream))
