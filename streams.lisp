@@ -124,14 +124,15 @@
         do
           (handler-case
               (with-pointer-to-vector-data (ptr buf)
-                (ensure-ssl-funcall stream
-                                    (ssl-stream-handle stream)
-                                    #'ssl-read
-                                    (ssl-stream-handle stream)
-                                    ptr
-                                    length)
-                (s/b-replace seq buf :start1 start :end1 (+ start length))
-                (incf start length))
+                (let ((read-bytes
+                        (ensure-ssl-funcall stream
+                                            (ssl-stream-handle stream)
+                                            #'ssl-read
+                                            (ssl-stream-handle stream)
+                                            ptr
+                                            length)))
+                  (s/b-replace seq buf :start1 start :end1 (+ start read-bytes))
+                  (incf start read-bytes)))
             (ssl-error-zero-return ()   ;SSL_read returns 0 on end-of-file
               (return))))
     ;; fixme: kein out-of-file wenn (zerop start)?
