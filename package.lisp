@@ -10,7 +10,8 @@
 
 (defpackage :cl+ssl
   (:use :common-lisp :trivial-gray-streams)
-  (:export #:ensure-initialized
+  (:export #:*default-cipher-list*
+           #:ensure-initialized
            #:reload
            #:stream-fd
            #:make-ssl-client-stream
