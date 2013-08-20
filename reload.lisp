@@ -21,7 +21,8 @@
 #+openbsd
 (progn
   (cffi:define-foreign-library libcrypto
-    (:openbsd (:or "libcrypto.so.21.0"
+    (:openbsd (:or "libcrypto.so.22.0"
+                   "libcrypto.so.21.0"
                    "libcrypto.so.20.1"
                    "libcrypto.so.19.0"
                    "libcrypto.so.18.0")))
