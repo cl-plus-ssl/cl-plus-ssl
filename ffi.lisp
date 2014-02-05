@@ -516,7 +516,8 @@ will use this value.")
   (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
   (ssl-ctx-set-default-passwd-cb *ssl-global-context* 
                                  (cffi:callback pem-password-callback))
-  (ssl-ctx-set-tmp-rsa-callback *ssl-global-context* (cffi:callback need-tmp-rsa-callback)))
+  (ssl-ctx-set-tmp-rsa-callback *ssl-global-context*
+                                (cffi:callback need-tmp-rsa-callback)))
 
 (defun ensure-initialized (&key (method 'ssl-v23-method) (rand-seed nil))
   "In most cases you do *not* need to call this function, because it 
