@@ -36,6 +36,11 @@
 
 (defconstant +SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER+ 2)
 
+(defconstant +RSA_F4+ #x10001)
+
+(defvar *tmp-rsa-key-512* nil)
+(defvar *tmp-rsa-key-1024* nil)
+
 ;;; Misc
 ;;;
 (defmacro while (cond &body body)
@@ -252,6 +257,38 @@
 (cffi:defcfun ("SSL_CTX_set_default_verify_paths" ssl-ctx-set-default-verify-paths)
     :int
   (ctx :pointer))
+
+(cffi:defcfun ("RSA_generate_key" rsa-generate-key)
+    :pointer
+  (num :int)
+  (e :unsigned-long)
+  (callback :pointer)
+  (opt :pointer))
+
+(cffi:defcfun ("RSA_free" rsa-free)
+    :void
+  (rsa :pointer))
+
+(cffi:defcfun ("SSL_CTX_set_tmp_rsa_callback" ssl-ctx-set-tmp-rsa-callback)
+    :pointer
+  (ctx :pointer)
+  (callback :pointer))
+
+(cffi:defcallback need-tmp-rsa-callback :pointer ((ssl :pointer) (export-p :int) (key-length :int))
+  (declare (ignore ssl export-p))
+  (flet ((rsa-key (length)
+           (rsa-generate-key length
+                             +RSA_F4+
+                             (cffi:null-pointer)
+                             (cffi:null-pointer))))
+    (cond ((= key-length 512)
+           (unless *tmp-rsa-key-512*
+             (setf *tmp-rsa-key-512* (rsa-key key-length)))
+           *tmp-rsa-key-512*)
+          (t
+           (unless *tmp-rsa-key-1024*
+             (setf *tmp-rsa-key-1024* (rsa-key key-length)))
+           *tmp-rsa-key-1024*))))
 
 ;;; Funcall wrapper
 ;;;
@@ -478,7 +515,8 @@ will use this value.")
   (setf *ssl-global-context* (ssl-ctx-new *ssl-global-method*))
   (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
   (ssl-ctx-set-default-passwd-cb *ssl-global-context* 
-                                 (cffi:callback pem-password-callback)))
+                                 (cffi:callback pem-password-callback))
+  (ssl-ctx-set-tmp-rsa-callback *ssl-global-context* (cffi:callback need-tmp-rsa-callback)))
 
 (defun ensure-initialized (&key (method 'ssl-v23-method) (rand-seed nil))
   "In most cases you do *not* need to call this function, because it 
@@ -517,4 +555,6 @@ context and in particular the loaded certificate chain."
   (cffi:load-foreign-library 'libssl)
   (cffi:load-foreign-library 'libeay32)
   (setf *ssl-global-context* nil)
-  (setf *ssl-global-method* nil))
+  (setf *ssl-global-method* nil)
+  (setf *tmp-rsa-key-512* nil)
+  (setf *tmp-rsa-key-1024* nil))
