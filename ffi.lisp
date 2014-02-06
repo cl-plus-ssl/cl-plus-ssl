@@ -40,6 +40,7 @@
 
 (defvar *tmp-rsa-key-512* nil)
 (defvar *tmp-rsa-key-1024* nil)
+(defvar *tmp-rsa-key-2048* nil)
 
 ;;; Misc
 ;;;
@@ -285,10 +286,14 @@
            (unless *tmp-rsa-key-512*
              (setf *tmp-rsa-key-512* (rsa-key key-length)))
            *tmp-rsa-key-512*)
-          (t
+          ((= key-length 1024)
            (unless *tmp-rsa-key-1024*
              (setf *tmp-rsa-key-1024* (rsa-key key-length)))
-           *tmp-rsa-key-1024*))))
+           *tmp-rsa-key-1024*)
+          (t
+           (unless *tmp-rsa-key-2048*
+             (setf *tmp-rsa-key-2048* (rsa-key key-length)))
+           *tmp-rsa-key-2048*))))
 
 ;;; Funcall wrapper
 ;;;
