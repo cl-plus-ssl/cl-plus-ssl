@@ -13,6 +13,9 @@
 (in-package :cl+ssl-system)
 
 (defsystem :cl+ssl
+  :description "Common Lisp interface to OpenSSL."
+  :license "MIT"
+  :author "Eric Marsden, Jochen Schmidt, David Lichteblau"
   :depends-on (:cffi :trivial-gray-streams :flexi-streams #+sbcl :sb-posix
 		     :bordeaux-threads :trivial-garbage)
   :serial t
