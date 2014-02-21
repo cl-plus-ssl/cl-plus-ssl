@@ -29,6 +29,12 @@
   (:darwin (:or "libssl.dylib" "/usr/lib/libssl.dylib"))
   (:solaris (:or "/lib/64/libssl.so"
                  "libssl.so.0.9.8" "libssl.so" "libssl.so.4"))
+  ;; Unlike some other systems, OpenBSD linker,
+  ;; when passed library name without versions at the end,
+  ;; will locate the library with highest macro.minor version,
+  ;; so we can just use just "libssl.so".
+  ;; More info at https://github.com/cl-plus-ssl/cl-plus-ssl/pull/2.
+  (:openbsd "libssl.so")
   ((and :unix (not :cygwin)) (:or "libssl.so.1.0.0"
                                   "libssl.so.0.9.8"
                                   "libssl.so"
