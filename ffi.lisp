@@ -200,7 +200,7 @@
   (ctx ssl-ctx)
   (cmd :int)
   (larg :long)
-  (parg :long))
+  (parg :pointer))
 
 (cffi:defcfun ("SSL_CTX_set_default_passwd_cb" ssl-ctx-set-default-passwd-cb)
     :void
