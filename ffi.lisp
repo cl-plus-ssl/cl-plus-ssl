@@ -303,7 +303,7 @@
 (defun ensure-ssl-funcall (stream handle func &rest args)
   (loop
      (let ((nbytes
-	    (let ((*socket* stream))	;for Lisp-BIO callbacks
+	    (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
 	      (apply func args))))
        (when (plusp nbytes)
 	 (return nbytes))
@@ -324,7 +324,7 @@
 (defun nonblocking-ssl-funcall (stream handle func &rest args)
   (loop
      (let ((nbytes
-	    (let ((*socket* stream))	;for Lisp-BIO callbacks
+	    (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
 	      (apply func args))))
        (when (plusp nbytes)
 	 (return nbytes))
