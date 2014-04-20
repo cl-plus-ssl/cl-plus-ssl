@@ -225,7 +225,7 @@
   (ssl-ctx-ctrl handle
 		+SSL_CTRL_MODE+
 		+SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER+
-		0)
+		(cffi:null-pointer))
   socket)
 
 (defun install-key-and-cert (handle key certificate)
