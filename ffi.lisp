@@ -458,7 +458,7 @@ will use this value.")
       (rand-seed ptr length))))
 
 (defun ssl-ctx-set-session-cache-mode (ctx mode)
-  (ssl-ctx-ctrl ctx +SSL_CTRL_SET_SESS_CACHE_MODE+ mode 0))
+  (ssl-ctx-ctrl ctx +SSL_CTRL_SET_SESS_CACHE_MODE+ mode (cffi:null-pointer)))
 
 (defvar *locks*)
 (defconstant +CRYPTO-LOCK+ 1)
