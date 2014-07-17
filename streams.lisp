@@ -121,23 +121,19 @@
     (setf (elt seq start) (ssl-stream-peeked-byte stream))
     (setf (ssl-stream-peeked-byte stream) nil)
     (incf start))
-  (let ((buf (ssl-stream-input-buffer stream)))
+  (let ((buf (ssl-stream-input-buffer stream))
+        (handle (ssl-stream-handle stream)))
     (loop
         for length = (min (- end start) (buffer-length buf))
         while (plusp length)
         do
           (handler-case
-              (progn
-                (let ((read-bytes
-                        (with-pointer-to-vector-data (ptr buf)
-                          (ensure-ssl-funcall stream
-                                              (ssl-stream-handle stream)
-                                              #'ssl-read
-                                              (ssl-stream-handle stream)
-                                              ptr
-                                              length))))
-                  (s/b-replace seq buf :start1 start :end1 (+ start read-bytes))
-                  (incf start read-bytes)))
+              (let ((read-bytes
+                      (with-pointer-to-vector-data (ptr buf)
+                        (ensure-ssl-funcall
+                         stream handle #'ssl-read handle ptr length))))
+                (s/b-replace seq buf :start1 start :end1 (+ start read-bytes))
+                (incf start read-bytes))
             (ssl-error-zero-return ()   ;SSL_read returns 0 on end-of-file
               (return))))
     ;; fixme: kein out-of-file wenn (zerop start)?
