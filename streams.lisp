@@ -87,55 +87,46 @@
 (defmethod stream-listen ((stream ssl-stream))
   (or (ssl-stream-peeked-byte stream)
       (setf (ssl-stream-peeked-byte stream)
-	    (let ((buf (ssl-stream-input-buffer stream)))
-	      (with-pointer-to-vector-data (ptr buf)
-		(let* ((*blockp* nil) ;; for the Lisp-BIO
-		       (n (nonblocking-ssl-funcall stream
-						   (ssl-stream-handle stream)
-						   #'ssl-read
-						   (ssl-stream-handle stream)
-						   ptr
-						   1)))
-		  (and (> n 0) (buffer-elt buf 0))))))))
+            (let* ((buf (ssl-stream-input-buffer stream))
+                   (handle (ssl-stream-handle stream))
+                   (*blockp* nil) ;; for the Lisp-BIO
+                   (n (with-pointer-to-vector-data (ptr buf)
+                        (nonblocking-ssl-funcall
+                         stream handle #'ssl-read handle ptr 1))))
+              (and (> n 0) (buffer-elt buf 0))))))
 
 (defmethod stream-read-byte ((stream ssl-stream))
-  (or (prog1 
-	  (ssl-stream-peeked-byte stream) 
-	(setf (ssl-stream-peeked-byte stream) nil))
-      (let ((buf (ssl-stream-input-buffer stream)))
-        (handler-case
+  (or (prog1
+         (ssl-stream-peeked-byte stream)
+       (setf (ssl-stream-peeked-byte stream) nil))
+      (handler-case
+          (let ((buf (ssl-stream-input-buffer stream))
+                (handle (ssl-stream-handle stream)))
             (with-pointer-to-vector-data (ptr buf)
-              (ensure-ssl-funcall stream
-                                  (ssl-stream-handle stream)
-                                  #'ssl-read
-                                  (ssl-stream-handle stream)
-                                  ptr
-                                  1)
-              (buffer-elt buf 0))
-          (ssl-error-zero-return ()     ;SSL_read returns 0 on end-of-file
-            :eof)))))
+              (ensure-ssl-funcall
+               stream handle #'ssl-read handle ptr 1))
+            (buffer-elt buf 0))
+        (ssl-error-zero-return ()     ;SSL_read returns 0 on end-of-file
+          :eof))))
 
 (defmethod stream-read-sequence ((stream ssl-stream) seq start end &key)
   (when (and (< start end) (ssl-stream-peeked-byte stream))
     (setf (elt seq start) (ssl-stream-peeked-byte stream))
     (setf (ssl-stream-peeked-byte stream) nil)
     (incf start))
-  (let ((buf (ssl-stream-input-buffer stream)))
+  (let ((buf (ssl-stream-input-buffer stream))
+        (handle (ssl-stream-handle stream)))
     (loop
         for length = (min (- end start) (buffer-length buf))
         while (plusp length)
         do
           (handler-case
-              (with-pointer-to-vector-data (ptr buf)
-                (let ((read-bytes
-                        (ensure-ssl-funcall stream
-                                            (ssl-stream-handle stream)
-                                            #'ssl-read
-                                            (ssl-stream-handle stream)
-                                            ptr
-                                            length)))
-                  (s/b-replace seq buf :start1 start :end1 (+ start read-bytes))
-                  (incf start read-bytes)))
+              (let ((read-bytes
+                      (with-pointer-to-vector-data (ptr buf)
+                        (ensure-ssl-funcall
+                         stream handle #'ssl-read handle ptr length))))
+                (s/b-replace seq buf :start1 start :end1 (+ start read-bytes))
+                (incf start read-bytes))
             (ssl-error-zero-return ()   ;SSL_read returns 0 on end-of-file
               (return))))
     ;; fixme: kein out-of-file wenn (zerop start)?
