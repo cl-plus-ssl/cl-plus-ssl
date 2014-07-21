@@ -63,8 +63,14 @@
     :void)
 (cffi:defcfun ("SSL_library_init" ssl-library-init)
     :int)
-(cffi:defcfun ("SSLv2_client_method" ssl-v2-client-method)
-    ssl-method)
+;;
+;; We don't refer SSLv2_client_method as the default
+;; builds of OpenSSL do not have it, due to insecurity
+;; of the SSL v2 protocol (see https://www.openssl.org/docs/ssl/SSL_CTX_new.html
+;; and https://github.com/cl-plus-ssl/cl-plus-ssl/issues/6)
+;;
+;; (cffi:defcfun ("SSLv2_client_method" ssl-v2-client-method)
+;;     ssl-method)
 (cffi:defcfun ("SSLv23_client_method" ssl-v23-client-method)
     ssl-method)
 (cffi:defcfun ("SSLv23_server_method" ssl-v23-server-method)
