@@ -190,11 +190,11 @@ an internationalized domain name [IDNA-PROTO].
     #|We search backwards for the '@' character, so that we do
     not have to deal with quoted local-parts.  The domain part
     is compared in a case-insensitive manner.|#
-    (do ((ret))
-        ((or ret (<= i 0)))
+    (do ()
+        ((<= i 0))
       (decf i)
       (when (or (eql (aref pattern i) #\@) (eql (aref subject i) #\@))
-        (setf ret t)
+        (return)
         (unless (string-equal pattern subject :start1 i :start2 i)
           (return-from equal-email nil))))
     (string= pattern subject :end1 i :end2 i)))
