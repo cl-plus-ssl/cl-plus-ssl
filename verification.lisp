@@ -92,7 +92,7 @@ character is embedded within an A-label or U-label [IDNA-DEFS] of
 an internationalized domain name [IDNA-PROTO].
 |#
 
-(defun try-match-using-wildcards (pattern hostname)
+(defun try-match-using-wildcards (pattern hostname flags)
   ;; wildcard must match at least one character
   (when (> (length pattern) (length hostname))
     (return-from try-match-using-wildcards nil))
@@ -104,31 +104,45 @@ an internationalized domain name [IDNA-PROTO].
 
     ;; only one star
     (when (position #* pattern :start pattern-w-pos)
-      (return-from try-match-using-wildcards nil))
+      (return-from try-match-using-wildcards (values nil :not-single-star)))
 
     ;; check if pattern has at least two dots after star
-    ;; check no labels(dots) behind star
     (setq pattern-leftmost-label-end (position #\. pattern))
     (when (or (null pattern-leftmost-label-end)
-              (null (position #\. pattern :start (1+ pattern-leftmost-label-end)))
-              (> pattern-w-pos pattern-leftmost-label-end))
-      (return-from try-match-using-wildcards nil))
+              (null (position #\. pattern :start (1+ pattern-leftmost-label-end))))
+      (return-from try-match-using-wildcards (values nil :too-few-dots-after-star)))
+
+    ;; check no labels(dots) behind star
+    (when (> pattern-w-pos pattern-leftmost-label-end)
+      (return-from try-match-using-wildcards (values nil :star-not-in-leftmost)))
 
     ;;check star is not part of A-label label, what about U-labels though?
     (when (search "xn--" pattern :test #'equal :end2 pattern-leftmost-label-end)
-      (return-from try-match-using-wildcards nil))
+      (return-from try-match-using-wildcards (values nil :star-in-a-label)))
 
     (let* ((pattern-length-after-star (- (length pattern) pattern-w-pos 1 #|not include star|#))
            (hostname-position-after-star (- (length hostname) pattern-length-after-star)))
-      ;; do not allow *.example.com match bar.foo.example.com
-      ;; also here we can partially match part after star
-      (if (and (not (position #\. hostname :end hostname-position-after-star))
-               (string-equal hostname pattern :start1  hostname-position-after-star :start2 (1+ pattern-w-pos)))
+
+      (unless (flag-set-p flags +x509-check-flag-multi-label-wildcards+)
+        ;; do not allow *.example.com match bar.foo.example.com
+        (when (position #\. hostname :end hostname-position-after-star)
+          (return-from try-match-using-wildcards (values nil :multilable-match))))
+
+      (when (flag-set-p flags +x509-check-flag-no-partial-wildcards+)
+        (unless (eql (print (aref pattern (1+ pattern-w-pos))) #\.)
+          (return-from try-match-using-wildcards (values nil :maybe-partial-match)))
+        (unless (eql pattern-w-pos 0)
+          (return-from try-match-using-wildcards (values nil :maybe-partial-match))))
+
+      ;; partially match part after star
+      (if (string-equal hostname pattern :start1  hostname-position-after-star :start2 (1+ pattern-w-pos))
           (if (= 0 pattern-w-pos)
               t
               ;; match before star part now
-              (string-equal hostname pattern :end1 pattern-w-pos :end2 pattern-w-pos))
-          nil))))
+              (if (string-equal hostname pattern :end1 pattern-w-pos :end2 pattern-w-pos)
+                  t
+                  (values nil :no-match-before-star)))
+          (values nil :no-match-after-star)))))
 
 (defun skip-prefix (pattern subject flags)
   (unless (flag-set-p flags +_x509-check-flag-dot-subdomains+)
@@ -164,7 +178,7 @@ an internationalized domain name [IDNA-PROTO].
 (defun equal-wildcard (pattern subject flags)
   (if (equal-nocase subject pattern flags)
       t
-      (try-match-using-wildcards pattern subject)))
+      (try-match-using-wildcards pattern subject flags)))
 
 (defun equal-email (pattern subject flags)
   (declare (ignore flags))
@@ -184,8 +198,6 @@ an internationalized domain name [IDNA-PROTO].
         (unless (string-equal pattern subject :start1 i :start2 i)
           (return-from equal-email nil))))
     (string= pattern subject :end1 i :end2 i)))
-
-
 
 (defun try-match-pattern (pattern subject equality-function flags)
   (let ((pattern-string (try-get-asn1-string-data pattern)))
