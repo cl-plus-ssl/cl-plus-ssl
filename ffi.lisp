@@ -453,7 +453,7 @@ session-resume requests) would normally be copied into the local cache before pr
     :int
   (name :pointer)
   (nid :int)
-  (lastpost :int))
+  (lastpos :int))
 
 (cffi:defcfun ("X509_NAME_get_entry" x509-name-get-entry)
     :pointer
