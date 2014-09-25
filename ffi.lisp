@@ -31,6 +31,7 @@
 (defconstant +ssl-filetype-asn1+ 2)
 (defconstant +ssl-filetype-default+ 3)
 
+(defconstant +SSL-CTRL-OPTIONS+ 32)
 (defconstant +SSL_CTRL_SET_SESS_CACHE_MODE+ 44)
 (defconstant +SSL_CTRL_MODE+ 33)
 
@@ -349,10 +350,8 @@ session-resume requests) would normally be copied into the local cache before pr
   (buf :pointer)
   (num :int))
 
-(cffi:defcfun ("SSL_CTX_set_options" ssl-ctx-set-options)
-    :long
-  (ctx :pointer)
-  (options :long))
+(defun ssl-ctx-set-options (ctx options)
+  (ssl-ctx-ctrl ctx +SSL-CTRL-OPTIONS+ options (cffi:null-pointer)))
 
 (cffi:defcfun ("SSL_CTX_set_verify" ssl-ctx-set-verify)
     :void
@@ -734,6 +733,13 @@ will use this value.")
     (setf (gethash self *threads*)
     (incf *thread-counter*))))))
 
+(cffi:defcallback cb-ssl-verify :int ((ok :int) (ctx :pointer))
+  (let* (;(certificate (X509-STORE-CTX-get-current-cert ctx))
+        (error-code (X509_STORE_CTX-get-error ctx)))
+    (unless (eql error-code 0)
+      (error 'ssl-error-verify  :error-code error-code))
+    ok))
+
 (defvar *ssl-check-verify-p* :unspecified)
 
 (defun initialize (&key (method 'ssl-v23-method) rand-seed)
@@ -750,7 +756,7 @@ will use this value.")
   (setf *ssl-check-verify-p* :unspecified)
   (setf *ssl-global-method* (funcall method))
   (setf *ssl-global-context* (ssl-ctx-new *ssl-global-method*))
-  (ssl-ctx-set-verify *ssl-global-context* +SSL-VERIFY-PEER+ (cffi:null-pointer))
+  (ssl-ctx-set-verify *ssl-global-context* +SSL-VERIFY-PEER+ (cffi:callback cb-ssl-verify))
   (ssl-ctx-set-options *ssl-global-context* #x80000BFF #|SSL_OP_ALL|#)
   (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
   (ssl-ctx-set-default-passwd-cb *ssl-global-context* 
