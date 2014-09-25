@@ -297,11 +297,13 @@ After RELOAD, you need to call this again."
       (setf (ssl-check-verify-p) t))
     t))
 
-(defun ssl-stream-check-verify (ssl-stream)
+(defun ssl-stream-check-verify (ssl-stream hostname)
   (let* ((handle (ssl-stream-handle ssl-stream))
          (err (ssl-get-verify-result handle)))
     (unless (eql err 0)
-      (error 'ssl-error-verify :stream ssl-stream :error-code err))))
+      (error 'ssl-error-verify :stream ssl-stream :error-code err))
+    (unless (verify-hostname (ssl-get-peer-certificate handle) hostname)
+      (error 'ssl-unable-to-match-host-name))))
 
 (defun handle-external-format (stream ef)
   (if ef
@@ -338,7 +340,7 @@ to choose certificate for right domain."
       (install-key-and-cert handle key certificate))
     (ensure-ssl-funcall stream handle #'ssl-connect handle)
     (when (ssl-check-verify-p)
-      (ssl-stream-check-verify stream))
+      (ssl-stream-check-verify stream hostname))
     (handle-external-format stream external-format)))
 
 ;; fixme: free the context when errors happen in this function

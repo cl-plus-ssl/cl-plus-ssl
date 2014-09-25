@@ -293,3 +293,6 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
                (format stream "SSL verify error: ~d~@[ ~a~]"
                        code (ssl-verify-error-keyword code)))))
   (:documentation "This condition is signalled on SSL connection when a peer certificate doesn't verify."))
+
+(define-condition ssl-unable-to-match-host-name (ssl-error-verify)
+  ()))

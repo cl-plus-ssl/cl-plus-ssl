@@ -382,7 +382,7 @@ session-resume requests) would normally be copied into the local cache before pr
 
 (cffi:defcfun ("X509_VERIFY_PARAM_set1_host" x509-verify-param-set1-host)
     :int
-  (param :pointer) 
+  (param :pointer)
   (name :string)
   (namelen :int))
 
