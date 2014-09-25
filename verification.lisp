@@ -129,7 +129,7 @@ an internationalized domain name [IDNA-PROTO].
           (return-from try-match-using-wildcards (values nil :multilable-match))))
 
       (when (flag-set-p flags +x509-check-flag-no-partial-wildcards+)
-        (unless (eql (print (aref pattern (1+ pattern-w-pos))) #\.)
+        (unless (eql (aref pattern (1+ pattern-w-pos)) #\.)
           (return-from try-match-using-wildcards (values nil :maybe-partial-match)))
         (unless (eql pattern-w-pos 0)
           (return-from try-match-using-wildcards (values nil :maybe-partial-match))))
@@ -261,8 +261,7 @@ an internationalized domain name [IDNA-PROTO].
                       (when (and (not common-name-id)
                                  (not (flag-set-p flags +X509-check-flag-always-check-subject+)))
                         (return-from do-x509-check (values nil :no-alt-name-match))))
-            ;; turns out sk_GENERAL_NAME_pop_free is layered #define mess, don't know what to do now
-            ;;(sk_GENERAL_NAME_pop_free altnames 1216 #|GENERAL_NAME_free|#)
+            (general-names-free altnames)
             )))
     ;; no alt names or always check subject
     (let ((i -1)

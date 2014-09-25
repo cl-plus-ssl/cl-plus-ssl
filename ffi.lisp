@@ -449,6 +449,10 @@ session-resume requests) would normally be copied into the local cache before pr
   (type :int)
   (data :pointer))
 
+(cffi:defcfun ("GENERAL_NAMES_free" general-names-free)
+    :void
+  (general-names :pointer))
+
 (cffi:defcfun ("X509_NAME_get_index_by_NID" x509-name-get-index-by-nid)
     :int
   (name :pointer)
