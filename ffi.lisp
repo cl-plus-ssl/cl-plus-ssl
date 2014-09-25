@@ -433,9 +433,12 @@ session-resume requests) would normally be copied into the local cache before pr
     :int
   (stack :pointer))
 
+
+(declaim (ftype (function (cffi:foreign-pointer fixnum) cffi:foreign-pointer) sk-general-name-value))
 (defun sk-general-name-value (names index)
   (sk-value names index))
 
+(declaim (ftype (function (cffi:foreign-pointer) fixnum) sk-general-name-num))
 (defun sk-general-name-num (names)
   (sk-num names))
 
@@ -453,6 +456,7 @@ session-resume requests) would normally be copied into the local cache before pr
     :void
   (general-names :pointer))
 
+(declaim (ftype (function (cffi:foreign-pointer fixnum fixnum) fixnum) x509-name-get-index-by-nid))
 (cffi:defcfun ("X509_NAME_get_index_by_NID" x509-name-get-index-by-nid)
     :int
   (name :pointer)
@@ -472,6 +476,7 @@ session-resume requests) would normally be copied into the local cache before pr
     :pointer
   (asn1-string :pointer))
 
+(declaim (ftype (function (cffi:foreign-pointer) fixnum) asn1-string-length asn1-string-type))
 (cffi:defcfun ("ASN1_STRING_length" asn1-string-length)
     :int
   (asn1-string :pointer))

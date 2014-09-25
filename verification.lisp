@@ -6,9 +6,9 @@
 (module
  (:depends-on ("package" "conditions" "ffi")))
 
-;; (eval-when (:compile-toplevel)
-;;   (declaim
-;;    (optimize (speed 3) (space 1) (safety 1) (debug 0) (compilation-speed 0))))
+(eval-when (:compile-toplevel)
+  (declaim
+   (optimize (speed 3) (space 1) (safety 1) (debug 0) (compilation-speed 0))))
 
 
 (in-package :cl+ssl)
@@ -47,16 +47,20 @@
 ;;       (if x509-vp
 ;;           (X509-VERIFY-PARAM-free x509-vp)))))
 
+(declaim (inline set-flags add-flag remove-flag flag-set-p))
 (defun set-flags (&rest flags)
   (apply #'logior flags))
 
 (defun add-flag (flags flag)
+  (declare (type fixnum flags flag))
   (logior flags flag))
 
-(defun remove-flag (flags flag)
+(defun remove-flag (flags flag)  
+  (declare (type fixnum flags flag))
   (logand flags (lognot flag)))
 
-(defun flag-set-p (flags flag &optional match)
+(defun flag-set-p (flags flag &optional match)  
+  (declare (type fixnum flags flag))
   (let ((r (logand flags flag)))
     (if (> r 0)
         (if match
@@ -64,10 +68,11 @@
             t)
         nil)))
 
-(defun remove-trailing-dot (str)
-  (if (eql (elt str (1- (length str))) #\.)
-      (subseq str 0 (- (length str) 2))
-      str))
+;; (defun remove-trailing-dot (str)
+;;   (declare (type string str))
+;;   (if (eql (elt str (1- (length str))) #\.)
+;;       (subseq str 0 (- (length str) 2))
+;;       str))
 
 #|
 http://tools.ietf.org/html/rfc6125
@@ -92,9 +97,11 @@ character is embedded within an A-label or U-label [IDNA-DEFS] of
 an internationalized domain name [IDNA-PROTO].
 |#
 
-(defun try-match-using-wildcards (pattern hostname flags)
+(defun try-match-using-wildcards (pattern subject flags)
+  (declare (type string pattern subject)
+           (type fixnum flags))
   ;; wildcard must match at least one character
-  (when (> (length pattern) (length hostname))
+  (when (> (length pattern) (length subject))
     (return-from try-match-using-wildcards nil))
 
   (let ((pattern-w-pos (position #\* pattern))
@@ -121,11 +128,11 @@ an internationalized domain name [IDNA-PROTO].
       (return-from try-match-using-wildcards (values nil :star-in-a-label)))
 
     (let* ((pattern-length-after-star (- (length pattern) pattern-w-pos 1 #|not include star|#))
-           (hostname-position-after-star (- (length hostname) pattern-length-after-star)))
+           (hostname-position-after-star (- (length subject) pattern-length-after-star)))
 
       (unless (flag-set-p flags +x509-check-flag-multi-label-wildcards+)
         ;; do not allow *.example.com match bar.foo.example.com
-        (when (position #\. hostname :end hostname-position-after-star)
+        (when (position #\. subject :end hostname-position-after-star)
           (return-from try-match-using-wildcards (values nil :multilable-match))))
 
       (when (flag-set-p flags +x509-check-flag-no-partial-wildcards+)
@@ -135,16 +142,18 @@ an internationalized domain name [IDNA-PROTO].
           (return-from try-match-using-wildcards (values nil :maybe-partial-match))))
 
       ;; partially match part after star
-      (if (string-equal hostname pattern :start1  hostname-position-after-star :start2 (1+ pattern-w-pos))
+      (if (string-equal subject pattern :start1  hostname-position-after-star :start2 (1+ pattern-w-pos))
           (if (= 0 pattern-w-pos)
               t
               ;; match before star part now
-              (if (string-equal hostname pattern :end1 pattern-w-pos :end2 pattern-w-pos)
+              (if (string-equal subject pattern :end1 pattern-w-pos :end2 pattern-w-pos)
                   t
                   (values nil :no-match-before-star)))
           (values nil :no-match-after-star)))))
 
 (defun skip-prefix (pattern subject flags)
+  (declare (type string pattern subject)
+           (type fixnum flags))
   (unless (flag-set-p flags +_x509-check-flag-dot-subdomains+)
     (return-from skip-prefix 0))
   #|
@@ -164,23 +173,32 @@ an internationalized domain name [IDNA-PROTO].
       (decf pattern-length))))
 
 (defun just-equal (pattern subject flags)
+  (declare (type string pattern subject))
   (declare (ignore flags))
   (equal pattern subject))
 
 (defun equal-case (pattern subject flags)
+  (declare (type string pattern subject)
+           (type fixnum flags))
   (let ((pattern-start (skip-prefix pattern subject flags)))
     (string= pattern subject :start1 pattern-start)))
 
 (defun equal-nocase (pattern subject flags)
+  (declare (type string pattern subject)
+           (type fixnum flags))
   (let ((pattern-start (skip-prefix pattern subject flags)))
     (string-equal pattern subject :start1 pattern-start)))
 
 (defun equal-wildcard (pattern subject flags)
+  (declare (type string pattern subject)
+           (type fixnum flags))
   (if (equal-nocase subject pattern flags)
       t
       (try-match-using-wildcards pattern subject flags)))
 
 (defun equal-email (pattern subject flags)
+  (declare (type string pattern subject)
+           (type fixnum flags))
   (declare (ignore flags))
   (let* ((length (length pattern))
          (i length))
@@ -200,6 +218,9 @@ an internationalized domain name [IDNA-PROTO].
     (string= pattern subject :end1 i :end2 i)))
 
 (defun try-match-pattern (pattern subject equality-function flags)
+  (declare (type string subject)
+           (type fixnum flags)
+           (type (function (string string fixnum) boolean) equality-function))
   (let ((pattern-string (try-get-asn1-string-data pattern)))
     (unless pattern-string
       (return-from try-match-pattern (values nil :invalid-pattern-string)))
@@ -207,6 +228,10 @@ an internationalized domain name [IDNA-PROTO].
         (values t pattern-string))))
 
 (defun try-match (pattern subject asn1-string-type equality-function flags)
+  (declare (type cffi:foreign-pointer pattern)
+           (type string subject)
+           (type fixnum asn1-string-type flags)
+           (type (function (string string fixnum) boolean) equality-function))
   (when (or (cffi:null-pointer-p (asn1-string-data pattern))
             (= 0 (asn1-string-length pattern)))
     (return-from try-match (values nil :invalid-pattern-structure)))
@@ -223,25 +248,28 @@ an internationalized domain name [IDNA-PROTO].
 (defconstant +NID-commonName+   13)
 (defconstant +NID-pkcs9-emailAddress+   48)
 
-(defun do-x509-check (certificate chk chk-type flags)
+(defun do-x509-check (certificate subject subject-type flags)
+  (declare (type cffi:foreign-pointer certificate)
+           (type string subject)
+           (type fixnum flags subject-type))
   (setq flags (remove-flag flags +_X509-CHECK-FLAG-DOT-SUBDOMAINS+))
   (let (common-name-id asn1-string-type equality-function)
     (cond
-      ((eql chk-type +GEN-EMAIL+)
+      ((eql subject-type +GEN-EMAIL+)
        (setf common-name-id +NID-pkcs9-emailAddress+
              asn1-string-type +V-ASN1-IASTRING+
-             equality-function 'equal-email))
-      ((eql chk-type +GEN-DNS+)
+             equality-function #'equal-email))
+      ((eql subject-type +GEN-DNS+)
        (setf common-name-id +NID-commonName+
              asn1-string-type +V-ASN1-IASTRING+
              equality-function (if (flag-set-p flags +x509-check-flag-no-wildcards+)
-                                   'equal-nocase
-                                   'equal-wildcard))
-       (if (and (> (length chk)1)
-                (eql #\. (aref chk 0)))
+                                   #'equal-nocase
+                                   #'equal-wildcard))
+       (if (and (> (length subject) 1)
+                (eql #\. (aref subject 0)))
            (setf flags (add-flag flags +_X509-CHECK-FLAG-DOT-SUBDOMAINS+))))
       (t (setf asn1-string-type +V-ASN1-OCTET-STRING+
-               equality-function 'equal-case
+               equality-function #'equal-case
                common-name-id 0)))
 
     ;; first try match altname if any
@@ -253,9 +281,9 @@ an internationalized domain name [IDNA-PROTO].
                             ((>= i altnames-count))
                           (let* ((alt-name (sk-general-name-value altnames i)))
                             (cffi:with-foreign-slots ((type data) alt-name (:struct general_name))
-                              (when (= type chk-type)
+                              (when (= type subject-type)
                                 (multiple-value-bind (result reason)
-                                    (try-match data chk asn1-string-type equality-function flags)
+                                    (try-match data subject asn1-string-type equality-function flags)
                                   (if result
                                       (return-from do-x509-check (values t reason)))))))))
                       (when (and (not common-name-id)
@@ -272,7 +300,7 @@ an internationalized domain name [IDNA-PROTO].
           (return (values nil :no-common-name-match))
           (let* ((entry (x509-name-get-entry subject-name i)))
             (multiple-value-bind (result reason)
-                (try-match (x509-name-entry-get-data entry) chk -1 equality-function)
+                (try-match (x509-name-entry-get-data entry) subject -1 equality-function)
               (if result
                   (return-from do-x509-check (values result reason))))))))))
 
