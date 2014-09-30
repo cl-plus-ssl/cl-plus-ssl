@@ -289,8 +289,8 @@ an internationalized domain name [IDNA-PROTO].
                       (when (and (not common-name-id)
                                  (not (flag-set-p flags +X509-check-flag-always-check-subject+)))
                         (return-from do-x509-check (values nil :no-alt-name-match))))
-            (general-names-free altnames)
-            )))
+            (general-names-free altnames))))
+    
     ;; no alt names or always check subject
     (let ((i -1)
           (subject-name (x509-get-subject-name certificate)))
