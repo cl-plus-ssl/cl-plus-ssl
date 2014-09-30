@@ -767,6 +767,7 @@ will use this value.")
   (setf *ssl-global-context* (ssl-ctx-new *ssl-global-method*))
   (ssl-ctx-set-verify *ssl-global-context* +SSL-VERIFY-PEER+ (cffi:callback cb-ssl-verify))
   (ssl-ctx-set-options *ssl-global-context* #x80000BFF #|SSL_OP_ALL|#)
+  (ssl-ctx-set-default-verify-paths *ssl-global-context*)
   (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
   (ssl-ctx-set-default-passwd-cb *ssl-global-context* 
                                  (cffi:callback pem-password-callback))
