@@ -489,6 +489,10 @@ session-resume requests) would normally be copied into the local cache before pr
     :int
   (string :string))
 
+(cffi:defcfun ("close" close-fd)
+    :int
+  (fd :int))
+
 (defun try-get-asn1-string-data (asn1-string)
   (cffi:with-foreign-slots ((length data) asn1-string (:struct asn1_string_st))
     (let* ((strlen (strlen data)))
