@@ -305,10 +305,23 @@ After RELOAD, you need to call this again."
       (flexi-streams:make-flexi-stream stream :external-format ef)
       stream))
 
+(defun handle-servername (stream handle servername)
+  (cffi:with-foreign-object (sni '(:struct tlsextctx))
+    (cffi:with-foreign-slots ((biodebug) sni (:struct tlsextctx))
+      (setf biodebug (cffi:null-pointer))
+      (let ((ctx *ssl-global-context*))
+        (ssl-ctx-set-tlsext-servername-callback
+         ctx
+         (cffi:callback lisp-ssl-servername-cb))
+        (ssl-ctx-set-tlsext-servername-arg ctx sni))
+      (cffi:with-foreign-string (servername* servername)
+        (ssl-set-tlsext-host-name handle servername*)
+        (ensure-ssl-funcall stream handle #'ssl-connect handle)))))
+
 ;; fixme: free the context when errors happen in this function
 (defun make-ssl-client-stream
     (socket &key certificate key password (method 'ssl-v23-method) external-format
-                 close-callback (unwrap-stream-p t))
+                 close-callback (unwrap-stream-p t) servername)
   "Returns an SSL stream for the client socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your client. KEY is the path to the PEM-encoded key for the client, which
@@ -322,7 +335,9 @@ may be associated with the passphrase PASSWORD."
     (ssl-set-connect-state handle)
     (with-pem-password (password)
       (install-key-and-cert handle key certificate))
-    (ensure-ssl-funcall stream handle #'ssl-connect handle)
+    (if servername
+        (handle-servername stream handle servername)
+        (ensure-ssl-funcall stream handle #'ssl-connect handle))
     (when (ssl-check-verify-p)
       (ssl-stream-check-verify stream))
     (handle-external-format stream external-format)))

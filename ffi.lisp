@@ -208,6 +208,66 @@
   (larg :long)
   (parg :pointer))
 
+(cffi:defcfun ("SSL_CTX_callback_ctrl" ssl-ctx-callback-ctrl)
+    :long
+  (ctx ssl-ctx)
+  (cmd :int)
+  (fp :pointer))
+
+(defconstant +SSL_TLSEXT_ERR_OK+ 0)
+(defconstant +SSL_CTRL_SET_TLSEXT_SERVERNAME_CB+ 53)
+(defconstant +SSL_CTRL_SET_TLSEXT_SERVERNAME_ARG+ 54)
+(defconstant +SSL_CTRL_SET_TLSEXT_HOSTNAME+ 55)
+(defconstant +TLSEXT_NAMETYPE_host_name+ 0)
+
+(defmacro ssl-ctx-set-tlsext-servername-callback (ctx cb)
+  `(ssl-ctx-callback-ctrl ,ctx +SSL_CTRL_SET_TLSEXT_SERVERNAME_CB+ ,cb))
+
+(defmacro ssl-ctx-set-tlsext-servername-arg (ctx arg)
+  `(ssl-ctx-ctrl ,ctx +SSL_CTRL_SET_TLSEXT_SERVERNAME_ARG+ 0 ,arg))
+
+(defmacro ssl-set-tlsext-host-name (s name)
+  `(ssl-ctrl ,s +SSL_CTRL_SET_TLSEXT_HOSTNAME+ +TLSEXT_NAMETYPE_host_name+ ,name))
+
+(cffi:defcstruct tlsextctx
+  (biodebug :pointer)
+  (ack :int))
+
+(cffi:defcfun ("SSL_get_servername" ssl-get-servername)
+    (:pointer :char)
+  (s ssl-pointer)
+  (type :int))
+
+(cffi:defcfun ("SSL_get_servername_type" ssl-get-servername-type)
+    :int
+  (s ssl-pointer))
+
+(cffi:defcfun ("SSL_ctrl" ssl-ctrl)
+    :long
+  (s ssl-pointer)
+  (cmd :int)
+  (larg :long)
+  (parg :pointer))
+
+(defconstant +SSL_CTRL_GET_SESSION_REUSED+ 8)
+
+(defmacro ssl-session-reused (s)
+  `(ssl-ctrl ,s +SSL_CTRL_GET_SESSION_REUSED+ 0 (cffi:null-pointer)))
+
+(defconstant +TLSEXT_NAMETYPE_host_name+ 0)
+
+(cffi:defcallback lisp-ssl-servername-cb :int
+    ((s ssl-pointer)
+     (ad (:pointer :int))
+     (arg :pointer))
+  (declare (ignore ad))
+  (cffi:with-foreign-slots ((ack) arg (:struct tlsextctx))
+    (let ((hn (ssl-get-servername s +TLSEXT_NAMETYPE_host_name+)))
+      (when (/= (ssl-get-servername-type s) -1)
+        (setf ack (if (and (zerop (ssl-session-reused s))
+                           (not (cffi:null-pointer-p hn))) 1 0)))
+      +SSL_TLSEXT_ERR_OK+)))
+
 (cffi:defcfun ("SSL_CTX_set_default_passwd_cb" ssl-ctx-set-default-passwd-cb)
     :void
   (ctx ssl-ctx)
