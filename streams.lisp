@@ -308,7 +308,8 @@ After RELOAD, you need to call this again."
 ;; fixme: free the context when errors happen in this function
 (defun make-ssl-client-stream
     (socket &key certificate key password (method 'ssl-v23-method) external-format
-                 close-callback (unwrap-stream-p t))
+                 close-callback (unwrap-stream-p t)
+		 (cipher-list *default-cipher-list*))
   "Returns an SSL stream for the client socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your client. KEY is the path to the PEM-encoded key for the client, which
@@ -320,6 +321,8 @@ may be associated with the passphrase PASSWORD."
         (handle (ssl-new *ssl-global-context*)))
     (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
     (ssl-set-connect-state handle)
+    (when (zerop (ssl-set-cipher-list handle cipher-list))
+      (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
     (with-pem-password (password)
       (install-key-and-cert handle key certificate))
     (ensure-ssl-funcall stream handle #'ssl-connect handle)
