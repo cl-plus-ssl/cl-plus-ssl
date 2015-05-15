@@ -17,7 +17,6 @@
          (format char-stream "GET / HTTP/1.1~%")
          (format char-stream "Host: sni.velox.ch~%~%")
          (finish-output char-stream)
-         (let ((reply)))
          (read-sequence reply-buf char-stream)
          reply-buf)
     (usocket:socket-close socket)))
