@@ -208,6 +208,13 @@
   (larg :long)
   (parg :pointer))
 
+(cffi:defcfun ("SSL_ctrl" ssl-ctrl)
+    :long
+  (ssl :pointer)
+  (cmd :int)
+  (larg :long)
+  (parg :pointer))
+
 (cffi:defcfun ("SSL_CTX_set_default_passwd_cb" ssl-ctx-set-default-passwd-cb)
     :void
   (ctx ssl-ctx)
@@ -465,6 +472,9 @@ will use this value.")
 
 (defun ssl-ctx-set-session-cache-mode (ctx mode)
   (ssl-ctx-ctrl ctx +SSL_CTRL_SET_SESS_CACHE_MODE+ mode (cffi:null-pointer)))
+
+(defun SSL-set-tlsext-host-name (ctx hostname)
+  (ssl-ctrl ctx 55 #|SSL_CTRL_SET_TLSEXT_HOSTNAME|# 0 #|TLSEXT_NAMETYPE_host_name|# hostname))
 
 (defvar *locks*)
 (defconstant +CRYPTO-LOCK+ 1)

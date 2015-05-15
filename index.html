@@ -124,7 +124,7 @@
       usually returns predictable values.
     </p>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-streams-p t))<br/><br/>
+      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-streams-p t) hostname)<br/><br/>
       Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-streams-p t))</div>
       Return an SSL stream for the client (server)
       socket <tt>fd-or-stream</tt>.  All reads and writes to this
@@ -163,6 +163,12 @@
       non-null <tt>external-format</tt>, a flexi-stream capable of
       character I/O will be returned instead, with the specified value
       as its initial external format.
+    </p>
+    <p>
+      <tt>hostname</tt> if specified, will be sent by client during TLS negotiation,
+      according to the Server Name Indication (SNI) extension to the TLS.
+      When server handles several domain names, this extension enables the server
+      to choose certificate for right domain.
     </p>
     <p>
       <div class="def">Function CL+SSL:USE-CERTIFICATE-CHAIN-FILE (certificate-chain-file)</div>

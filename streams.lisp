@@ -309,16 +309,24 @@ After RELOAD, you need to call this again."
 (defun make-ssl-client-stream
     (socket &key certificate key password (method 'ssl-v23-method) external-format
                  close-callback (unwrap-stream-p t)
-		 (cipher-list *default-cipher-list*))
+		 (cipher-list *default-cipher-list*)
+                 hostname)
   "Returns an SSL stream for the client socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your client. KEY is the path to the PEM-encoded key for the client, which
-may be associated with the passphrase PASSWORD."
+may be associated with the passphrase PASSWORD.
+HOSTNAME if specified, will be sent by client during TLS negotiation,
+according to the Server Name Indication (SNI) extension to the TLS.
+When server handles several domain names, this extension enables the server
+to choose certificate for right domain."
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-stream
 			       :socket socket
 			       :close-callback close-callback))
         (handle (ssl-new *ssl-global-context*)))
+    (if hostname
+        (cffi:with-foreign-string (chostname hostname)
+          (ssl-set-tlsext-host-name handle chostname)))
     (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
     (ssl-set-connect-state handle)
     (when (zerop (ssl-set-cipher-list handle cipher-list))
