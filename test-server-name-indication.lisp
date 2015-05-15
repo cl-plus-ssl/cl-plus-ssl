@@ -3,10 +3,8 @@
 (ql:quickload :cl+ssl)
 (ql:quickload :usocket)
 
-(let* ((socket (usocket:socket-connect
-                "sni.velox.ch"
-                443
-                :element-type '(unsigned-byte 8)))
+(let* ((socket (usocket:socket-connect "sni.velox.ch" 443
+                                       :element-type '(unsigned-byte 8)))
        (ssl-stream (cl+ssl:make-ssl-client-stream (usocket:socket-stream socket)
                                                   :hostname "sni.velox.ch"))
        (char-stream (flexi-streams:make-flexi-stream ssl-stream
