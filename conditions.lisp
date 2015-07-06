@@ -295,4 +295,6 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
   (:documentation "This condition is signalled on SSL connection when a peer certificate doesn't verify."))
 
 (define-condition ssl-unable-to-match-host-name (ssl-error-verify)
-  ())
+  ((hostname :initarg :hostname))
+  (:report (lambda (condition stream)
+             (format stream "SSL vertify error: Unable to match hostname ~a" (slot-value condition 'hostname)))))

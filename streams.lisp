@@ -303,7 +303,7 @@ After RELOAD, you need to call this again."
     (unless (eql err 0)
       (error 'ssl-error-verify :stream ssl-stream :error-code err))
     (unless (verify-hostname (ssl-get-peer-certificate handle) hostname)
-      (error 'ssl-unable-to-match-host-name))))
+      (error 'ssl-unable-to-match-host-name :hostname hostname))))
 
 (defun handle-external-format (stream ef)
   (if ef
