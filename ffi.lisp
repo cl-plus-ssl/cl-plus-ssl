@@ -89,6 +89,18 @@
     ssl-method)
 (cffi:defcfun ("TLSv1_method" ssl-TLSv1-method)
     ssl-method)
+(cffi:defcfun ("TLSv1_1_client_method" ssl-TLSv1-1-client-method)
+    ssl-method)
+(cffi:defcfun ("TLSv1_1_server_method" ssl-TLSv1-1-server-method)
+    ssl-method)
+(cffi:defcfun ("TLSv1_1_method" ssl-TLSv1-1-method)
+    ssl-method)
+(cffi:defcfun ("TLSv1_2_client_method" ssl-TLSv1-2-client-method)
+    ssl-method)
+(cffi:defcfun ("TLSv1_2_server_method" ssl-TLSv1-2-server-method)
+    ssl-method)
+(cffi:defcfun ("TLSv1_2_method" ssl-TLSv1-2-method)
+    ssl-method)
 
 (cffi:defcfun ("SSL_CTX_new" ssl-ctx-new)
     ssl-ctx
