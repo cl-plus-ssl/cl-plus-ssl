@@ -65,7 +65,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
    (handle :initarg :handle
            :reader ssl-error-handle))
   (:report (lambda (condition stream)
-             (format stream "Unspecified error ~A on handle ~A" 
+             (format stream "Unspecified error ~A on handle ~A~%"
                      (ssl-error-ret condition)
                      (ssl-error-handle condition))
        (format-ssl-error-queue stream condition))))
@@ -74,7 +74,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
   ((reason  :initarg :reason
             :reader ssl-error-reason))
   (:report (lambda (condition stream)
-             (format stream "SSL initialization error: ~A"
+             (format stream "SSL initialization error: ~A~%"
                      (ssl-error-reason condition))
        (format-ssl-error-queue stream condition))))
 
@@ -89,7 +89,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
    "The TLS/SSL I/O operation completed. This result code is returned if and
     only if ret > 0.")
   (:report (lambda (condition stream)
-             (format stream "The TLS/SSL operation on handle ~A completed (return code: ~A). "
+             (format stream "The TLS/SSL operation on handle ~A completed (return code: ~A).~%"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
        (format-ssl-error-queue stream condition))))
@@ -105,7 +105,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     does not necessarily indicate that the underlying transport has been
     closed.")
   (:report (lambda (condition stream)
-             (format stream "The TLS/SSL connection on handle ~A has been closed (return code: ~A). "
+             (format stream "The TLS/SSL connection on handle ~A has been closed (return code: ~A).~%"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
        (format-ssl-error-queue stream condition))))
@@ -124,7 +124,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     may be necessary until progress becomes visible at application protocol
     level.")
   (:report (lambda (condition stream)
-             (format stream "The TLS/SSL operation on handle ~A did not complete: It wants a READ (return code: ~A). "
+             (format stream "The TLS/SSL operation on handle ~A did not complete: It wants a READ (return code: ~A).~%"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
        (format-ssl-error-queue stream condition))))
@@ -143,7 +143,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     may be necessary until progress becomes visible at application protocol
     level.")
   (:report (lambda (condition stream)
-             (format stream "The TLS/SSL operation on handle ~A did not complete: It wants a WRITE (return code: ~A). "
+             (format stream "The TLS/SSL operation on handle ~A did not complete: It wants a WRITE (return code: ~A).~%"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
        (format-ssl-error-queue stream condition))))
@@ -162,7 +162,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     select() or poll() for writing on the socket file
     descriptor can be used.")
   (:report (lambda (condition stream)
-            (format stream "The TLS/SSL operation on handle ~A did not complete: It wants a connect first (return code: ~A). "
+            (format stream "The TLS/SSL operation on handle ~A did not complete: It wants a connect first (return code: ~A).~%"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
       (format-ssl-error-queue stream condition))))
@@ -176,7 +176,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     TLS/SSL I/O function should be called again later. Details depend on the
     application.")
   (:report (lambda (condition stream)
-             (format stream "The TLS/SSL operation on handle ~A did not complete: An application callback wants to be called again (return code: ~A). "
+             (format stream "The TLS/SSL operation on handle ~A did not complete: An application callback wants to be called again (return code: ~A).~%"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
        (format-ssl-error-queue stream condition))))
@@ -193,14 +193,14 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
   (:report (lambda (condition stream)
              (if (zerop (length (ssl-error-queue condition)))
                  (case (ssl-error-ret condition)
-                   (0 (format stream "An I/O error occurred: An unexpected EOF was observed on handle ~A (return code: ~A). "
+                   (0 (format stream "An I/O error occurred: An unexpected EOF was observed on handle ~A (return code: ~A).~%"
                               (ssl-error-handle condition)
                               (ssl-error-ret condition)))
-                   (-1 (format stream "An I/O error occurred in the underlying BIO (return code: ~A). "
+                   (-1 (format stream "An I/O error occurred in the underlying BIO (return code: ~A).~%"
                                (ssl-error-ret condition)))
-                   (otherwise (format stream "An I/O error occurred: undocumented reason (return code: ~A). "
+                   (otherwise (format stream "An I/O error occurred: undocumented reason (return code: ~A).~%"
                                       (ssl-error-ret condition))))
-                 (format stream "An UNKNOWN I/O error occurred in the underlying BIO (return code: ~A). "
+                 (format stream "An UNKNOWN I/O error occurred in the underlying BIO (return code: ~A).~%"
                          (ssl-error-ret condition)))
        (format-ssl-error-queue stream condition))))
 
@@ -212,7 +212,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     OpenSSL error queue contains more information on the error.")
   (:report (lambda (condition stream)
              (format stream
-         "A failure in the SSL library occurred on handle ~A (return code: ~A). "
+         "A failure in the SSL library occurred on handle ~A (return code: ~A).~%"
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
        (format-ssl-error-queue stream condition))))
