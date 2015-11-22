@@ -11,14 +11,14 @@
   (let ((s (make-string-output-stream)))
     (loop
         for empty = t then nil
-	for c = (read-char stream eof-error-p nil)
-	while (and c (not (eql c #\return)))
-	do
-	  (unless (eql c #\newline)
-	    (write-char c s))
-	finally
-	  (return
-	    (if empty nil (get-output-stream-string s))))))
+  for c = (read-char stream eof-error-p nil)
+  while (and c (not (eql c #\return)))
+  do
+    (unless (eql c #\newline)
+      (write-char c s))
+  finally
+    (return
+      (if empty nil (get-output-stream-string s))))))
 
 (defun write-ssl-certificate-names (ssl-stream &optional (output-stream t))
   (let* ((ssl (ssl-stream-handle ssl-stream))
@@ -34,15 +34,15 @@
 ;; from cl+ssl/example.lisp
 (defun test-https-client-2 (host &key (port 443) show-text-p)
   (let* ((deadline (+ (get-internal-real-time)
-		      (* 3 internal-time-units-per-second)))
-	 (socket (ccl:make-socket :address-family :internet
-				  :connect :active
-				  :type :stream
-				  :remote-host host
-				  :remote-port port
-;;  				  :local-host (resolve-hostname local-host)
-;; 				  :local-port local-port
-				  :deadline deadline))
+          (* 3 internal-time-units-per-second)))
+   (socket (ccl:make-socket :address-family :internet
+          :connect :active
+          :type :stream
+          :remote-host host
+          :remote-port port
+;;            :local-host (resolve-hostname local-host)
+;;           :local-port local-port
+          :deadline deadline))
          https)
     (unwind-protect
          (handler-bind
