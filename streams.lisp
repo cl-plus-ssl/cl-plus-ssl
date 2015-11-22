@@ -167,7 +167,7 @@
         (handle (ssl-stream-handle stream)))
     (when (plusp fill-ptr)
       (unless handle
-	(error "output operation on closed SSL stream"))
+  (error "output operation on closed SSL stream"))
       (with-pointer-to-vector-data (ptr buf)
         (ensure-ssl-funcall stream handle #'ssl-write handle ptr fill-ptr))
       (setf (ssl-stream-output-pointer stream) 0))))
@@ -185,9 +185,9 @@
 #+(and sbcl (not win32))
 (defun install-nonblock-flag (fd)
   (sb-posix:fcntl fd
-		  sb-posix::f-setfl
-		  (logior (sb-posix:fcntl fd sb-posix::f-getfl)
-			  sb-posix::o-nonblock)))
+      sb-posix::f-setfl
+      (logior (sb-posix:fcntl fd sb-posix::f-getfl)
+        sb-posix::o-nonblock)))
 
 #-(or (and clozure-common-lisp (not windows)) sbcl)
 (defun install-nonblock-flag (fd)
@@ -206,7 +206,7 @@
   (when unwrap-stream-p
     (let ((fd (stream-fd socket)))
       (when fd
-	(setf socket fd))))
+  (setf socket fd))))
   (etypecase socket
     (integer
      (install-nonblock-flag socket)
@@ -214,23 +214,23 @@
     (stream
      (ssl-set-bio handle (bio-new-lisp) (bio-new-lisp))))
   (ssl-ctx-ctrl handle
-		+SSL_CTRL_MODE+
-		+SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER+
-		(cffi:null-pointer))
+    +SSL_CTRL_MODE+
+    +SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER+
+    (cffi:null-pointer))
   socket)
 
 (defun install-key-and-cert (handle key certificate)
   (when key
     (unless (eql 1 (ssl-use-rsa-privatekey-file handle
-						key
-						+ssl-filetype-pem+))
+            key
+            +ssl-filetype-pem+))
       (error 'ssl-error-initialize :reason (format nil "Can't load RSA private key file ~A" key))))
   (when certificate
     (unless (eql 1 (ssl-use-certificate-file handle
-					     certificate
-					     +ssl-filetype-pem+))
+               certificate
+               +ssl-filetype-pem+))
       (error 'ssl-error-initialize
-	     :reason (format nil "Can't load certificate ~A" certificate)))))
+       :reason (format nil "Can't load certificate ~A" certificate)))))
 
 (defun x509-certificate-names (x509-certificate)
   (unless (cffi:null-pointer-p x509-certificate)
@@ -309,7 +309,7 @@ After RELOAD, you need to call this again."
 (defun make-ssl-client-stream
     (socket &key certificate key password (method 'ssl-v23-method) external-format
                  close-callback (unwrap-stream-p t)
-		 (cipher-list *default-cipher-list*)
+     (cipher-list *default-cipher-list*)
                  hostname)
   "Returns an SSL stream for the client socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
@@ -321,8 +321,8 @@ When server handles several domain names, this extension enables the server
 to choose certificate for right domain."
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-stream
-			       :socket socket
-			       :close-callback close-callback))
+             :socket socket
+             :close-callback close-callback))
         (handle (ssl-new *ssl-global-context*)))
     (if hostname
         (cffi:with-foreign-string (chostname hostname)
@@ -349,10 +349,10 @@ CERTIFICATE is the path to a file containing the PEM-encoded certificate for
 may be associated with the passphrase PASSWORD."
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-server-stream
-		 :socket socket
-		 :close-callback close-callback
-		 :certificate certificate
-		 :key key))
+     :socket socket
+     :close-callback close-callback
+     :certificate certificate
+     :key key))
         (handle (ssl-new *ssl-global-context*)))
     (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
     (ssl-set-accept-state handle)

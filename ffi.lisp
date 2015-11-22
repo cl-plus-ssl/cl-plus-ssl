@@ -328,37 +328,37 @@
 (defun ensure-ssl-funcall (stream handle func &rest args)
   (loop
      (let ((nbytes
-	    (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
-	      (apply func args))))
+      (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
+        (apply func args))))
        (when (plusp nbytes)
-	 (return nbytes))
+   (return nbytes))
        (let ((error (ssl-get-error handle nbytes)))
-	 (case error
-	   (#.+ssl-error-want-read+
-	    (input-wait stream
-			(ssl-get-fd handle)
-			(ssl-stream-deadline stream)))
-	   (#.+ssl-error-want-write+
-	    (output-wait stream
-			 (ssl-get-fd handle)
-			 (ssl-stream-deadline stream)))
-	   (t
-	    (ssl-signal-error handle func error nbytes)))))))
+   (case error
+     (#.+ssl-error-want-read+
+      (input-wait stream
+      (ssl-get-fd handle)
+      (ssl-stream-deadline stream)))
+     (#.+ssl-error-want-write+
+      (output-wait stream
+       (ssl-get-fd handle)
+       (ssl-stream-deadline stream)))
+     (t
+      (ssl-signal-error handle func error nbytes)))))))
 
 (declaim (inline nonblocking-ssl-funcall))
 (defun nonblocking-ssl-funcall (stream handle func &rest args)
   (loop
      (let ((nbytes
-	    (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
-	      (apply func args))))
+      (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
+        (apply func args))))
        (when (plusp nbytes)
-	 (return nbytes))
+   (return nbytes))
        (let ((error (ssl-get-error handle nbytes)))
-	 (case error
-	   ((#.+ssl-error-want-read+ #.+ssl-error-want-write+)
-	    (return nbytes))
-	   (t
-	    (ssl-signal-error handle func error nbytes)))))))
+   (case error
+     ((#.+ssl-error-want-read+ #.+ssl-error-want-write+)
+      (return nbytes))
+     (t
+      (ssl-signal-error handle func error nbytes)))))))
 
 
 ;;; Waiting for output to be possible
@@ -367,34 +367,34 @@
 (defun milliseconds-until-deadline (deadline stream)
   (let* ((now (get-internal-real-time)))
     (if (> now deadline)
-	(error 'ccl::communication-deadline-expired :stream stream)
-	(values
-	 (round (- deadline now) (/ internal-time-units-per-second 1000))))))
+  (error 'ccl::communication-deadline-expired :stream stream)
+  (values
+   (round (- deadline now) (/ internal-time-units-per-second 1000))))))
 
 #+clozure-common-lisp
 (defun output-wait (stream fd deadline)
   (unless deadline
     (setf deadline (stream-deadline (ssl-stream-socket stream))))
   (let* ((timeout
-	  (if deadline
-	      (milliseconds-until-deadline deadline stream)
-	      nil)))
+    (if deadline
+        (milliseconds-until-deadline deadline stream)
+        nil)))
     (multiple-value-bind (win timedout error)
-	(ccl::process-output-wait fd timeout)
+  (ccl::process-output-wait fd timeout)
       (unless win
-	(if timedout
-	    (error 'ccl::communication-deadline-expired :stream stream)
-	    (ccl::stream-io-error stream (- error) "write"))))))
+  (if timedout
+      (error 'ccl::communication-deadline-expired :stream stream)
+      (ccl::stream-io-error stream (- error) "write"))))))
 
 #+sbcl
 (defun output-wait (stream fd deadline)
   (declare (ignore stream))
   (let ((timeout
-	 ;; *deadline* is handled by wait-until-fd-usable automatically,
-	 ;; but we need to turn a user-specified deadline into a timeout
-	 (when deadline
-	   (/ (- deadline (get-internal-real-time))
-	      internal-time-units-per-second))))
+   ;; *deadline* is handled by wait-until-fd-usable automatically,
+   ;; but we need to turn a user-specified deadline into a timeout
+   (when deadline
+     (/ (- deadline (get-internal-real-time))
+        internal-time-units-per-second))))
     (sb-sys:wait-until-fd-usable fd :output timeout)))
 
 #-(or clozure-common-lisp sbcl)
@@ -412,25 +412,25 @@
   (unless deadline
     (setf deadline (stream-deadline (ssl-stream-socket stream))))
   (let* ((timeout
-	  (if deadline
-	      (milliseconds-until-deadline deadline stream)
-	      nil)))
+    (if deadline
+        (milliseconds-until-deadline deadline stream)
+        nil)))
     (multiple-value-bind (win timedout error)
-	(ccl::process-input-wait fd timeout)
+  (ccl::process-input-wait fd timeout)
       (unless win
-	(if timedout
-	    (error 'ccl::communication-deadline-expired :stream stream)
-	    (ccl::stream-io-error stream (- error) "read"))))))
+  (if timedout
+      (error 'ccl::communication-deadline-expired :stream stream)
+      (ccl::stream-io-error stream (- error) "read"))))))
 
 #+sbcl
 (defun input-wait (stream fd deadline)
   (declare (ignore stream))
   (let ((timeout
-	 ;; *deadline* is handled by wait-until-fd-usable automatically,
-	 ;; but we need to turn a user-specified deadline into a timeout
-	 (when deadline
-	   (/ (- deadline (get-internal-real-time))
-	      internal-time-units-per-second))))
+   ;; *deadline* is handled by wait-until-fd-usable automatically,
+   ;; but we need to turn a user-specified deadline into a timeout
+   (when deadline
+     (/ (- deadline (get-internal-real-time))
+        internal-time-units-per-second))))
     (sb-sys:wait-until-fd-usable fd :input timeout)))
 
 #-(or clozure-common-lisp sbcl)
@@ -527,15 +527,15 @@ will use this value.")
   (bordeaux-threads:with-recursive-lock-held (*global-lock*)
     (let ((self (bt:current-thread)))
       (or (gethash self *threads*)
-	  (setf (gethash self *threads*)
-		(incf *thread-counter*))))))
+    (setf (gethash self *threads*)
+    (incf *thread-counter*))))))
 
 (defvar *ssl-check-verify-p* :unspecified)
 
 (defun initialize (&key (method 'ssl-v23-method) rand-seed)
   (setf *locks* (loop
-		   repeat (crypto-num-locks)
-		   collect (bt:make-lock)))
+       repeat (crypto-num-locks)
+       collect (bt:make-lock)))
   (crypto-set-locking-callback (cffi:callback locking-callback))
   (crypto-set-id-callback (cffi:callback threadid-callback))
   (setf *bio-lisp-method* (make-bio-lisp-method))

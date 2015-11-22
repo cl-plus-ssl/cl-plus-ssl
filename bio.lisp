@@ -45,11 +45,11 @@
 (defun make-bio-lisp-method ()
   (let ((m (cffi:foreign-alloc '(:struct bio-method))))
     (setf (cffi:foreign-slot-value m '(:struct bio-method) 'type)
-	  ;; fixme: this is wrong, but presumably still better than some
-	  ;; random value here.
-	  +bio-type-socket+)
+    ;; fixme: this is wrong, but presumably still better than some
+    ;; random value here.
+    +bio-type-socket+)
     (macrolet ((slot (name)
-		 `(cffi:foreign-slot-value m '(:struct bio-method) ,name)))
+     `(cffi:foreign-slot-value m '(:struct bio-method) ,name)))
       (setf (slot 'name) (cffi:foreign-string-alloc "lisp"))
       (setf (slot 'bwrite) (cffi:callback lisp-write))
       (setf (slot 'bread) (cffi:callback lisp-read))
@@ -76,34 +76,34 @@
 
 (defun clear-retry-flags (bio)
   (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-	(logandc2 (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-		  (logior +BIO_FLAGS_READ+
-			  +BIO_FLAGS_WRITE+
-			  +BIO_FLAGS_SHOULD_RETRY+))))
+  (logandc2 (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+      (logior +BIO_FLAGS_READ+
+        +BIO_FLAGS_WRITE+
+        +BIO_FLAGS_SHOULD_RETRY+))))
 
 (defun set-retry-read (bio)
   (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-	(logior (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-		+BIO_FLAGS_READ+
-		+BIO_FLAGS_SHOULD_RETRY+)))
+  (logior (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+    +BIO_FLAGS_READ+
+    +BIO_FLAGS_SHOULD_RETRY+)))
 
 (cffi:defcallback lisp-read :int ((bio :pointer) (buf :pointer) (n :int))
   bio buf n
   (let ((i 0))
     (handler-case
-	(unless (or (cffi:null-pointer-p buf) (null n))
-	  (clear-retry-flags bio)
-	  (when (or *blockp* (listen *socket*))
+  (unless (or (cffi:null-pointer-p buf) (null n))
+    (clear-retry-flags bio)
+    (when (or *blockp* (listen *socket*))
             (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
             (incf i))
-	  (loop
-	      while (and (< i n)
+    (loop
+        while (and (< i n)
                          (or (null *partial-read-p*) (listen *socket*)))
-	      do
-		(setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
-		(incf i))
-	  #+(or)
-	  (when (zerop i) (set-retry-read bio)))
+        do
+    (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
+    (incf i))
+    #+(or)
+    (when (zerop i) (set-retry-read bio)))
       (end-of-file ()))
     i))
 
@@ -135,4 +135,4 @@
       (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
       1)))
 
-(setf *bio-lisp-method* nil)		;force reinit if anything changed here
+(setf *bio-lisp-method* nil)    ;force reinit if anything changed here
