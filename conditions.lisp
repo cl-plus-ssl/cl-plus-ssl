@@ -115,7 +115,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
   ()
   (:documentation
    "The operation did not complete; the same TLS/SSL I/O function should be
-    called again later. If, by then, the underlying BIO has data available for 
+    called again later. If, by then, the underlying BIO has data available for
     reading (if the result code is SSL_ERROR_WANT_READ) or allows writing data
     (SSL_ERROR_WANT_WRITE), then some TLS/SSL protocol progress will take place,
     i.e. at least part of an TLS/SSL record will be read or written. Note that
@@ -134,7 +134,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
   ()
   (:documentation
    "The operation did not complete; the same TLS/SSL I/O function should be
-    called again later. If, by then, the underlying BIO has data available for 
+    called again later. If, by then, the underlying BIO has data available for
     reading (if the result code is SSL_ERROR_WANT_READ) or allows writing data
     (SSL_ERROR_WANT_WRITE), then some TLS/SSL protocol progress will take place,
     i.e. at least part of an TLS/SSL record will be read or written. Note that
