@@ -594,6 +594,8 @@ context and in particular the loaded certificate chain."
   (ssl-ctx-use-certificate-chain-file *ssl-global-context* certificate-chain-file))
 
 (defun reload ()
+  (if *ssl-global-context*      
+      (ssl-ctx-free *ssl-global-context*))
   (cffi:load-foreign-library 'libssl)
   (cffi:load-foreign-library 'libeay32)
   (setf *ssl-global-context* nil)
