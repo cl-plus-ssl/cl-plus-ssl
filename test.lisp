@@ -212,13 +212,13 @@
      :close-callback callback
      :external-format :iso-8859-1)))
 
-;; CCL requires specifying the 
+;; CCL requires specifying the
 ;; deadline at the socket cration (
 ;; in constrast to SBCL which has
 ;; the WITH-TIMEOUT macro).
-;; 
+;;
 ;; Therefore a separate INIT-CLIENT
-;; function is needed for CCL when 
+;; function is needed for CCL when
 ;; we need read/write deadlines on
 ;; the SSL client stream.
 #+clozure-common-lisp
@@ -289,7 +289,7 @@
       #'test-server)
       (with-open-stream
     (socket
-     (ccl-init-client-with-deadline 
+     (ccl-init-client-with-deadline
       :unwrap-stream-p usp
       :seconds 3))
   (write-line "test" socket)
@@ -322,9 +322,9 @@
     (with-thread ("echo server for deadline test"
       (lambda () (init-server :unwrap-stream-p usp))
       #'test-server)
-      (with-open-stream 
+      (with-open-stream
     (socket
-     (ccl-init-client-with-deadline 
+     (ccl-init-client-with-deadline
       :unwrap-stream-p usp
       :seconds 3))
       (unwind-protect
@@ -376,8 +376,8 @@
     (with-thread ("echo server for read-char-no-hang test"
       (lambda () (init-server :unwrap-stream-p usp))
       #'test-server)
-      (with-open-stream 
-    (socket (ccl-init-client-with-deadline 
+      (with-open-stream
+    (socket (ccl-init-client-with-deadline
        :unwrap-stream-p usp
        :seconds 3))
   (write-line "test" socket)

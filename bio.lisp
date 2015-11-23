@@ -114,7 +114,7 @@
 (cffi:defcallback lisp-ctrl :int
   ((bio :pointer) (cmd :int) (larg :long) (parg :pointer))
   bio larg parg
-  (cond 
+  (cond
     ((eql cmd +BIO_CTRL_FLUSH+) 1)
     (t
       ;; (warn "lisp-ctrl(~A,~A,~A)" cmd larg parg)
