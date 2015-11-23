@@ -196,6 +196,14 @@
   (ssl ssl-pointer)
   (str :string)
   (type :int))
+(cffi:defcfun ("SSL_CTX_set_cipher_list" ssl-ctx-set-cipher-list%)
+    :int
+  (ctx :pointer)
+  (ciphers :pointer))
+(defun ssl-ctx-set-cipher-list (ctx ciphers)
+  (cffi:with-foreign-string (ciphers* ciphers)
+    (when (= 0 (ssl-ctx-set-cipher-list% ctx ciphers*))
+      (error 'ssl-error-initialize :reason "Can't set SSL cipher list" :queue (read-ssl-error-queue)))))
 (cffi:defcfun ("SSL_CTX_use_certificate_chain_file" ssl-ctx-use-certificate-chain-file)
     :int
   (ctx ssl-ctx)
