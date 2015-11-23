@@ -20,7 +20,7 @@
 
 ;; to calculate non NIL value of the buffer end index
 (defun calc-buf-end (buf-start seq seq-start seq-end)
-  (+ buf-start 
+  (+ buf-start
      (- (or seq-end (length seq))
         seq-start)))
 

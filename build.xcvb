@@ -23,4 +23,3 @@
 	       "random")
   :build-depends-on ("flexi-streams" "trivial-gray-streams" "cffi")
   :supersedes-asdf ("cl+ssl")))
-
