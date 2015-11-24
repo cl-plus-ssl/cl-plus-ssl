@@ -50,6 +50,11 @@
 
 ;;; Function definitions
 ;;;
+
+(cffi:defcfun ("close" close-fd)
+    :int
+  (fd :int))
+
 (declaim (inline ssl-write ssl-read ssl-connect ssl-accept))
 
 (cffi:defctype ssl-method :pointer)
