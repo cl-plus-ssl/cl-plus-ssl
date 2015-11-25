@@ -151,7 +151,7 @@
   (ssl ssl-pointer)
   (buf :pointer)
   (num :int))
-(cffi:defcfun ("SSL_shutdown" ssh-shutdown)
+(cffi:defcfun ("SSL_shutdown" ssl-shutdown)
     :void
   (ssl ssl-pointer))
 (cffi:defcfun ("SSL_free" ssl-free)
