@@ -375,7 +375,7 @@ session-resume requests) would normally be copied into the local cache before pr
   (ctx :pointer)
   (callback :pointer))
 
-(cffi:defcallback need-tmp-rsa-callback :pointer ((ssl :pointer) (export-p :int) (key-length :int))
+(cffi:defcallback tmp-rsa-callback :pointer ((ssl :pointer) (export-p :int) (key-length :int))
   (declare (ignore ssl export-p))
   (flet ((rsa-key (length)
            (rsa-generate-key length
@@ -625,7 +625,7 @@ will use this value.")
   (ssl-ctx-set-default-passwd-cb *ssl-global-context* 
                                  (cffi:callback pem-password-callback))
   (ssl-ctx-set-tmp-rsa-callback *ssl-global-context*
-                                (cffi:callback need-tmp-rsa-callback)))
+                                (cffi:callback tmp-rsa-callback)))
 
 (defun ensure-initialized (&key (method 'ssl-v23-method) (rand-seed nil))
   "In most cases you do *not* need to call this function, because it 
