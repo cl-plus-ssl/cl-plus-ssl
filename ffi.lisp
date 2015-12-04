@@ -38,6 +38,50 @@
 
 (defconstant +RSA_F4+ #x10001)
 
+(defconstant +SSL-SESS-CACHE-OFF+ #x0000
+  "No session caching for client or server takes place.")
+(defconstant +SSL-SESS-CACHE-CLIENT+ #x0001
+  "Client sessions are added to the session cache.
+As there is no reliable way for the OpenSSL library to know whether a session should be reused
+or which session to choose (due to the abstract BIO layer the SSL engine does not have details
+about the connection), the application must select the session to be reused by using the
+SSL-SET-SESSION function. This option is not activated by default.")
+(defconstant +SSL-SESS-CACHE-SERVER+ #x0002
+  "Server sessions are added to the session cache.
+When a client proposes a session to be reused, the server looks for the corresponding session
+in (first) the internal session cache (unless +SSL-SESS-CACHE-NO-INTERNAL-LOOKUP+ is set), then
+(second) in the external cache if available. If the session is found, the server will try to
+reuse the session. This is the default.")
+(defconstant +SSL-SESS-CACHE-BOTH+ (logior +SSL-SESS-CACHE-CLIENT+ +SSL-SESS-CACHE-SERVER+)
+  "Enable both +SSL-SESS-CACHE-CLIENT+ and +SSL-SESS-CACHE-SERVER+ at the same time.")
+(defconstant +SSL-SESS-CACHE-NO-AUTO-CLEAR+ #x0080
+  "Normally the session cache is checked for expired sessions every 255 connections using the
+SSL-CTX-FLUSH-SESSIONS function. Since this may lead to a delay which cannot be controlled,
+the automatic flushing may be disabled and SSL-CTX-FLUSH-SESSIONS can be called explicitly
+by the application.")
+(defconstant +SSL-SESS-CACHE-NO-INTERNAL-LOOKUP+ #x0100
+  "By setting this flag, session-resume operations in an SSL/TLS server will not automatically
+look up sessions in the internal cache, even if sessions are automatically stored there.
+If external session caching callbacks are in use, this flag guarantees that all lookups are
+directed to the external cache. As automatic lookup only applies for SSL/TLS servers, the flag
+has no effect on clients.")
+(defconstant +SSL-SESS-CACHE-NO-INTERNAL-STORE+ #x0200
+  "Depending on the presence of +SSL-SESS-CACHE-CLIENT+ and/or +SSL-SESS-CACHE-SERVER+, sessions
+negotiated in an SSL/TLS handshake may be cached for possible reuse. Normally a new session is
+added to the internal cache as well as any external session caching (callback) that is configured
+for the SSL-CTX. This flag will prevent sessions being stored in the internal cache (though the
+application can add them manually using SSL-CTX-ADD-SESSION). Note: in any SSL/TLS servers where
+external caching is configured, any successful session lookups in the external cache (ie. for
+session-resume requests) would normally be copied into the local cache before processing continues
+- this flag prevents these additions to the internal cache as well.")
+(defconstant +SSL-SESS-CACHE-NO-INTERNAL+ (logior +SSL-SESS-CACHE-NO-INTERNAL-LOOKUP+ +SSL-SESS-CACHE-NO-INTERNAL-STORE+)
+  "Enable both +SSL-SESS-CACHE-NO-INTERNAL-LOOKUP+ and +SSL-SESS-CACHE-NO-INTERNAL-STORE+ at the same time.")
+
+(defconstant +SSL-VERIFY-NONE+ #x00)
+(defconstant +SSL-VERIFY-PEER+ #x01)
+(defconstant +SSL-VERIFY-FAIL-IF-NO-PEER-CERT+ #x02)
+(defconstant +SSL-VERIFY-CLIENT-ONCE+ #x04)
+
 (defvar *tmp-rsa-key-512* nil)
 (defvar *tmp-rsa-key-1024* nil)
 (defvar *tmp-rsa-key-2048* nil)
@@ -267,6 +311,12 @@
   (ctx :pointer)
   (depth :int))
 
+(cffi:defcfun ("SSL_CTX_set_verify" ssl-ctx-set-verify)
+    :void
+  (ctx :pointer)
+  (mode :int)
+  (verify-callback :pointer))
+
 (cffi:defcfun ("SSL_get_verify_result" ssl-get-verify-result)
     :long
   (ssl ssl-pointer))
@@ -293,7 +343,19 @@
     :pointer                            ; *X509_NAME
   (x509 :pointer))
 
+(cffi:defcfun ("X509_STORE_CTX_get_error" x509-store-ctx-get-error)
+    :int
+  (ctx :pointer))
+
 (cffi:defcfun ("SSL_CTX_set_default_verify_paths" ssl-ctx-set-default-verify-paths)
+    :int
+  (ctx :pointer))
+
+(cffi:defcfun ("SSL_CTX_set_default_verify_dir" ssl-ctx-set-default-verify-dir)
+    :int
+  (ctx :pointer))
+
+(cffi:defcfun ("SSL_CTX_set_default_verify_file" ssl-ctx-set-default-verify-file)
     :int
   (ctx :pointer))
 
