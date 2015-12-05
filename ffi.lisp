@@ -622,27 +622,27 @@ will use this value.")
   (setf *ssl-global-method* (funcall method))
   (setf *ssl-global-context* (ssl-ctx-new *ssl-global-method*))
   (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
-  (ssl-ctx-set-default-passwd-cb *ssl-global-context* 
+  (ssl-ctx-set-default-passwd-cb *ssl-global-context*
                                  (cffi:callback pem-password-callback))
   (ssl-ctx-set-tmp-rsa-callback *ssl-global-context*
                                 (cffi:callback tmp-rsa-callback)))
 
 (defun ensure-initialized (&key (method 'ssl-v23-method) (rand-seed nil))
-  "In most cases you do *not* need to call this function, because it 
-is called automatically by all other functions. The only reason to 
+  "In most cases you do *not* need to call this function, because it
+is called automatically by all other functions. The only reason to
 call it explicitly is to supply the RAND-SEED parameter. In this case
 do it before calling any other functions.
 
 Just leave the default value for the METHOD parameter.
 
-RAND-SEED is an octet sequence to initialize OpenSSL random number generator. 
-On many platforms, including Linux and Windows, it may be leaved NIL (default), 
-because OpenSSL initializes the random number generator from OS specific service. 
+RAND-SEED is an octet sequence to initialize OpenSSL random number generator.
+On many platforms, including Linux and Windows, it may be leaved NIL (default),
+because OpenSSL initializes the random number generator from OS specific service.
 But for example on Solaris it may be necessary to supply this value.
 The minimum length required by OpenSSL is 128 bits.
 See ttp://www.openssl.org/support/faq.html#USER1 for details.
 
-Hint: do not use Common Lisp RANDOM function to generate the RAND-SEED, 
+Hint: do not use Common Lisp RANDOM function to generate the RAND-SEED,
 because the function usually returns predictable values."
   (bordeaux-threads:with-recursive-lock-held (*global-lock*)
     (unless (ssl-initialized-p)
@@ -652,16 +652,16 @@ because the function usually returns predictable values."
 
 (defun use-certificate-chain-file (certificate-chain-file)
   "Loads a PEM encoded certificate chain file CERTIFICATE-CHAIN-FILE
-and adds the chain to global context. The certificates must be sorted 
+and adds the chain to global context. The certificates must be sorted
 starting with the subject's certificate (actual client or server certificate),
-followed by intermediate CA certificates if applicable, and ending at 
-the highest level (root) CA. Note: the RELOAD function clears the global 
+followed by intermediate CA certificates if applicable, and ending at
+the highest level (root) CA. Note: the RELOAD function clears the global
 context and in particular the loaded certificate chain."
   (ensure-initialized)
   (ssl-ctx-use-certificate-chain-file *ssl-global-context* certificate-chain-file))
 
 (defun reload ()
-  (if *ssl-global-context*      
+  (if *ssl-global-context*
       (ssl-ctx-free *ssl-global-context*))
   (cffi:load-foreign-library 'libssl)
   (cffi:load-foreign-library 'libeay32)
