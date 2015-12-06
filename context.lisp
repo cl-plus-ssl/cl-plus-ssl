@@ -79,7 +79,7 @@
 (defun make-context (&key (method nil method-supplied-p)
                           (disabled-protocols)
                           (options (list +SSL-OP-ALL+))
-                          (session-cache-mode +ssl-sess-cache-client+)
+                          (session-cache-mode +ssl-sess-cache-server+)
                           (verify-location :default)
                           (verify-depth 100)
                           (verify-mode +ssl-verify-peer+)
