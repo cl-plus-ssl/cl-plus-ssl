@@ -1,0 +1,33 @@
+language: lisp
+
+env:
+  matrix:
+    - LISP=abcl
+    - LISP=allegro
+    - LISP=sbcl
+    - LISP=sbcl32
+    - LISP=ccl
+    - LISP=ccl32
+    - LISP=clisp
+    - LISP=clisp32
+    - LISP=cmucl
+    - LISP=ecl
+
+matrix:
+  allow_failures:
+    # CIM not available for CMUCL
+    - env: LISP=cmucl
+
+install:
+  - if [ -x ./install.sh ] && head -2 ./install.sh | grep '^# cl-travis' > /dev/null;
+    then
+      ./install.sh;
+    else
+      curl https://raw.githubusercontent.com/luismbo/cl-travis/master/install.sh | sh;
+    fi     
+        
+before_script:
+  # - echo "(defsystem :dummy-cl-travis-system)" > ~/lisp/dummy-cl-travis-system.asd
+
+script:
+  - COVERALLS=true cl -e '(ql:quickload :cl+ssl.test) (let ((results (coveralls:with-coveralls (:exclude "test") (5am:run :cl+ssl)))) (5am:explain! results) (unless (5am:results-status results) (uiop:quit 1)))'

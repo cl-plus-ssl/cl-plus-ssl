@@ -19,15 +19,17 @@
   :depends-on (:cffi :trivial-gray-streams :flexi-streams #+sbcl :sb-posix
                :bordeaux-threads :trivial-garbage :uiop)
   :serial t
-  :components
-   ((:file "package")
-    (:file "reload")
-    (:file "conditions")
-    (:file "ffi")
-    (:file "ffi-buffer-all")
-    #-clisp (:file "ffi-buffer")
-    #+clisp (:file "ffi-buffer-clisp")
-    (:file "streams")
-    (:file "bio")
-    (:file "random")
-    (:file "context")))
+  :components ((:module "src"
+                :serial t
+                :components
+                ((:file "package")
+                 (:file "reload")
+                 (:file "conditions")
+                 (:file "ffi")
+                 (:file "ffi-buffer-all")
+                 #-clisp (:file "ffi-buffer")
+                 #+clisp (:file "ffi-buffer-clisp")
+                 (:file "streams")
+                 (:file "bio")
+                 (:file "random")
+                 (:file "context")))))
