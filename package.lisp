@@ -23,4 +23,10 @@
            #:ssl-set-global-default-verify-paths
            #:ssl-error-verify
            #:ssl-error-stream
-           #:ssl-error-code))
+           #:ssl-error-code
+
+           #:+ssl-verify-none+
+           #:+ssl-verify-peer+
+           #:+ssl-verify-fail-if-no-peer-cert+
+           #:+ssl-verify-client-once+
+           #:make-context))
