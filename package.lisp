@@ -23,4 +23,30 @@
            #:ssl-set-global-default-verify-paths
            #:ssl-error-verify
            #:ssl-error-stream
-           #:ssl-error-code))
+           #:ssl-error-code
+           #:ssl-ctx-free
+
+           #:with-pem-password
+
+           #:+ssl-verify-none+
+           #:+ssl-verify-peer+
+           #:+ssl-verify-fail-if-no-peer-cert+
+           #:+ssl-verify-client-once+
+
+           #:+ssl-op-no-sslv2+
+           #:+ssl-op-no-sslv3+
+           #:+ssl-op-no-tlsv1+
+           #:+ssl-op-no-tlsv1-1+
+           #:+ssl-op-no-tlsv1-2+
+
+           #:+ssl-sess-cache-off+
+           #:+ssl-sess-cache-client+
+           #:+ssl-sess-cache-server+
+           #:+ssl-sess-cache-both+
+           #:+ssl-sess-cache-no-auto-clear+
+           #:+ssl-sess-cache-no-internal-lookup+
+           #:+ssl-sess-cache-no-internal-store+
+           #:+ssl-sess-cache-no-internal+
+           
+           #:make-context
+           #:with-global-context))

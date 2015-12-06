@@ -31,12 +31,65 @@
 (defconstant +ssl-filetype-asn1+ 2)
 (defconstant +ssl-filetype-default+ 3)
 
+(defconstant +SSL-CTRL-OPTIONS+ 32)
 (defconstant +SSL_CTRL_SET_SESS_CACHE_MODE+ 44)
 (defconstant +SSL_CTRL_MODE+ 33)
 
 (defconstant +SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER+ 2)
 
 (defconstant +RSA_F4+ #x10001)
+
+(defconstant +SSL-SESS-CACHE-OFF+ #x0000
+  "No session caching for client or server takes place.")
+(defconstant +SSL-SESS-CACHE-CLIENT+ #x0001
+  "Client sessions are added to the session cache.
+As there is no reliable way for the OpenSSL library to know whether a session should be reused
+or which session to choose (due to the abstract BIO layer the SSL engine does not have details
+about the connection), the application must select the session to be reused by using the
+SSL-SET-SESSION function. This option is not activated by default.")
+(defconstant +SSL-SESS-CACHE-SERVER+ #x0002
+  "Server sessions are added to the session cache.
+When a client proposes a session to be reused, the server looks for the corresponding session
+in (first) the internal session cache (unless +SSL-SESS-CACHE-NO-INTERNAL-LOOKUP+ is set), then
+(second) in the external cache if available. If the session is found, the server will try to
+reuse the session. This is the default.")
+(defconstant +SSL-SESS-CACHE-BOTH+ (logior +SSL-SESS-CACHE-CLIENT+ +SSL-SESS-CACHE-SERVER+)
+  "Enable both +SSL-SESS-CACHE-CLIENT+ and +SSL-SESS-CACHE-SERVER+ at the same time.")
+(defconstant +SSL-SESS-CACHE-NO-AUTO-CLEAR+ #x0080
+  "Normally the session cache is checked for expired sessions every 255 connections using the
+SSL-CTX-FLUSH-SESSIONS function. Since this may lead to a delay which cannot be controlled,
+the automatic flushing may be disabled and SSL-CTX-FLUSH-SESSIONS can be called explicitly
+by the application.")
+(defconstant +SSL-SESS-CACHE-NO-INTERNAL-LOOKUP+ #x0100
+  "By setting this flag, session-resume operations in an SSL/TLS server will not automatically
+look up sessions in the internal cache, even if sessions are automatically stored there.
+If external session caching callbacks are in use, this flag guarantees that all lookups are
+directed to the external cache. As automatic lookup only applies for SSL/TLS servers, the flag
+has no effect on clients.")
+(defconstant +SSL-SESS-CACHE-NO-INTERNAL-STORE+ #x0200
+  "Depending on the presence of +SSL-SESS-CACHE-CLIENT+ and/or +SSL-SESS-CACHE-SERVER+, sessions
+negotiated in an SSL/TLS handshake may be cached for possible reuse. Normally a new session is
+added to the internal cache as well as any external session caching (callback) that is configured
+for the SSL-CTX. This flag will prevent sessions being stored in the internal cache (though the
+application can add them manually using SSL-CTX-ADD-SESSION). Note: in any SSL/TLS servers where
+external caching is configured, any successful session lookups in the external cache (ie. for
+session-resume requests) would normally be copied into the local cache before processing continues
+- this flag prevents these additions to the internal cache as well.")
+(defconstant +SSL-SESS-CACHE-NO-INTERNAL+ (logior +SSL-SESS-CACHE-NO-INTERNAL-LOOKUP+ +SSL-SESS-CACHE-NO-INTERNAL-STORE+)
+  "Enable both +SSL-SESS-CACHE-NO-INTERNAL-LOOKUP+ and +SSL-SESS-CACHE-NO-INTERNAL-STORE+ at the same time.")
+
+(defconstant +SSL-VERIFY-NONE+ #x00)
+(defconstant +SSL-VERIFY-PEER+ #x01)
+(defconstant +SSL-VERIFY-FAIL-IF-NO-PEER-CERT+ #x02)
+(defconstant +SSL-VERIFY-CLIENT-ONCE+ #x04)
+
+(defconstant +SSL-OP-ALL+ #x80000BFF)
+
+(defconstant +SSL-OP-NO-SSLv2+   #x00000000)
+(defconstant +SSL-OP-NO-SSLv3+   #x02000000)
+(defconstant +SSL-OP-NO-TLSv1+   #x04000000)
+(defconstant +SSL-OP-NO-TLSv1-2+ #x08000000)
+(defconstant +SSL-OP-NO-TLSv1-1+ #x10000000)
 
 (defvar *tmp-rsa-key-512* nil)
 (defvar *tmp-rsa-key-1024* nil)
@@ -201,6 +254,14 @@
   (ssl ssl-pointer)
   (str :string)
   (type :int))
+#+new-openssl
+(cffi:defcfun ("SSL_CTX_set_options" ssl-ctx-set-options)
+                 :long
+               (ctx :pointer)
+               (options :long))
+#-new-openssl
+(defun ssl-ctx-set-options (ctx options)
+  (ssl-ctx-ctrl ctx +SSL-CTRL-OPTIONS+ options (cffi:null-pointer)))
 (cffi:defcfun ("SSL_CTX_set_cipher_list" ssl-ctx-set-cipher-list%)
     :int
   (ctx :pointer)
@@ -267,6 +328,12 @@
   (ctx :pointer)
   (depth :int))
 
+(cffi:defcfun ("SSL_CTX_set_verify" ssl-ctx-set-verify)
+    :void
+  (ctx :pointer)
+  (mode :int)
+  (verify-callback :pointer))
+
 (cffi:defcfun ("SSL_get_verify_result" ssl-get-verify-result)
     :long
   (ssl ssl-pointer))
@@ -293,7 +360,19 @@
     :pointer                            ; *X509_NAME
   (x509 :pointer))
 
+(cffi:defcfun ("X509_STORE_CTX_get_error" x509-store-ctx-get-error)
+    :int
+  (ctx :pointer))
+
 (cffi:defcfun ("SSL_CTX_set_default_verify_paths" ssl-ctx-set-default-verify-paths)
+    :int
+  (ctx :pointer))
+
+(cffi:defcfun ("SSL_CTX_set_default_verify_dir" ssl-ctx-set-default-verify-dir)
+    :int
+  (ctx :pointer))
+
+(cffi:defcfun ("SSL_CTX_set_default_verify_file" ssl-ctx-set-default-verify-file)
     :int
   (ctx :pointer))
 
@@ -313,7 +392,7 @@
   (ctx :pointer)
   (callback :pointer))
 
-(cffi:defcallback need-tmp-rsa-callback :pointer ((ssl :pointer) (export-p :int) (key-length :int))
+(cffi:defcallback tmp-rsa-callback :pointer ((ssl :pointer) (export-p :int) (key-length :int))
   (declare (ignore ssl export-p))
   (flet ((rsa-key (length)
            (rsa-generate-key length
@@ -560,27 +639,27 @@ will use this value.")
   (setf *ssl-global-method* (funcall method))
   (setf *ssl-global-context* (ssl-ctx-new *ssl-global-method*))
   (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
-  (ssl-ctx-set-default-passwd-cb *ssl-global-context* 
+  (ssl-ctx-set-default-passwd-cb *ssl-global-context*
                                  (cffi:callback pem-password-callback))
   (ssl-ctx-set-tmp-rsa-callback *ssl-global-context*
-                                (cffi:callback need-tmp-rsa-callback)))
+                                (cffi:callback tmp-rsa-callback)))
 
 (defun ensure-initialized (&key (method 'ssl-v23-method) (rand-seed nil))
-  "In most cases you do *not* need to call this function, because it 
-is called automatically by all other functions. The only reason to 
+  "In most cases you do *not* need to call this function, because it
+is called automatically by all other functions. The only reason to
 call it explicitly is to supply the RAND-SEED parameter. In this case
 do it before calling any other functions.
 
 Just leave the default value for the METHOD parameter.
 
-RAND-SEED is an octet sequence to initialize OpenSSL random number generator. 
-On many platforms, including Linux and Windows, it may be leaved NIL (default), 
-because OpenSSL initializes the random number generator from OS specific service. 
+RAND-SEED is an octet sequence to initialize OpenSSL random number generator.
+On many platforms, including Linux and Windows, it may be leaved NIL (default),
+because OpenSSL initializes the random number generator from OS specific service.
 But for example on Solaris it may be necessary to supply this value.
 The minimum length required by OpenSSL is 128 bits.
 See ttp://www.openssl.org/support/faq.html#USER1 for details.
 
-Hint: do not use Common Lisp RANDOM function to generate the RAND-SEED, 
+Hint: do not use Common Lisp RANDOM function to generate the RAND-SEED,
 because the function usually returns predictable values."
   (bordeaux-threads:with-recursive-lock-held (*global-lock*)
     (unless (ssl-initialized-p)
@@ -590,16 +669,16 @@ because the function usually returns predictable values."
 
 (defun use-certificate-chain-file (certificate-chain-file)
   "Loads a PEM encoded certificate chain file CERTIFICATE-CHAIN-FILE
-and adds the chain to global context. The certificates must be sorted 
+and adds the chain to global context. The certificates must be sorted
 starting with the subject's certificate (actual client or server certificate),
-followed by intermediate CA certificates if applicable, and ending at 
-the highest level (root) CA. Note: the RELOAD function clears the global 
+followed by intermediate CA certificates if applicable, and ending at
+the highest level (root) CA. Note: the RELOAD function clears the global
 context and in particular the loaded certificate chain."
   (ensure-initialized)
   (ssl-ctx-use-certificate-chain-file *ssl-global-context* certificate-chain-file))
 
 (defun reload ()
-  (if *ssl-global-context*      
+  (if *ssl-global-context*
       (ssl-ctx-free *ssl-global-context*))
   (cffi:load-foreign-library 'libssl)
   (cffi:load-foreign-library 'libeay32)

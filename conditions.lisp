@@ -293,3 +293,10 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
                (format stream "SSL verify error: ~d~@[ ~a~]"
                        code (ssl-verify-error-keyword code)))))
   (:documentation "This condition is signalled on SSL connection when a peer certificate doesn't verify."))
+
+(define-condition ssl-error-call (cl+ssl::ssl-error)
+  ((message :initarg :message))
+  (:documentation
+   "A failure in the SSL library occurred..")
+  (:report (lambda (condition stream)
+             (format stream "A failure in OpenSSL library occurred~@[: ~A~].~%" (slot-value condition 'message)) (cl+ssl::format-ssl-error-queue stream (cl+ssl::ssl-error-queue condition)))))

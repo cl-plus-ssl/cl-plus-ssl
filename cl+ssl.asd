@@ -17,7 +17,7 @@
   :license "MIT"
   :author "Eric Marsden, Jochen Schmidt, David Lichteblau"
   :depends-on (:cffi :trivial-gray-streams :flexi-streams #+sbcl :sb-posix
-		     :bordeaux-threads :trivial-garbage)
+               :bordeaux-threads :trivial-garbage :uiop)
   :serial t
   :components
    ((:file "package")
@@ -29,4 +29,5 @@
     #+clisp (:file "ffi-buffer-clisp")
     (:file "streams")
     (:file "bio")
-    (:file "random")))
+    (:file "random")
+    (:file "context")))
