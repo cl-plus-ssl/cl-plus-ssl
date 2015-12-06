@@ -25,6 +25,8 @@
            #:ssl-error-stream
            #:ssl-error-code
 
+           #:with-pem-password
+
            #:+ssl-verify-none+
            #:+ssl-verify-peer+
            #:+ssl-verify-fail-if-no-peer-cert+
