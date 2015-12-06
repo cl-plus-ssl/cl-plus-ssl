@@ -29,6 +29,12 @@
            #:+ssl-verify-peer+
            #:+ssl-verify-fail-if-no-peer-cert+
            #:+ssl-verify-client-once+
+
+           #:+ssl-op-no-sslv2+
+           #:+ssl-op-no-sslv3+
+           #:+ssl-op-no-tlsv1+
+           #:+ssl-op-no-tlsv1-1+
+           #:+ssl-op-no-tlsv1-2+
            
            #:make-context
            #:with-global-context))
