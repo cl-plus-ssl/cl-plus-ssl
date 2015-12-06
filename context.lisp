@@ -85,8 +85,7 @@
                           (verify-mode +ssl-verify-peer+)
                           (verify-callback nil verify-callback-supplied-p)
                           (cipher-list +default-cipher-list+)
-                          (pem-password-callback 'pem-password-callback)
-                          (tmp-rsa-callback 'tmp-rsa-callback))
+                          (pem-password-callback 'pem-password-callback))
   (ensure-initialized)
   (let ((ctx (ssl-ctx-new (if method-supplied-p
                               method
@@ -110,7 +109,6 @@
                                                     (cffi:null-pointer)))))
     (ssl-ctx-set-cipher-list ctx cipher-list)
     (ssl-ctx-set-default-passwd-cb ctx (cffi:get-callback pem-password-callback))
-    (ssl-ctx-set-tmp-rsa-callback ctx (cffi:get-callback tmp-rsa-callback))
     ctx))
 
 (defmacro with-global-context ((context &key auto-free) &body body)
