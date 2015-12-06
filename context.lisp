@@ -76,7 +76,9 @@
       (error 'ssl-error-verify  :error-code error-code))
     ok))
 
-(defun make-context (&key (method (ssl-tlsv1-client-method))
+(defun make-context (&key (method nil method-supplied-p)
+                          (disabled-protocols)
+                          (options (list +SSL-OP-ALL+))
                           (session-cache-mode +ssl-sess-cache-client+)
                           (verify-location :default)
                           (verify-depth 100)
@@ -86,9 +88,16 @@
                           (pem-password-callback 'pem-password-callback)
                           (tmp-rsa-callback 'tmp-rsa-callback))
   (ensure-initialized)
-  (let ((ctx (ssl-ctx-new method)))
+  (let ((ctx (ssl-ctx-new (if method-supplied-p
+                              method
+                              (progn
+                                (unless disabled-protocols
+                                  (setf disabled-protocols
+                                        (list +SSL-OP-NO-SSLv2+ +SSL-OP-NO-SSLv3+)))
+                                (ssl-v23-method))))))
     (when (cffi:null-pointer-p ctx)
       (error 'ssl-error-initialize :reason "Can't create new SSL CTX" :queue (read-ssl-error-queue)))
+    (ssl-ctx-set-options ctx (apply #'logior (append disabled-protocols options)))
     (ssl-ctx-set-session-cache-mode ctx session-cache-mode)
     (ssl-ctx-set-verify-location ctx verify-location)
     (ssl-ctx-set-verify-depth ctx verify-depth)
