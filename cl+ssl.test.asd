@@ -15,10 +15,11 @@
   :maintainer "Ilya Khaprov <ilya.khaprov@publitechs.com>"
   :author "Ilya Khaprov <ilya.khaprov@publitechs.com>"
   :licence "MIT"
-  :depends-on (:fiveam :cl+ssl :cl-coveralls)
+  :depends-on (:fiveam :cl-coveralls :cl+ssl :usocket)
   :serial t
   :components ((:module "test"
                 :serial t
                 :components
                 ((:file "package")
-                 (:file "dummy")))))
+                 (:file "dummy")
+                 (:file "sni")))))
