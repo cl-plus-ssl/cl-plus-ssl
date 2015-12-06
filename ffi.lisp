@@ -31,6 +31,7 @@
 (defconstant +ssl-filetype-asn1+ 2)
 (defconstant +ssl-filetype-default+ 3)
 
+(defconstant +SSL-CTRL-OPTIONS+ 32)
 (defconstant +SSL_CTRL_SET_SESS_CACHE_MODE+ 44)
 (defconstant +SSL_CTRL_MODE+ 33)
 
@@ -81,6 +82,14 @@ session-resume requests) would normally be copied into the local cache before pr
 (defconstant +SSL-VERIFY-PEER+ #x01)
 (defconstant +SSL-VERIFY-FAIL-IF-NO-PEER-CERT+ #x02)
 (defconstant +SSL-VERIFY-CLIENT-ONCE+ #x04)
+
+(defconstant +SSL-OP-ALL+ #x80000BFF)
+
+(defconstant +SSL-OP-NO-SSLv2+   #x00000000)
+(defconstant +SSL-OP-NO-SSLv3+   #x02000000)
+(defconstant +SSL-OP-NO-TLSv1+   #x04000000)
+(defconstant +SSL-OP-NO-TLSv1-2+ #x08000000)
+(defconstant +SSL-OP-NO-TLSv1-1+ #x10000000)
 
 (defvar *tmp-rsa-key-512* nil)
 (defvar *tmp-rsa-key-1024* nil)
@@ -245,6 +254,14 @@ session-resume requests) would normally be copied into the local cache before pr
   (ssl ssl-pointer)
   (str :string)
   (type :int))
+#+new-openssl
+(cffi:defcfun ("SSL_CTX_set_options" ssl-ctx-set-options)
+                 :long
+               (ctx :pointer)
+               (options :long))
+#-new-openssl
+(defun ssl-ctx-set-options (ctx options)
+  (ssl-ctx-ctrl ctx +SSL-CTRL-OPTIONS+ options (cffi:null-pointer)))
 (cffi:defcfun ("SSL_CTX_set_cipher_list" ssl-ctx-set-cipher-list%)
     :int
   (ctx :pointer)
