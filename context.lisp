@@ -87,6 +87,8 @@
                           (tmp-rsa-callback 'tmp-rsa-callback))
   (ensure-initialized)
   (let ((ctx (ssl-ctx-new method)))
+    (when (cffi:null-pointer-p ctx)
+      (error 'ssl-error-initialize :reason "Can't create new SSL CTX" :queue (read-ssl-error-queue)))
     (ssl-ctx-set-session-cache-mode ctx session-cache-mode)
     (ssl-ctx-set-verify-location ctx verify-location)
     (ssl-ctx-set-verify-depth ctx verify-depth)
