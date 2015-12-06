@@ -17,5 +17,8 @@
   :licence "MIT"
   :depends-on (:fiveam :cl+ssl :cl-coveralls)
   :serial t
-  :components ((:file "test/package")
-               (:file "test/dummy")))
+  :components ((:module "test"
+                :serial t
+                :components
+                ((:file "package")
+                 (:file "dummy")))))

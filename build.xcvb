@@ -11,15 +11,16 @@
 #+xcvb
 (module
  (:fullname "cl+ssl"
-  :depends-on ("package"
-	       "reload"
-	       "conditions"
-	       "ffi"
-	       "ffi-buffer-all"
-	       (:cond ((:featurep :clisp) "ffi-buffer-clisp")
-                      ((:featurep (:not :clisp)) "ffi-buffer"))
-	       "streams"
-	       "bio"
-	       "random")
+  :depends-on ("src/package"
+	       "src/reload"
+	       "src/conditions"
+	       "src/ffi"
+	       "src/ffi-buffer-all"
+	       (:cond ((:featurep :clisp) "src/ffi-buffer-clisp")
+                      ((:featurep (:not :clisp)) "src/ffi-buffer"))
+	       "src/streams"
+	       "src/bio"
+	       "src/random"
+	       "src/context")
   :build-depends-on ("flexi-streams" "trivial-gray-streams" "cffi")
   :supersedes-asdf ("cl+ssl")))
