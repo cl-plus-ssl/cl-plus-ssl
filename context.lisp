@@ -103,3 +103,12 @@
     (ssl-ctx-set-default-passwd-cb ctx (cffi:get-callback pem-password-callback))
     (ssl-ctx-set-tmp-rsa-callback ctx (cffi:get-callback tmp-rsa-callback))
     ctx))
+
+(defmacro with-global-context ((context &key auto-free) &body body)
+  (alexandria:with-gensyms (ctx)
+    `(let* ((,ctx ,context)
+            (*ssl-global-context* ,ctx))
+       (unwind-protect
+            (progn ,@body)
+         (when ,auto-free
+           (ssl-ctx-free ,ctx))))))
