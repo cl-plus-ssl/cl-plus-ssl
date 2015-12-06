@@ -35,6 +35,15 @@
            #:+ssl-op-no-tlsv1+
            #:+ssl-op-no-tlsv1-1+
            #:+ssl-op-no-tlsv1-2+
+
+           #:+ssl-sess-cache-off+
+           #:+ssl-sess-cache-client+
+           #:+ssl-sess-cache-server+
+           #:+ssl-sess-cache-both+
+           #:+ssl-sess-cache-no-auto-clear+
+           #:+ssl-sess-cache-no-internal-lookup+
+           #:+ssl-sess-cache-no-internal-store+
+           #:+ssl-sess-cache-no-internal+
            
            #:make-context
            #:with-global-context))
