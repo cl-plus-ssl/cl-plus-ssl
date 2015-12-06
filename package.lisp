@@ -29,4 +29,6 @@
            #:+ssl-verify-peer+
            #:+ssl-verify-fail-if-no-peer-cert+
            #:+ssl-verify-client-once+
-           #:make-context))
+           
+           #:make-context
+           #:with-global-context))
