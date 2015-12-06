@@ -124,6 +124,89 @@
       usually returns predictable values.
     </p>
     <p>
+      <pre class="def" style="font-family:normal;">Function CL+SSL:MAKE-CONTEXT (&key (method (ssl-v23-method))
+                                                                               (disabled-protocols)
+                                                                               (options (list +SSL-OP-ALL+))
+                                                                               (session-cache-mode +ssl-sess-cache-server+)
+                                                                               (verify-location :default)
+                                                                               (verify-depth 100)
+                                                                               (verify-mode +ssl-verify-peer+)
+                                                                               (verify-callback nil verify-callback-supplied-p)
+                                                                               (cipher-list +default-cipher-list+)
+                                                                               (pem-password-callback 'pem-password-callback)
+                                                                               (tmp-rsa-callback 'tmp-rsa-callback))</pre>
+    </p>
+    <p>
+      Exceptions:
+    </p>
+    <p>
+      <tt>ssl-error-initialize</tt>. When underlying SSL_CTX_new fails.
+    </p>
+    <p>
+      Keyword arguments:
+    </p>
+    <p>
+      <tt>method</tt>. Specifies which supported SSL/TLS to use. Defaults to ssl-v23-method
+    </p>
+    <p>
+      <tt>disabled-protocols</tt>. List of +SSL-OP-NO-* constants. Denotes disabled SSL/TLS versions.
+      When <tt>method</tt> not specified defaults to (list +SSL-OP-NO-SSLv2+ +SSL-OP-NO-SSLv3+)
+    </p>
+    <p>
+      <tt>options</tt>. SSL context options list. Defaults to (list +SSL-OP-ALL+)
+    </p>
+    <p>
+      <tt>session-cache-mode</tt>. Enable/Disable session caching. Defaults to +SSL-SESS-CACHE-SERVER+
+    </p>
+    <p>
+      <tt>verify-location</tt>. Location(s) to load CA from.
+      Possible values
+      <br>
+      <ul>
+        <li><tt>:default</tt> OpenSSL default directory and file will be loaded</li>
+        <li><tt>:default-file</tt> OpenSSL default file will be loaded</li>
+        <li><tt>:default-dir</tt> OpenSSL default directory will be loaded</li>
+        <li><tt>STRING</tt> Directory or file path to be loaded</li>
+        <li><tt>PATHNAME</tt> Directory or file path to be loaded</li>
+        <li><tt>(LIST (or STRING PATHNAME))</tt> List of directories or files to be loaded</li>
+      </ul>
+    </p>
+    <p>
+      <tt>verify-depth</tt>. Sets the maximum depth for the certificate chain verification that shall be allowed for context.
+      Defaults to 100.
+    </p>
+    <p>
+      <tt>verify-mode</tt>. Sets the verification flags for context to be mode. Available flags
+      <ul>
+        <li>+SSL-VERIFY-NONE+</li>
+        <li>+SSL-VERIFY-PEER+</li>
+        <li>+SSL-VERIFY-FAIL-IF-NO-PEER-CERT+</li>
+        <li>+SSL-VERIFY-CLIENT-ONCE+</li>
+      </ul>
+      Defaults to +VERIFY-PEER+
+    </p>
+    <p>
+      <tt>verify-callback</tt>. The verify-callback is used to control the behaviour when the +SSL-VERIFY-PEER+ flag is set.
+      <br/>
+      Please note: this must be CFFI callback i.e. defined as <tt>(defcallback <name> :int ((ok :int) (ctx :pointer)) .. )</tt>.
+        <br/>
+        Defaults to <tt>verify-peer-callback</tt> which converts chain errors to <tt>ssl-error-verify</tt>.
+    </p>
+    <p>
+      <tt>cipher-list</tt>. Sets the list of available ciphers for context.
+      Possible values described <a href="https://www.openssl.org/docs/manmaster/apps/ciphers.html">here</a>.
+      <br/>
+      Default is expected to change overtime to provide highest security level. Do not rely on its exact value.
+    </p>
+    <p>
+      <tt>pem-password-callback</tt>. Sets the default password callback called when loading/storing a PEM certificate with encryption.
+      <br/>
+      Please note: this must be CFFI callback i.e. defined as <tt>(cffi:defcallback <name> :int
+        ((buf :pointer) (size :int) (rwflag :int) (unused :pointer)) .. )</tt>.
+        <br/>
+        Defaults to <tt>pem-password-callback</tt> which simply uses password provided by <tt>with-pem-password</tt>.
+    </p>
+    <p>
       <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-streams-p t) hostname)<br/><br/>
       Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-streams-p t))</div>
       Return an SSL stream for the client (server)
