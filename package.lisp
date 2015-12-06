@@ -24,6 +24,7 @@
            #:ssl-error-verify
            #:ssl-error-stream
            #:ssl-error-code
+           #:ssl-error-initialize
            #:ssl-ctx-free
 
            #:with-pem-password
