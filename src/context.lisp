@@ -114,11 +114,11 @@
       (ssl-ctx-set-default-passwd-cb ctx (cffi:get-callback pem-password-callback))
       ctx)))
 
-(defun call-with-global-context (context auto-free body-fn)
+(defun call-with-global-context (context auto-free-p body-fn)
   (let* ((*ssl-global-context* context))
     (unwind-protect (funcall body-fn)
-      (when auto-free
+      (when auto-free-p
         (ssl-ctx-free context)))))
 
-(defmacro with-global-context ((context &key auto-free) &body body)
-  `(call-with-global-context ,context ,auto-free (lambda () ,@body)))
+(defmacro with-global-context ((context &key auto-free-p) &body body)
+  `(call-with-global-context ,context ,auto-free-p (lambda () ,@body)))
