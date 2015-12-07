@@ -136,6 +136,11 @@
                                                                                (pem-password-callback 'pem-password-callback))</pre>
     </p>
     <p>
+      Creates a new SSL_CTX using <a href="https://www.openssl.org/docs/manmaster/ssl/SSL_CTX_new.html"><tt>SSL_CTX_new</tt></a>
+      and initializes it according to the specified parameters.
+      After you're done using the context, don't forget to free it using <tt>ssl-ctx-free</tt>.
+    </p>
+    <p>
       Exceptions:
     </p>
     <p>
@@ -204,6 +209,10 @@
         ((buf :pointer) (size :int) (rwflag :int) (unused :pointer)) .. )</tt>.
         <br/>
         Defaults to <tt>pem-password-callback</tt> which simply uses password provided by <tt>with-pem-password</tt>.
+    </p>
+    <p>
+      <div class="def">Function CL+SSL:SSL-CTX-FREE (context)</div>
+      Plain FFI binding for <a href="https://www.openssl.org/docs/manmaster/ssl/SSL_CTX_free.html">SSL_CTX_free<a>.
     </p>
     <p>
       <div class="def">Macro CL+SSL:WITH-GLOBAL-CONTEXT ((context &key :auto-free-p) &body body)</div>
