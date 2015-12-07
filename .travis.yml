@@ -9,6 +9,7 @@ env:
     - COVERAGE_EXCLUDE=test
   matrix:
     - LISP=sbcl-bin COVERALLS=true
+    - LISP=ccl-bin
 
 install:
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
