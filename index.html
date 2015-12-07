@@ -100,7 +100,7 @@
 
     <h3>API functions</h3>
     <p>
-      <div class="def">Function CL+SSL:ENSURE-INITIALIZED (&key (method 'ssl-v23-method) (rand-seed nil))</div>
+      <div class="def">Function CL+SSL:ENSURE-INITIALIZED (&amp;key (method 'ssl-v23-method) (rand-seed nil))</div>
       In most cases you <strong>do not</strong> need to call this function, because it is called
       automatically. The only reason to call it explicitly is to supply the <tt>rand-seed</tt> parameter.
       In this case do it before calling any other functions.
@@ -124,7 +124,7 @@
       usually returns predictable values.
     </p>
     <p>
-      <pre class="def" style="font-family:normal;">Function CL+SSL:MAKE-CONTEXT (&key (method (ssl-v23-method))
+      <pre class="def" style="font-family:normal;">Function CL+SSL:MAKE-CONTEXT (&amp;key (method (ssl-v23-method))
                                                                                (disabled-protocols)
                                                                                (options (list +SSL-OP-ALL+))
                                                                                (session-cache-mode +ssl-sess-cache-server+)
@@ -215,7 +215,7 @@
       Plain FFI binding for <a href="https://www.openssl.org/docs/manmaster/ssl/SSL_CTX_free.html">SSL_CTX_free<a>.
     </p>
     <p>
-      <div class="def">Macro CL+SSL:WITH-GLOBAL-CONTEXT ((context &key :auto-free-p) &body body)</div>
+      <div class="def">Macro CL+SSL:WITH-GLOBAL-CONTEXT ((context &amp;key :auto-free-p) &amp;body body)</div>
       Executes <tt>body</tt> with <tt>*ssl-global-context*</tt> bound to <tt>context</tt>.
       <br/>
       If <tt>auto-free-p</tt> is true the context is freed using <tt>ssl-ctx-free</tt> before exit.
