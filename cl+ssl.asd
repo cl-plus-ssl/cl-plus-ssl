@@ -33,7 +33,8 @@
                  (:file "streams")
                  (:file "bio")
                  (:file "random")
-                 (:file "context")))))
+                 (:file "context")
+                 (:file "verify-hostname")))))
 
 (defsystem :openssl-1.1.0
   :description "FFI bindings to API introduced in OpenSSL 1.1.0"
