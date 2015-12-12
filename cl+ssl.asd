@@ -25,6 +25,7 @@
                 ((:file "package")
                  (:file "reload")
                  (:file "conditions")
+                 (:file "x509")
                  (:file "ffi")
                  (:file "ffi-buffer-all")
                  #-clisp (:file "ffi-buffer")

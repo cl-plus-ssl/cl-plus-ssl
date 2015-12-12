@@ -342,28 +342,6 @@ session-resume requests) would normally be copied into the local cache before pr
     :pointer
   (ssl ssl-pointer))
 
-(cffi:defcfun ("X509_free" x509-free)
-    :void
-  (x509 :pointer))
-
-(cffi:defcfun ("X509_NAME_oneline" x509-name-oneline)
-    :pointer
-  (x509-name :pointer)
-  (buf :pointer)
-  (size :int))
-
-(cffi:defcfun ("X509_get_issuer_name" x509-get-issuer-name)
-    :pointer                            ; *X509_NAME
-  (x509 :pointer))
-
-(cffi:defcfun ("X509_get_subject_name" x509-get-subject-name)
-    :pointer                            ; *X509_NAME
-  (x509 :pointer))
-
-(cffi:defcfun ("X509_STORE_CTX_get_error" x509-store-ctx-get-error)
-    :int
-  (ctx :pointer))
-
 (cffi:defcfun ("SSL_CTX_set_default_verify_paths" ssl-ctx-set-default-verify-paths)
     :int
   (ctx :pointer))

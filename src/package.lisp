@@ -9,7 +9,7 @@
 (in-package :cl-user)
 
 (defpackage :cl+ssl
-  (:use :common-lisp :trivial-gray-streams)
+  (:use :common-lisp :trivial-gray-streams :alexandria)
   (:export #:*default-cipher-list*
            #:ensure-initialized
            #:reload
@@ -50,4 +50,11 @@
            #:+ssl-sess-cache-no-internal+
            
            #:make-context
-           #:with-global-context))
+           #:with-global-context
+
+           ;; x509 stuff
+           #:decode-certificate-from-file
+           #:decode-certificate
+
+           ;; hostname-verification
+           #:verify-hostname))
