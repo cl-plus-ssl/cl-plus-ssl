@@ -594,7 +594,7 @@ will use this value.")
 (cffi:defcallback locking-callback :void
     ((mode :int)
      (n :int)
-     (file :pointer) ;; could be (file :string), but we don't use FILE, so save  
+     (file :pointer) ;; could be (file :string), but we don't use FILE, so avoid the conversion
      (line :int))
   (declare (ignore file line))
   ;; (assert (logtest mode (logior +CRYPTO-READ+ +CRYPTO-WRITE+)))
