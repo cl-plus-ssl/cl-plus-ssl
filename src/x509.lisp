@@ -281,7 +281,10 @@ ASN1 string validation references:
   (cffi:with-pointer-to-vector-data (buf* bytes)
     (cffi:with-foreign-object (buf** :pointer)
       (setf (cffi:mem-ref buf** :pointer) buf*)
-      (d2i-x509 (cffi:null-pointer) buf** (length bytes)))))
+      (let ((cert (d2i-x509 (cffi:null-pointer) buf** (length bytes))))
+        (when (cffi:null-pointer-p cert)
+          (error 'ssl-error-call :message "d2i-X509 failed" :queue (read-ssl-error-queue)))
+        cert))))
 
 (defun cert-format-from-path (path)
   ;; or match "pem" type too and raise unknown format error?
@@ -296,7 +299,26 @@ ASN1 string validation references:
     (decode-certificate format bytes)))
 
 (defun certificate-alt-names (cert)
-  (x509-get-ext-d2i cert +NID-subject-alt-name+ (cffi:null-pointer) (cffi:null-pointer)))
+  #|
+  * The return value is the decoded extension or NULL on
+  * error. The actual error can have several different causes,
+  * the value of *crit reflects the cause:
+  * >= 0, extension found but not decoded (reflects critical value).
+  * -1 extension not found.
+  * -2 extension occurs more than once.
+  |#
+  (cffi:with-foreign-object (crit* :int)
+    (let ((result (x509-get-ext-d2i cert +NID-subject-alt-name+ crit* (cffi:null-pointer))))
+      (if (cffi:null-pointer-p result)
+          (let ((crit (cffi:mem-ref crit* :int)))
+            (cond
+              ((>= crit 0)
+               (error "X509_get_ext_d2i: subject-alt-name extension decoding error"))
+              ((= crit -1) ;; extension not found, return NULL
+               result)
+              ((= crit -2)
+               (error "X509_get_ext_d2i: subject-alt-name extension occurs more than once"))))
+          result))))
 
 (defun certificate-dns-alt-names (cert)
   (let ((altnames (certificate-alt-names cert)))
@@ -317,15 +339,22 @@ ASN1 string validation references:
 (defun certificate-subject-common-names (cert)
   (let ((i -1)
         (subject-name (x509-get-subject-name cert)))
+    (when (cffi:null-pointer-p subject-name)
+      (error "X509_get_subject_name returned NULL"))
     (flet ((extract-cn ()
              (setf i (x509-name-get-index-by-nid subject-name +NID-commonName+ i))
              (when (>= i 0)
                (let* ((entry (x509-name-get-entry subject-name i)))
-                 (try-get-asn1-string-data (x509-name-entry-get-data entry) '(#.+v-asn1-utf8string+
-                                                                              #.+v-asn1-bmpstring+
-                                                                              #.+v-asn1-printablestring+
-                                                                              #.+v-asn1-universalstring+
-                                                                              #.+v-asn1-teletexstring+))))))
+                 (when (cffi:null-pointer-p entry)
+                   (error "X509_NAME_get_entry returned NULL"))
+                 (let ((entry-data (x509-name-entry-get-data entry)))
+                   (when (cffi:null-pointer-p entry-data)
+                     (error "X509_NAME_ENTRY_get_data returned NULL"))
+                   (try-get-asn1-string-data entry-data '(#.+v-asn1-utf8string+
+                                                          #.+v-asn1-bmpstring+
+                                                          #.+v-asn1-printablestring+
+                                                          #.+v-asn1-universalstring+
+                                                          #.+v-asn1-teletexstring+)))))))
       (loop
         as cn = (extract-cn)
         if cn collect cn
