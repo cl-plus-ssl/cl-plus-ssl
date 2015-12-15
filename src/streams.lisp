@@ -308,6 +308,17 @@ After RELOAD, you need to call this again."
       (flexi-streams:make-flexi-stream stream :external-format ef)
       stream))
 
+(defmacro with-new-ssl ((var) &body body)
+  (alexandria:with-gensyms (ssl)
+    `(let* ((,ssl (ssl-new *ssl-global-context*))
+            (,var ,ssl))
+       (when (cffi:null-pointer-p ,ssl)
+         (error 'ssl-error-call :message "Unable to create SSL structure" :queue (read-ssl-error-queue)))
+       (handler-bind ((error (lambda (_)
+                               (declare (ignore _))
+                               (ssl-free ,ssl))))
+         ,@body))))
+
 ;; fixme: free the context when errors happen in this function
 (defun make-ssl-client-stream
     (socket &key certificate key password (method 'ssl-v23-method) external-format
@@ -325,13 +336,8 @@ to choose certificate for right domain."
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-stream
                                :socket socket
-                               :close-callback close-callback))
-        (handle (ssl-new *ssl-global-context*)))
-    (when (cffi:null-pointer-p handle)
-      (error 'ssl-error-call :message "Unable to create SSL structure" :queue (read-ssl-error-queue)))
-    (handler-bind ((error (lambda (_)
-                            (declare (ignore _))
-                            (ssl-free handle))))
+                               :close-callback close-callback)))
+    (with-new-ssl (handle)
       (if hostname
           (cffi:with-foreign-string (chostname hostname)
             (ssl-set-tlsext-host-name handle chostname)))
@@ -357,16 +363,11 @@ CERTIFICATE is the path to a file containing the PEM-encoded certificate for
 may be associated with the passphrase PASSWORD."
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-server-stream
-     :socket socket
-     :close-callback close-callback
-     :certificate certificate
-     :key key))
-        (handle (ssl-new *ssl-global-context*)))
-    (when (cffi:null-pointer-p handle)
-      (error 'ssl-error-call :message "Unable to create SSL structure" :queue (read-ssl-error-queue)))
-    (handler-bind ((error (lambda (_)
-                            (declare (ignore _))
-                            (ssl-free handle))))
+                               :socket socket
+                               :close-callback close-callback
+                               :certificate certificate
+                               :key key)))
+    (with-new-ssl (handle)
       (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
       (ssl-set-accept-state handle)
       (when (zerop (ssl-set-cipher-list handle cipher-list))
