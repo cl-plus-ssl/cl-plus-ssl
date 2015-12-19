@@ -114,21 +114,11 @@
     :int
   (asn1-string :pointer))
 
-(cffi:defcfun ("strlen" strlen)
-    :int
-  (string :string))
-
-(cffi:defcfun (memcpy "memcpy") :pointer
-  (dest :pointer)
-  (src  :pointer)
-  (count :int))
-
 (cffi:defcstruct asn1_string_st
   (length :int)
   (type :int)
   (data :pointer)
   (flags :long))
-
 
 #|
 ASN1 string validation references:
@@ -140,8 +130,11 @@ ASN1 string validation references:
 (defgeneric decode-asn1-string (asn1-string type))
 
 (defun copy-bytes-to-lisp-vector (src-ptr vector count)
-  (cffi:with-pointer-to-vector-data (dst-ptr vector)
-    (memcpy dst-ptr src-ptr count)))
+  (declare (type (simple-array (unsigned-byte 8)) vector)
+           (type fixnum count)
+           (optimize (safety 0) (debug 0) (speed 3)))
+  (dotimes (i count vector)
+    (setf (aref vector i) (cffi:mem-aref src-ptr :unsigned-char i))))
 
 (defun asn1-string-bytes-vector (asn1-string)
   (let* ((data (asn1-string-data asn1-string))
@@ -165,14 +158,9 @@ ASN1 string validation references:
   (every #'asn1-iastring-char-p bytes))
 
 (defmethod decode-asn1-string (asn1-string (type (eql #.+v-asn1-iastring+)))
-  (let* ((data (asn1-string-data asn1-string))
-         (length (asn1-string-length asn1-string))
-         (strlen (strlen data)))
-    (if (= strlen length)
-        (let ((bytes (asn1-string-bytes-vector asn1-string)))
-          (if (asn1-iastring-p bytes)
-              (cffi:foreign-string-to-lisp data :encoding :ascii)
-              (error 'invalid-asn1-string :type '+v-asn1-iastring+)))
+  (let ((bytes (asn1-string-bytes-vector asn1-string)))
+    (if (asn1-iastring-p bytes)
+        (babel:octets-to-string bytes :encoding :ascii)
         (error 'invalid-asn1-string :type '+v-asn1-iastring+))))
 
 (defun asn1-printable-char-p (byte)
@@ -218,11 +206,8 @@ ASN1 string validation references:
 
 (defmethod decode-asn1-string (asn1-string (type (eql #.+v-asn1-utf8string+)))
   (let* ((data (asn1-string-data asn1-string))
-         (length (asn1-string-length asn1-string))
-         (strlen (strlen data)))
-    (if (= strlen length)
-        (cffi:foreign-string-to-lisp data)
-        (error 'invalid-asn1-string :type '+v-asn1-utf8string+))))
+         (length (asn1-string-length asn1-string)))
+    (cffi:foreign-string-to-lisp data :count length :encoding :utf-8)))
 
 (defmethod decode-asn1-string (asn1-string (type (eql #.+v-asn1-universalstring+)))
   (if (= 0 (mod (asn1-string-length asn1-string) 4))
@@ -250,14 +235,9 @@ ASN1 string validation references:
   (every #'asn1-teletex-char-p bytes))
 
 (defmethod decode-asn1-string (asn1-string (type (eql #.+v-asn1-teletexstring+)))
-  (let* ((data (asn1-string-data asn1-string))
-         (length (asn1-string-length asn1-string))
-         (strlen (strlen data)))
-    (if (= strlen length)
-        (let ((bytes (asn1-string-bytes-vector asn1-string)))
-          (if (asn1-teletex-string-p bytes)
-              (cffi:foreign-string-to-lisp data :encoding :ascii)
-              (error 'invalid-asn1-string :type '+v-asn1-teletexstring+)))
+  (let ((bytes (asn1-string-bytes-vector asn1-string)))
+    (if (asn1-teletex-string-p bytes)
+        (babel:octets-to-string bytes :encoding :ascii)
         (error 'invalid-asn1-string :type '+v-asn1-teletexstring+))))
 
 (defmethod decode-asn1-string (asn1-string (type (eql #.+v-asn1-bmpstring+)))
