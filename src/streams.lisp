@@ -308,6 +308,17 @@ After RELOAD, you need to call this again."
       (flexi-streams:make-flexi-stream stream :external-format ef)
       stream))
 
+(defmacro with-new-ssl ((var) &body body)
+  (alexandria:with-gensyms (ssl)
+    `(let* ((,ssl (ssl-new *ssl-global-context*))
+            (,var ,ssl))
+       (when (cffi:null-pointer-p ,ssl)
+         (error 'ssl-error-call :message "Unable to create SSL structure" :queue (read-ssl-error-queue)))
+       (handler-bind ((error (lambda (_)
+                               (declare (ignore _))
+                               (ssl-free ,ssl))))
+         ,@body))))
+
 ;; fixme: free the context when errors happen in this function
 (defun make-ssl-client-stream
     (socket &key certificate key password (method 'ssl-v23-method) external-format
@@ -324,22 +335,22 @@ When server handles several domain names, this extension enables the server
 to choose certificate for right domain."
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-stream
-             :socket socket
-             :close-callback close-callback))
-        (handle (ssl-new *ssl-global-context*)))
-    (if hostname
-        (cffi:with-foreign-string (chostname hostname)
-          (ssl-set-tlsext-host-name handle chostname)))
-    (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
-    (ssl-set-connect-state handle)
-    (when (zerop (ssl-set-cipher-list handle cipher-list))
-      (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
-    (with-pem-password (password)
-      (install-key-and-cert handle key certificate))
-    (ensure-ssl-funcall stream handle #'ssl-connect handle)
-    (when (ssl-check-verify-p)
-      (ssl-stream-check-verify stream))
-    (handle-external-format stream external-format)))
+                               :socket socket
+                               :close-callback close-callback)))
+    (with-new-ssl (handle)
+      (if hostname
+          (cffi:with-foreign-string (chostname hostname)
+            (ssl-set-tlsext-host-name handle chostname)))
+      (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
+      (ssl-set-connect-state handle)
+      (when (zerop (ssl-set-cipher-list handle cipher-list))
+        (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
+      (with-pem-password (password)
+        (install-key-and-cert handle key certificate))
+      (ensure-ssl-funcall stream handle #'ssl-connect handle)
+      (when (ssl-check-verify-p)
+        (ssl-stream-check-verify stream))
+      (handle-external-format stream external-format))))
 
 ;; fixme: free the context when errors happen in this function
 (defun make-ssl-server-stream
@@ -352,19 +363,19 @@ CERTIFICATE is the path to a file containing the PEM-encoded certificate for
 may be associated with the passphrase PASSWORD."
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-server-stream
-     :socket socket
-     :close-callback close-callback
-     :certificate certificate
-     :key key))
-        (handle (ssl-new *ssl-global-context*)))
-    (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
-    (ssl-set-accept-state handle)
-    (when (zerop (ssl-set-cipher-list handle cipher-list))
-      (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
-    (with-pem-password (password)
-      (install-key-and-cert handle key certificate))
-    (ensure-ssl-funcall stream handle #'ssl-accept handle)
-    (handle-external-format stream external-format)))
+                               :socket socket
+                               :close-callback close-callback
+                               :certificate certificate
+                               :key key)))
+    (with-new-ssl (handle)
+      (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
+      (ssl-set-accept-state handle)
+      (when (zerop (ssl-set-cipher-list handle cipher-list))
+        (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
+      (with-pem-password (password)
+        (install-key-and-cert handle key certificate))
+      (ensure-ssl-funcall stream handle #'ssl-accept handle)
+      (handle-external-format stream external-format))))
 
 #+openmcl
 (defmethod stream-deadline ((stream ccl::basic-stream))
