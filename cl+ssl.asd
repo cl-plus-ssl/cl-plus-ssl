@@ -33,3 +33,13 @@
                  (:file "bio")
                  (:file "random")
                  (:file "context")))))
+
+(defsystem :openssl-1.1.0
+  :description "FFI bindings to API introduced in OpenSSL 1.1.0"
+  :license "MIT"
+  :author "Anton Vodonosov"
+  :depends-on (:cffi)
+  :serial t
+  :components ((:module "src"
+                :serial t
+                :components ((:file "ffi-1.1.0")))))

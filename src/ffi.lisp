@@ -368,14 +368,6 @@ session-resume requests) would normally be copied into the local cache before pr
     :int
   (ctx :pointer))
 
-(cffi:defcfun ("SSL_CTX_set_default_verify_dir" ssl-ctx-set-default-verify-dir)
-    :int
-  (ctx :pointer))
-
-(cffi:defcfun ("SSL_CTX_set_default_verify_file" ssl-ctx-set-default-verify-file)
-    :int
-  (ctx :pointer))
-
 (cffi:defcfun ("RSA_generate_key" rsa-generate-key)
     :pointer
   (num :int)
