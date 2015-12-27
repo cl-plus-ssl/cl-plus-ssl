@@ -362,6 +362,124 @@ session-resume requests) would normally be copied into the local cache before pr
   (ctx :pointer)
   (callback :pointer))
 
+;; X509 & ASN1
+(cffi:defcfun ("X509_free" x509-free)
+    :void
+  (x509 :pointer))
+
+(cffi:defcfun ("X509_NAME_oneline" x509-name-oneline)
+    :pointer
+  (x509-name :pointer)
+  (buf :pointer)
+  (size :int))
+
+(cffi:defcfun ("X509_NAME_get_index_by_NID" x509-name-get-index-by-nid)
+    :int
+  (name :pointer)
+  (nid :int)
+  (lastpos :int))
+
+(cffi:defcfun ("X509_NAME_get_entry" x509-name-get-entry)
+    :pointer
+  (name :pointer)
+  (log :int))
+
+(cffi:defcfun ("X509_NAME_ENTRY_get_data" x509-name-entry-get-data)
+    :pointer
+  (name-entry :pointer))
+
+(cffi:defcfun ("X509_get_issuer_name" x509-get-issuer-name)
+    :pointer                            ; *X509_NAME
+  (x509 :pointer))
+
+(cffi:defcfun ("X509_get_subject_name" x509-get-subject-name)
+    :pointer                            ; *X509_NAME
+  (x509 :pointer))
+
+(cffi:defcfun ("X509_get_ext_d2i" x509-get-ext-d2i)
+    :pointer
+  (cert :pointer)
+  (nid :int)
+  (crit :pointer)
+  (idx :pointer))
+
+(cffi:defcfun ("X509_STORE_CTX_get_error" x509-store-ctx-get-error)
+    :int
+  (ctx :pointer))
+
+(cffi:defcfun ("d2i_X509" d2i-x509)
+    :pointer
+  (*px :pointer)
+  (in :pointer)
+  (len :int))
+
+;; GENERAL-NAME types
+(defconstant +GEN-OTHERNAME+  0)
+(defconstant +GEN-EMAIL+  1)
+(defconstant +GEN-DNS+    2)
+(defconstant +GEN-X400+ 3)
+(defconstant +GEN-DIRNAME+  4)
+(defconstant +GEN-EDIPARTY+ 5)
+(defconstant +GEN-URI+    6)
+(defconstant +GEN-IPADD+  7)
+(defconstant +GEN-RID+    8)
+
+(defconstant +V-ASN1-OCTET-STRING+ 4)
+(defconstant +V-ASN1-UTF8STRING+ 12)
+(defconstant +V-ASN1-PRINTABLESTRING+ 19)
+(defconstant +V-ASN1-TELETEXSTRING+ 20)
+(defconstant +V-ASN1-IASTRING+ 22)
+(defconstant +V-ASN1-UNIVERSALSTRING+ 28)
+(defconstant +V-ASN1-BMPSTRING+ 30)
+
+
+(defconstant +NID-subject-alt-name+ 85)
+(defconstant +NID-commonName+   13)
+
+(cffi:defcstruct general-name
+  (type :int)
+  (data :pointer))
+
+(cffi:defcfun ("sk_value" sk-value)
+    :pointer
+  (stack :pointer)
+  (index :int))
+
+(cffi:defcfun ("sk_num" sk-num)
+    :int
+  (stack :pointer))
+
+(declaim (ftype (function (cffi:foreign-pointer fixnum) cffi:foreign-pointer) sk-general-name-value))
+(defun sk-general-name-value (names index)
+  (sk-value names index))
+
+(declaim (ftype (function (cffi:foreign-pointer) fixnum) sk-general-name-num))
+(defun sk-general-name-num (names)
+  (sk-num names))
+
+(cffi:defcfun ("GENERAL_NAMES_free" general-names-free)
+    :void
+  (general-names :pointer))
+
+(cffi:defcfun ("ASN1_STRING_data" asn1-string-data)
+    :pointer
+  (asn1-string :pointer))
+
+(cffi:defcfun ("ASN1_STRING_length" asn1-string-length)
+    :int
+  (asn1-string :pointer))
+
+(cffi:defcfun ("ASN1_STRING_type" asn1-string-type)
+    :int
+  (asn1-string :pointer))
+
+(cffi:defcstruct asn1_string_st
+  (length :int)
+  (type :int)
+  (data :pointer)
+  (flags :long))
+
+
 (cffi:defcallback tmp-rsa-callback :pointer ((ssl :pointer) (export-p :int) (key-length :int))
   (declare (ignore ssl export-p))
   (flet ((rsa-key (length)

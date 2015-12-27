@@ -1,125 +1,5 @@
 (in-package :cl+ssl)
 
-;; ffi
-;; X509 *d2i_X509(X509 **px, const unsigned char **in, int len);
-
-(cffi:defcfun ("X509_free" x509-free)
-    :void
-  (x509 :pointer))
-
-(cffi:defcfun ("X509_NAME_oneline" x509-name-oneline)
-    :pointer
-  (x509-name :pointer)
-  (buf :pointer)
-  (size :int))
-
-(cffi:defcfun ("X509_NAME_get_index_by_NID" x509-name-get-index-by-nid)
-    :int
-  (name :pointer)
-  (nid :int)
-  (lastpos :int))
-
-(cffi:defcfun ("X509_NAME_get_entry" x509-name-get-entry)
-    :pointer
-  (name :pointer)
-  (log :int))
-
-(cffi:defcfun ("X509_NAME_ENTRY_get_data" x509-name-entry-get-data)
-    :pointer
-  (name-entry :pointer))
-
-(cffi:defcfun ("X509_get_issuer_name" x509-get-issuer-name)
-    :pointer                            ; *X509_NAME
-  (x509 :pointer))
-
-(cffi:defcfun ("X509_get_subject_name" x509-get-subject-name)
-    :pointer                            ; *X509_NAME
-  (x509 :pointer))
-
-(cffi:defcfun ("X509_get_ext_d2i" x509-get-ext-d2i)
-    :pointer
-  (cert :pointer)
-  (nid :int)
-  (crit :pointer)
-  (idx :pointer))
-
-(cffi:defcfun ("X509_STORE_CTX_get_error" x509-store-ctx-get-error)
-    :int
-  (ctx :pointer))
-
-(cffi:defcfun ("d2i_X509" d2i-x509)
-    :pointer
-  (*px :pointer)
-  (in :pointer)
-  (len :int))
-
-;; GENERAL-NAME types
-(defconstant +GEN-OTHERNAME+  0)
-(defconstant +GEN-EMAIL+  1)
-(defconstant +GEN-DNS+    2)
-(defconstant +GEN-X400+ 3)
-(defconstant +GEN-DIRNAME+  4)
-(defconstant +GEN-EDIPARTY+ 5)
-(defconstant +GEN-URI+    6)
-(defconstant +GEN-IPADD+  7)
-(defconstant +GEN-RID+    8)
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defconstant +V-ASN1-OCTET-STRING+ 4)
-  (defconstant +V-ASN1-UTF8STRING+ 12)
-  (defconstant +V-ASN1-PRINTABLESTRING+ 19)
-  (defconstant +V-ASN1-TELETEXSTRING+ 20)
-  (defconstant +V-ASN1-IASTRING+ 22)
-  (defconstant +V-ASN1-UNIVERSALSTRING+ 28)
-  (defconstant +V-ASN1-BMPSTRING+ 30))
-
-
-(defconstant +NID-subject-alt-name+ 85)
-(defconstant +NID-commonName+   13)
-
-(cffi:defcstruct general-name
-  (type :int)
-  (data :pointer))
-
-(cffi:defcfun ("sk_value" sk-value)
-    :pointer
-  (stack :pointer)
-  (index :int))
-
-(cffi:defcfun ("sk_num" sk-num)
-    :int
-  (stack :pointer))
-
-(declaim (ftype (function (cffi:foreign-pointer fixnum) cffi:foreign-pointer) sk-general-name-value))
-(defun sk-general-name-value (names index)
-  (sk-value names index))
-
-(declaim (ftype (function (cffi:foreign-pointer) fixnum) sk-general-name-num))
-(defun sk-general-name-num (names)
-  (sk-num names))
-
-(cffi:defcfun ("GENERAL_NAMES_free" general-names-free)
-    :void
-  (general-names :pointer))
-
-(cffi:defcfun ("ASN1_STRING_data" asn1-string-data)
-    :pointer
-  (asn1-string :pointer))
-
-(cffi:defcfun ("ASN1_STRING_length" asn1-string-length)
-    :int
-  (asn1-string :pointer))
-
-(cffi:defcfun ("ASN1_STRING_type" asn1-string-type)
-    :int
-  (asn1-string :pointer))
-
-(cffi:defcstruct asn1_string_st
-  (length :int)
-  (type :int)
-  (data :pointer)
-  (flags :long))
-
 #|
 ASN1 string validation references:
  - https://github.com/digitalbazaar/forge/blob/909e312878838f46ba6d70e90264650b05eb8bde/js/asn1.js
@@ -157,7 +37,7 @@ ASN1 string validation references:
                      (safety 0)))
   (every #'asn1-iastring-char-p bytes))
 
-(defmethod decode-asn1-string (asn1-string (type (eql #.+v-asn1-iastring+)))
+(defmethod decode-asn1-string (asn1-string (type (eql +v-asn1-iastring+)))
   (let ((bytes (asn1-string-bytes-vector asn1-string)))
     (if (asn1-iastring-p bytes)
         (babel:octets-to-string bytes :encoding :ascii)
@@ -198,18 +78,18 @@ ASN1 string validation references:
                      (safety 0)))
   (every #'asn1-printable-char-p bytes))
 
-(defmethod decode-asn1-string (asn1-string (type (eql #.+v-asn1-printablestring+)))
+(defmethod decode-asn1-string (asn1-string (type (eql +v-asn1-printablestring+)))
   (let* ((bytes (asn1-string-bytes-vector asn1-string)))
     (if (asn1-printable-string-p bytes)
         (babel:octets-to-string bytes :encoding :ascii)
         (error 'invalid-asn1-string :type '+v-asn1-printablestring+))))
 
-(defmethod decode-asn1-string (asn1-string (type (eql #.+v-asn1-utf8string+)))
+(defmethod decode-asn1-string (asn1-string (type (eql +v-asn1-utf8string+)))
   (let* ((data (asn1-string-data asn1-string))
          (length (asn1-string-length asn1-string)))
     (cffi:foreign-string-to-lisp data :count length :encoding :utf-8)))
 
-(defmethod decode-asn1-string (asn1-string (type (eql #.+v-asn1-universalstring+)))
+(defmethod decode-asn1-string (asn1-string (type (eql +v-asn1-universalstring+)))
   (if (= 0 (mod (asn1-string-length asn1-string) 4))
       ;; cffi sometimes fails here on sbcl? idk why (maybe threading?)
       ;; fail: Illegal :UTF-32 character starting at position 48...
@@ -234,13 +114,13 @@ ASN1 string validation references:
                      (safety 0)))
   (every #'asn1-teletex-char-p bytes))
 
-(defmethod decode-asn1-string (asn1-string (type (eql #.+v-asn1-teletexstring+)))
+(defmethod decode-asn1-string (asn1-string (type (eql +v-asn1-teletexstring+)))
   (let ((bytes (asn1-string-bytes-vector asn1-string)))
     (if (asn1-teletex-string-p bytes)
         (babel:octets-to-string bytes :encoding :ascii)
         (error 'invalid-asn1-string :type '+v-asn1-teletexstring+))))
 
-(defmethod decode-asn1-string (asn1-string (type (eql #.+v-asn1-bmpstring+)))
+(defmethod decode-asn1-string (asn1-string (type (eql +v-asn1-bmpstring+)))
   (if (= 0 (mod (asn1-string-length asn1-string) 2))
       (or (ignore-errors (cffi:foreign-string-to-lisp (asn1-string-data asn1-string) :count (asn1-string-length asn1-string) :encoding :utf-16/be))
           (error 'invalid-asn1-string :type '+v-asn1-bmpstring+))
