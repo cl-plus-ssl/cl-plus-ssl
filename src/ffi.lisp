@@ -104,9 +104,9 @@ session-resume requests) would normally be copied into the local cache before pr
 ;;; Function definitions
 ;;;
 
-(cffi:defcfun ("close" close-fd)
+(cffi:defcfun (#-windows "close" #+windows "closesocket" close-socket)
     :int
-  (fd :int))
+  (socket :int))
 
 (declaim (inline ssl-write ssl-read ssl-connect ssl-accept))
 
