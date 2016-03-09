@@ -25,7 +25,7 @@
   (cffi:use-foreign-library libcrypto))
 
 (cffi:define-foreign-library libssl
-  (:windows "libssl32.dll")
+  (:windows (:or "libssl32.dll" "ssleay32.dll"))
   (:darwin (:or "libssl.dylib" "/usr/lib/libssl.dylib"))
   (:solaris (:or "/lib/64/libssl.so"
                  "libssl.so.0.9.8" "libssl.so" "libssl.so.4"))
