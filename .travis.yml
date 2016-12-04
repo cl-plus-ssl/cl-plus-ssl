@@ -22,14 +22,15 @@ install:
 #      - $HOME/.config/common-lisp
 
 script:
-  - > ros -s cl+ssl.test
-          -e '(progn
-                (format t "(lisp-implementation-type): ~A~%" (lisp-implementation-type))
-                (format t "(lisp-implementation-version): ~A~%" (lisp-implementation-version))
-                (format t "*features*: ~A~%" *features*)
-                (let ((results
-                      (coveralls:with-coveralls (:exclude "test")
-                         (5am:run :cl+ssl))))
-                  (5am:explain! results)
-                  (unless (5am:results-status results)
-                    (uiop:quit 1)))'
+  - >-
+    ros -s cl+ssl.test
+        -e '(progn
+              (format t "(lisp-implementation-type): ~A~%" (lisp-implementation-type))
+              (format t "(lisp-implementation-version): ~A~%" (lisp-implementation-version))
+              (format t "*features*: ~A~%" *features*)
+              (let ((results
+                    (coveralls:with-coveralls (:exclude "test")
+                       (5am:run :cl+ssl))))
+                (5am:explain! results)
+                (unless (5am:results-status results)
+                  (uiop:quit 1)))'
