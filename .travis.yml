@@ -21,7 +21,7 @@ install:
 #      - $HOME/.roswell
 #      - $HOME/.config/common-lisp
 
-script:
+script: |
   - ros -s cl+ssl.test
         -e '(progn
               (format t "(lisp-implementation-type): ~A~%" (lisp-implementation-type))
