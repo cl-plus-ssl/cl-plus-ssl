@@ -25,7 +25,8 @@ script:
   - "ros -e '(progn
                (format t \"(lisp-implementation-type): ~A~%\" (lisp-implementation-type))
                (format t \"(lisp-implementation-version): ~A~%\" (lisp-implementation-version))
-               (format t \"*features*: ~A~%\" *features*)'
+               (format t \"*features*: ~A~%\" *features*)
+               (format t \"(asdf:asdf-version): ~A~%\" (asdf:asdf-version)))'
          -s cl+ssl.test
          -e '(let ((results
                   (coveralls:with-coveralls (:exclude \"test\")
