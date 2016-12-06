@@ -10,7 +10,10 @@ env:
   matrix:
     - LISP=sbcl-bin COVERALLS=true
     - LISP=ccl-bin
-    - LISP=clisp
+# CLISP is disabled because it can't load bordeaux-treads which require ASDF >= 3.1
+# Example log: https://travis-ci.org/cl-plus-ssl/cl-plus-ssl/jobs/181539210
+# (As a workaround we could try to download ASDF 3 ourselves)
+#    - LISP=clisp
     - LISP=ecl
 
 install:
