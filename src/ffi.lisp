@@ -291,7 +291,7 @@ session-resume requests) would normally be copied into the local cache before pr
     :long
   (ctx ssl-ctx)
   (cmd :int)
-  (larg :long)
+  (larg :long-long)
   (parg :pointer))
 
 (cffi:defcfun ("SSL_ctrl" ssl-ctrl)
