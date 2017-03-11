@@ -291,7 +291,19 @@ session-resume requests) would normally be copied into the local cache before pr
     :long
   (ctx ssl-ctx)
   (cmd :int)
-  (larg :long)
+  ;; Despite declared as long in the original OpenSSL headers,
+  ;; passing to larg for example 2181041151 which is the result of
+  ;;     (logior cl+ssl::+SSL-OP-ALL+
+  ;;             cl+ssl::+SSL-OP-NO-SSLv2+
+  ;;             cl+ssl::+SSL-OP-NO-SSLv3+)
+  ;; causes CFFI on 32 bit platforms to signal an error
+  ;; "The value 2181041151 is not of the expected type (SIGNED-BYTE 32)"
+  ;; The problem is that 2181041151 requires 32 bits by itself and
+  ;; there is no place left for the sign bit.
+  ;; In C the compiler silently coerces unsigned to signed,
+  ;; but CFFI raises this error.
+  ;; Therefore we use :UNSIGNED-LONG for LARG.
+  (larg :unsigned-long)
   (parg :pointer))
 
 (cffi:defcfun ("SSL_ctrl" ssl-ctrl)
