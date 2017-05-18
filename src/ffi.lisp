@@ -287,6 +287,10 @@ session-resume requests) would normally be copied into the local cache before pr
     ssl-pointer
   (file :string))
 
+(cffi:defcfun ("SSL_get_SSL_CTX" ssl-get-ssl-ctx)
+    ssl-ctx
+  (ssl ssl-pointer))
+
 (cffi:defcfun ("SSL_CTX_ctrl" ssl-ctx-ctrl)
     :long
   (ctx ssl-ctx)

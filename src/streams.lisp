@@ -55,7 +55,7 @@
   (print-unreadable-object (object stream :type t)
     (format stream "for ~A" (ssl-stream-socket object))))
 
-(defclass ssl-server-stream (ssl-stream) 
+(defclass ssl-server-stream (ssl-stream)
   ((certificate
     :initarg :certificate
     :accessor ssl-stream-certificate)
@@ -174,14 +174,14 @@
 
 #+(and clozure-common-lisp (not windows))
 (defun install-nonblock-flag (fd)
-  (ccl::fd-set-flags fd (logior (ccl::fd-get-flags fd) 
+  (ccl::fd-set-flags fd (logior (ccl::fd-get-flags fd)
                      #.(read-from-string "#$O_NONBLOCK"))))
                      ;; read-from-string is necessary because
                      ;; CLISP and perhaps other Lisps are confused
-                     ;; by #$, signaling"undefined dispatch character $", 
-                     ;; even though the defun in conditionalized by 
+                     ;; by #$, signaling"undefined dispatch character $",
+                     ;; even though the defun in conditionalized by
                      ;; #+clozure-common-lisp
-                    
+
 #+(and sbcl (not win32))
 (defun install-nonblock-flag (fd)
   (sb-posix:fcntl fd
@@ -213,7 +213,7 @@
      (ssl-set-fd handle socket))
     (stream
      (ssl-set-bio handle (bio-new-lisp) (bio-new-lisp))))
-  (ssl-ctx-ctrl handle
+  (ssl-ctx-ctrl (ssl-get-ssl-ctx handle)
     +SSL_CTRL_MODE+
     +SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER+
     (cffi:null-pointer))
