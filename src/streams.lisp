@@ -213,10 +213,28 @@
      (ssl-set-fd handle socket))
     (stream
      (ssl-set-bio handle (bio-new-lisp) (bio-new-lisp))))
-  (ssl-ctx-ctrl handle
-    +SSL_CTRL_MODE+
-    +SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER+
-    (cffi:null-pointer))
+
+  ;; The below call setting +SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER+ mode
+  ;; existed since commit 5bd5225.
+  ;; It is implemented wrong - ssl-ctx-ctrl expects
+  ;; a context as the first parameter, not handle.
+  ;; It was lucky to not crush on Linux and Windows,
+  ;; untill crash was detedcted on OpenBSD + LibreSSL.
+  ;; See https://github.com/cl-plus-ssl/cl-plus-ssl/pull/42.
+  ;; We keep this code commented but not removed because
+  ;; we don't know what David Lichteblau meant when
+  ;; added this - maybe he has some idea?
+  ;; (Although modifying global context is a bad
+  ;; thing to do for install-handle-and-bio function,
+  ;; also we don't see a need for movable buffer -
+  ;; we don't repeat calls to ssl functions with
+  ;; moved buffer).
+  ;;
+  ;; (ssl-ctx-ctrl handle
+  ;;   +SSL_CTRL_MODE+
+  ;;   +SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER+
+  ;;   (cffi:null-pointer))
+
   socket)
 
 (defun install-key-and-cert (handle key certificate)
