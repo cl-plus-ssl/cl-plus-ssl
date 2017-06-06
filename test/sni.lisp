@@ -29,9 +29,13 @@
   (search "Unfortunately" response))
 
 (test (sni.disabled :compile-at :definition-time)
-  (is-true (sni-test-request-failed-p (make-request-to-sni-test-server nil))
-           "Request to SNI test server should've failed because SNI was disabled"))
+  (skip "Can't test Server Name Indication because sni.velox.ch was shut down.")
+  (when nil
+    (is-true (sni-test-request-failed-p (make-request-to-sni-test-server nil))
+             "Request to SNI test server should've failed because SNI was disabled")))
 
 (test (sni.enabled :compile-at :definition-time)
-  (is-true (sni-test-request-succeeded-p (make-request-to-sni-test-server t))
-           "Request to SNI test server should've succeseeded because SNI was enabled"))
+  (skip "Can't test Server Name Indication because sni.velox.ch was shut down.")
+  (when nil
+    (is-true (sni-test-request-succeeded-p (make-request-to-sni-test-server t))
+             "Request to SNI test server should've succeseeded because SNI was enabled")))
