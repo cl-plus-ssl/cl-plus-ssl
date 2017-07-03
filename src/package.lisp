@@ -9,7 +9,7 @@
 (in-package :cl-user)
 
 (defpackage :cl+ssl
-  (:use :common-lisp :trivial-gray-streams :alexandria)
+  (:use :common-lisp :trivial-gray-streams)
   (:export #:*default-cipher-list*
            #:ensure-initialized
            #:reload

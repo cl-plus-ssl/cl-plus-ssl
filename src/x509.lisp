@@ -187,7 +187,7 @@ ASN1 string validation references:
            (flet ((alt-name-to-string (alt-name)
                     (cffi:with-foreign-slots ((type data) alt-name (:struct general-name))
                       (when (= type +GEN-DNS+)
-                        (if-let ((string (try-get-asn1-string-data data '(#.+v-asn1-iastring+))))
+                        (alexandria:if-let ((string (try-get-asn1-string-data data '(#.+v-asn1-iastring+))))
                           string
                           (error "Malformed certificate: possibly NULL in dns-alt-name"))))))
              (let ((altnames-count (sk-general-name-num altnames)))

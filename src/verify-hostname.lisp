@@ -19,7 +19,7 @@
   (string-right-trim '(#\.) string))
 
 (defun check-wildcard-in-leftmost-label (identifier wildcard-pos)
-  (when-let ((dot-pos (position #\. identifier)))
+  (alexandria:when-let ((dot-pos (position #\. identifier)))
     (> dot-pos wildcard-pos)))
 
 (defun check-single-wildcard (identifier wildcard-pos)
@@ -27,18 +27,18 @@
 
 (defun check-two-labels-after-wildcard (after-wildcard)
   ;;at least two dots(in fact labels since we remove trailing dot first) after wildcard
-  (when-let ((first-dot-aw-pos (position #\. after-wildcard)))
+  (alexandria:when-let ((first-dot-aw-pos (position #\. after-wildcard)))
     (and (find #\. after-wildcard :start (1+ first-dot-aw-pos))
          first-dot-aw-pos)))
 
 (defun validate-and-parse-wildcard-identifier (identifier hostname)
-  (when-let ((wildcard-pos (position #\* identifier)))
+  (alexandria:when-let ((wildcard-pos (position #\* identifier)))
     (when (and (>= (length hostname) (length identifier)) ;; wildcard should constiute at least one character
                (check-wildcard-in-leftmost-label identifier wildcard-pos)
                (check-single-wildcard identifier wildcard-pos))
       (let ((after-wildcard (subseq identifier (1+ wildcard-pos)))
             (before-wildcard (subseq identifier 0 wildcard-pos)))
-        (when-let ((first-dot-aw-pos (check-two-labels-after-wildcard after-wildcard)))
+        (alexandria:when-let ((first-dot-aw-pos (check-two-labels-after-wildcard after-wildcard)))
           (if (and (= 0 (length before-wildcard))     ;; nothing before wildcard
                    (= wildcard-pos first-dot-aw-pos)) ;; i.e. dot follows *
               (values t before-wildcard after-wildcard t)
@@ -59,9 +59,10 @@
   ;; we can match like this: *o.example.com = bar.foo.example.com
   ;; but this is prohibited anyway thanks to check-vildcard-in-leftmost-label
   (if single-char-wildcard
-      (let ((pattern-except-left-most-label (if-let ((first-hostname-dot-post (position #\. pattern)))
-                                              (subseq pattern first-hostname-dot-post)
-                                              pattern)))
+      (let ((pattern-except-left-most-label
+             (alexandria:if-let ((first-hostname-dot-post (position #\. pattern)))
+               (subseq pattern first-hostname-dot-post)
+               pattern)))
         (case-insensitive-match after-wildcard pattern-except-left-most-label))
       (when (wildcard-not-in-a-label before-wildcard after-wildcard)
         ;; baz*.example.net and *baz.example.net and b*z.example.net would
@@ -93,7 +94,8 @@
 (defun maybe-check-subject-cn (dns-names cert hostname)
   (when dns-names
     (error 'unable-to-match-altnames))
-  (if-let ((cn (first (certificate-subject-common-names cert)))) ;; TODO: we are matching only first CN
+  ;; TODO: we are matching only first CN
+  (alexandria:if-let ((cn (first (certificate-subject-common-names cert))))
     (progn
       (or (try-match-hostname cn hostname)
           (error 'unable-to-match-common-name)))

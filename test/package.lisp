@@ -2,7 +2,6 @@
 
 (defpackage :cl+ssl.test
   (:use :cl
-        :alexandria   
         :5am))
 
 (in-package :cl+ssl.test)
