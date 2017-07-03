@@ -359,7 +359,7 @@ After RELOAD, you need to call this again."
     (socket &key certificate key password (method 'ssl-v23-method) external-format
               close-callback (unwrap-stream-p t)
               (cipher-list *default-cipher-list*)
-              (verify (if (ssl-check-verify-p) :optional nil))
+              (verify (if (ssl-check-verify-p) :optional :required))
               hostname)
   "Returns an SSL stream for the client socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for

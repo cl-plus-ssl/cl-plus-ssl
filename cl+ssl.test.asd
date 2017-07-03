@@ -23,4 +23,5 @@
                 ((:file "package")
                  (:file "dummy")
                  (:file "sni")
-                 (:file "verify-hostname")))))
+                 (:file "verify-hostname")
+                 (:file "badssl-com")))))

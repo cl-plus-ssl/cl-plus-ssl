@@ -739,6 +739,8 @@ will use this value.")
   (setf *ssl-check-verify-p* :unspecified)
   (setf *ssl-global-method* (funcall method))
   (setf *ssl-global-context* (ssl-ctx-new *ssl-global-method*))
+  (unless (eql 1 (ssl-ctx-set-default-verify-paths *ssl-global-context*))
+    (error "ssl-ctx-set-default-verify-paths failed."))
   (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
   (ssl-ctx-set-default-passwd-cb *ssl-global-context*
                                  (cffi:callback pem-password-callback))
