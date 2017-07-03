@@ -342,27 +342,7 @@ session-resume requests) would normally be copied into the local cache before pr
     :pointer
   (ssl ssl-pointer))
 
-(cffi:defcfun ("SSL_CTX_set_default_verify_paths" ssl-ctx-set-default-verify-paths)
-    :int
-  (ctx :pointer))
-
-(cffi:defcfun ("RSA_generate_key" rsa-generate-key)
-    :pointer
-  (num :int)
-  (e :unsigned-long)
-  (callback :pointer)
-  (opt :pointer))
-
-(cffi:defcfun ("RSA_free" rsa-free)
-    :void
-  (rsa :pointer))
-
-(cffi:defcfun ("SSL_CTX_set_tmp_rsa_callback" ssl-ctx-set-tmp-rsa-callback)
-    :pointer
-  (ctx :pointer)
-  (callback :pointer))
-
-;; X509 & ASN1
+;;; X509 & ASN1
 (cffi:defcfun ("X509_free" x509-free)
     :void
   (x509 :pointer))
@@ -479,6 +459,27 @@ session-resume requests) would normally be copied into the local cache before pr
   (data :pointer)
   (flags :long))
 
+;; X509 & ASN1 - end
+
+(cffi:defcfun ("SSL_CTX_set_default_verify_paths" ssl-ctx-set-default-verify-paths)
+    :int
+  (ctx :pointer))
+
+(cffi:defcfun ("RSA_generate_key" rsa-generate-key)
+    :pointer
+  (num :int)
+  (e :unsigned-long)
+  (callback :pointer)
+  (opt :pointer))
+
+(cffi:defcfun ("RSA_free" rsa-free)
+    :void
+  (rsa :pointer))
+
+(cffi:defcfun ("SSL_CTX_set_tmp_rsa_callback" ssl-ctx-set-tmp-rsa-callback)
+    :pointer
+  (ctx :pointer)
+  (callback :pointer))
 
 (cffi:defcallback tmp-rsa-callback :pointer ((ssl :pointer) (export-p :int) (key-length :int))
   (declare (ignore ssl export-p))
