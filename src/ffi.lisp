@@ -85,7 +85,7 @@ session-resume requests) would normally be copied into the local cache before pr
 
 (defconstant +SSL-OP-ALL+ #x80000BFF)
 
-(defconstant +SSL-OP-NO-SSLv2+   #x00000000)
+(defconstant +SSL-OP-NO-SSLv2+   #x01000000)
 (defconstant +SSL-OP-NO-SSLv3+   #x02000000)
 (defconstant +SSL-OP-NO-TLSv1+   #x04000000)
 (defconstant +SSL-OP-NO-TLSv1-2+ #x08000000)
