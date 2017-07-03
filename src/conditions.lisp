@@ -313,3 +313,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
   (:documentation "ASN.1 string parsing/validation error")
   (:report (lambda (condition stream)
              (format stream "ASN.1 syntax error: invalid asn1 string (expected type ~a)" (slot-value condition 'type))))) ;; TODO: when moved to grovel use enum symbol here
+
+(define-condition server-certificate-missing (cl+ssl-error simple-error)
+  ()
+  (:documentation "SSL server didn't present a certificate"))

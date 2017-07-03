@@ -312,11 +312,31 @@ After RELOAD, you need to call this again."
       (setf (ssl-check-verify-p) t))
     t))
 
-(defun ssl-stream-check-verify (ssl-stream)
-  (let* ((handle (ssl-stream-handle ssl-stream))
-         (err (ssl-get-verify-result handle)))
-    (unless (eql err 0)
-      (error 'ssl-error-verify :stream ssl-stream :error-code err))))
+(defun maybe-verify-client-stream (ssl-stream verify-mode hostname)
+  ;; VERIFY-MODE is one of NIL, :OPTIONAL, :REQUIRED
+  ;; HOSTNAME is either NIL or a string.
+  (when verify-mode
+    (let* ((handle (ssl-stream-handle ssl-stream))
+           (srv-cert (ssl-get-peer-certificate handle)))
+      (unwind-protect
+           (progn
+             (when (and (eq :required verify-mode)
+                        (cffi:null-pointer-p srv-cert))
+               (error 'server-certificate-missing
+                      :format-control "The server didn't present a certificate."))
+             (let ((err (ssl-get-verify-result handle)))
+               (unless (eql err 0)
+                 (error 'ssl-error-verify :stream ssl-stream :error-code err)))
+             (when (and hostname
+                        (not (cffi:null-pointer-p srv-cert))
+                        ;; Beware of the unusual protocol of verify-hostname:
+                        ;; it returns the verification result as true / false,
+                        ;; but also signals error for many verification failures.
+                        ;; TODO: refactor verify-hostname to simplify this protocol.
+                        (not (verify-hostname srv-cert hostname)))
+               (error 'ssl-unable-to-match-host-name :hostname hostname))))
+        (unless (cffi:null-pointer-p srv-cert)
+          (x509-free srv-cert)))))
 
 (defun handle-external-format (stream ef)
   (if ef
@@ -337,13 +357,20 @@ After RELOAD, you need to call this again."
 ;; fixme: free the context when errors happen in this function
 (defun make-ssl-client-stream
     (socket &key certificate key password (method 'ssl-v23-method) external-format
-                 close-callback (unwrap-stream-p t)
-     (cipher-list *default-cipher-list*)
-                 hostname)
+              close-callback (unwrap-stream-p t)
+              (cipher-list *default-cipher-list*)
+              (verify (if (ssl-check-verify-p) :optional nil))
+              hostname)
   "Returns an SSL stream for the client socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your client. KEY is the path to the PEM-encoded key for the client, which
 may be associated with the passphrase PASSWORD.
+
+VERIFY can be specified either as NIL if no check should be performed,
+:OPTIONAL to verify the server's certificate if it presented one or
+:REQUIRED to verify the server's certificate and fail if an invalid
+or no certificate was presented.
+
 HOSTNAME if specified, will be sent by client during TLS negotiation,
 according to the Server Name Indication (SNI) extension to the TLS.
 When server handles several domain names, this extension enables the server
@@ -363,8 +390,7 @@ to choose certificate for right domain."
       (with-pem-password (password)
         (install-key-and-cert handle key certificate))
       (ensure-ssl-funcall stream handle #'ssl-connect handle)
-      (when (ssl-check-verify-p)
-        (ssl-stream-check-verify stream))
+      (maybe-verify-client-stream stream verify hostname)
       (handle-external-format stream external-format))))
 
 ;; fixme: free the context when errors happen in this function
