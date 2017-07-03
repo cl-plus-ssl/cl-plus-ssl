@@ -22,4 +22,5 @@
                 :components
                 ((:file "package")
                  (:file "dummy")
-                 (:file "sni")))))
+                 (:file "sni")
+                 (:file "verify-hostname")))))

@@ -53,7 +53,10 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
                (get-output-stream-string s)))
       (otherwise (body stream-designator)))))
 
-(define-condition ssl-error (error)
+(define-condition cl+ssl-error (error)
+  ())
+
+(define-condition ssl-error (cl+ssl-error)
   (
    ;; Stores list of error codes
    ;; (as returned by the READ-SSL-ERROR-QUEUE function)
@@ -300,3 +303,13 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
    "A failure in the SSL library occurred..")
   (:report (lambda (condition stream)
              (format stream "A failure in OpenSSL library occurred~@[: ~A~].~%" (slot-value condition 'message)) (cl+ssl::format-ssl-error-queue stream (cl+ssl::ssl-error-queue condition)))))
+
+(define-condition asn1-error (cl+ssl-error)
+  ()
+  (:documentation "Asn1 syntax error"))
+
+(define-condition invalid-asn1-string (cl+ssl-error)
+  ((type :initarg :type :initform nil))
+  (:documentation "ASN.1 string parsing/validation error")
+  (:report (lambda (condition stream)
+             (format stream "ASN.1 syntax error: invalid asn1 string (expected type ~a)" (slot-value condition 'type))))) ;; TODO: when moved to grovel use enum symbol here

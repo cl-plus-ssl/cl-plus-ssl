@@ -50,4 +50,11 @@
            #:+ssl-sess-cache-no-internal+
            
            #:make-context
-           #:with-global-context))
+           #:with-global-context
+
+           ;; x509 stuff
+           #:decode-certificate-from-file
+           #:decode-certificate
+
+           ;; hostname-verification
+           #:verify-hostname))
