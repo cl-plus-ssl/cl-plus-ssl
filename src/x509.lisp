@@ -40,7 +40,7 @@ ASN1 string validation references:
 (defmethod decode-asn1-string (asn1-string (type (eql +v-asn1-iastring+)))
   (let ((bytes (asn1-string-bytes-vector asn1-string)))
     (if (asn1-iastring-p bytes)
-        (babel:octets-to-string bytes :encoding :ascii)
+        (flex:octets-to-string bytes :external-format :ascii)
         (error 'invalid-asn1-string :type '+v-asn1-iastring+))))
 
 (defun asn1-printable-char-p (byte)
@@ -81,7 +81,7 @@ ASN1 string validation references:
 (defmethod decode-asn1-string (asn1-string (type (eql +v-asn1-printablestring+)))
   (let* ((bytes (asn1-string-bytes-vector asn1-string)))
     (if (asn1-printable-string-p bytes)
-        (babel:octets-to-string bytes :encoding :ascii)
+        (flex:octets-to-string bytes :external-format :ascii)
         (error 'invalid-asn1-string :type '+v-asn1-printablestring+))))
 
 (defmethod decode-asn1-string (asn1-string (type (eql +v-asn1-utf8string+)))
@@ -117,7 +117,7 @@ ASN1 string validation references:
 (defmethod decode-asn1-string (asn1-string (type (eql +v-asn1-teletexstring+)))
   (let ((bytes (asn1-string-bytes-vector asn1-string)))
     (if (asn1-teletex-string-p bytes)
-        (babel:octets-to-string bytes :encoding :ascii)
+        (flex:octets-to-string bytes :external-format :ascii)
         (error 'invalid-asn1-string :type '+v-asn1-teletexstring+))))
 
 (defmethod decode-asn1-string (asn1-string (type (eql +v-asn1-bmpstring+)))

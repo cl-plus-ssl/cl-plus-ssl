@@ -16,8 +16,8 @@
   :description "Common Lisp interface to OpenSSL."
   :license "MIT"
   :author "Eric Marsden, Jochen Schmidt, David Lichteblau"
-  :depends-on (:cffi :uiop :babel :trivial-gray-streams :flexi-streams
-               :bordeaux-threads :trivial-garbage #+sbcl :sb-posix)
+  :depends-on (:cffi :trivial-gray-streams :flexi-streams #+sbcl :sb-posix
+               :bordeaux-threads :trivial-garbage :uiop)
   :serial t
   :components ((:module "src"
                 :serial t
