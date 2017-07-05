@@ -313,43 +313,33 @@
       CL+SSL requires CFFI with callback support.
     </p>
     <p>
-      Test results for Linux/x86, except OpenMCL which was tested on
-      Linux/PPC:
+      CL Test Grid results: <a href="https://common-lisp.net/project/cl-test-grid/library/cl+ssl.html">https://common-lisp.net/project/cl-test-grid/library/cl+ssl.html</a>
     </p>
-    <table border="1" cellpadding="2" cellspacing="0">
-      <thead>
-        <tr>
-          <th><b>Lisp Implementation</b></th>
-          <th><b>Status</b></th>
-          <th><b>Comments</b></th>
-        </tr>
-      </thead>
-      <tr><td>OpenMCL</td><td class="working">Working</td></tr>
-      <tr><td>SBCL</td><td class="working">Working</td></tr>
-      <tr><td>CMU CL</td><td class="working">Working</td></tr>
-      <tr><td>CLISP</td><td class="working">Working</td></tr>
-      <tr><td>LispWorks</td><td class="working">Working</td></tr>
-      <tr>
-        <td>Allegro</td>
-        <td class="broken">Broken</td>
-        <td>segfault</td>
-      </tr>
-      <tr><td>Corman CL</td><td class="unknown">Unknown</td></tr>
-      <tr><td>Digitool MCL</td><td class="unknown">Unknown</td></tr>
-      <tr><td>Scieneer CL</td><td class="unknown">Unknown</td></tr>
-      <tr><td>ECL</td><td class="unknown">Unknown</td></tr>
-      <tr><td>GCL</td><td class="unknown">Unknown</td></tr>
-    </table>
-
     <h3>TODO</h3>
     <ul>
-      <li>CNAME checking</li>
       <li>session caching</li>
       <li>The FFI code for all platforms except clisp needs to be
-      rewritten.</li>
+      rewritten. (update 2017-07-05: does it? why?)</li>
     </ul>
-
     <h3>News</h3>
+    <p>
+      2017-07-03
+    </p>
+    <ul>
+      <li>
+        Hostname verification added, thanks to Ilya Khaprov.
+        Default mode for <tt>make-ssl-client-stream</tt> is to verify the connection.
+        New keywrd argument <tt>verify</tt> is added to <tt>make-ssl-client-stream</tt> with the same possible values as Drakma uses for http request verification.
+      </li>
+    </ul>
+    <p>
+      201?-??-??
+    </p>
+    <ul>
+      <li>
+        See <a href="https://github.com/cl-plus-ssl/cl-plus-ssl/commits/master">commits</a>.
+      </li>
+    </ul>
     <p>
       2011-05-22
     </p>
