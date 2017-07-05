@@ -374,7 +374,8 @@ or no certificate was presented.
 HOSTNAME if specified, will be sent by client during TLS negotiation,
 according to the Server Name Indication (SNI) extension to the TLS.
 When server handles several domain names, this extension enables the server
-to choose certificate for right domain."
+to choose certificate for right domain. Also the HOSTNAME is used for
+hostname verification if verification is enabled by VERIFY."
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-stream
                                :socket socket

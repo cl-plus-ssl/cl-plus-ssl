@@ -271,7 +271,8 @@
       <tt>hostname</tt> if specified, will be sent by client during TLS negotiation,
       according to the Server Name Indication (SNI) extension to the TLS.
       When server handles several domain names, this extension enables the server
-      to choose certificate for right domain.
+      to choose certificate for right domain. Also the <tt>hostname></tt> is used for
+      hostname verification if verification is enabled by <tt>verify</tt>.
     </p>
     <p>
       <div class="def">Function CL+SSL:USE-CERTIFICATE-CHAIN-FILE (certificate-chain-file)</div>
