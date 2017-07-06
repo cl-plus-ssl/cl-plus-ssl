@@ -291,16 +291,26 @@ After RELOAD, you need to call this again."
     (error "ssl-ctx-set-default-verify-paths failed.")))
 
 (defun ssl-check-verify-p ()
-  "Return true if SSL connections will error if the certificate doesn't verify."
+  "DEPRECATED. Use the (MAKE-SSL-CLIENT-STREAM .. :VERIFY ?) to enable/disable verification.
+MAKE-CONTEXT also allows to enab/disable verification.
+
+Return true if SSL connections will error if the certificate doesn't verify."
   (and *ssl-check-verify-p* (not (eq *ssl-check-verify-p* :unspecified))))
 
 (defun (setf ssl-check-verify-p) (check-verify-p)
-  "If CHECK-VERIFY-P is true, signal connection errors if the server certificate doesn't verify."
+  "DEPRECATED. Use the (MAKE-SSL-CLIENT-STREAM .. :VERIFY ?) to enable/disable verification.
+MAKE-CONTEXT also allows to enab/disable verification.
+
+If CHECK-VERIFY-P is true, signal connection errors if the server certificate doesn't verify."
   (setf *ssl-check-verify-p* (not (null check-verify-p))))
 
 (defun ssl-verify-init (&key
                         (verify-depth nil)
                         (verify-locations nil))
+"DEPRECATED.
+Use the (MAKE-SSL-CLIENT-STREAM .. :VERIFY ?) to enable/disable verification.
+Use (MAKE-CONTEXT ... :VERIFY-LOCATION ? :VERIFY-DEPTH ?) to control the verification depth and locations.
+MAKE-CONTEXT also allows to enab/disable verification."
   (check-type verify-depth (or null integer))
   (ensure-initialized)
   (when verify-depth

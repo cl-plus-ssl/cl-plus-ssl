@@ -18,6 +18,9 @@
            #:make-ssl-server-stream
            #:use-certificate-chain-file
            #:random-bytes
+           ;; DEPRECATED.
+           ;; Use the (MAKE-SSL-CLIENT-STREAM .. :VERIFY ?) to enable/disable verification.
+           ;; MAKE-CONTEXT also allows to enab/disable verification.
            #:ssl-check-verify-p
            #:ssl-load-global-verify-locations
            #:ssl-set-global-default-verify-paths

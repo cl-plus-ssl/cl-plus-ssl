@@ -723,7 +723,10 @@ will use this value.")
     (setf (gethash self *threads*)
     (incf *thread-counter*))))))
 
-(defvar *ssl-check-verify-p* :unspecified)
+(defvar *ssl-check-verify-p* :unspecified
+  "DEPRECATED.
+Use the (MAKE-SSL-CLIENT-STREAM .. :VERIFY ?) to enable/disable verification.
+MAKE-CONTEXT also allows to enab/disable verification.")
 
 (defun initialize (&key (method 'ssl-v23-method) rand-seed)
   (setf *locks* (loop
