@@ -364,12 +364,20 @@ MAKE-CONTEXT also allows to enab/disable verification."
                                (ssl-free ,ssl))))
          ,@body))))
 
+(defvar *make-ssl-client-stream-verify-default* :required
+  "Helps to mitigate the change in default behaviour of
+MAKE-SSL-CLIENT-STREAM - previously it worked as if :VERIFY NIL
+but then :VERIFY :REQUIRED became the default.
+Change this variable if you want the previous behaviour.")
+
 ;; fixme: free the context when errors happen in this function
 (defun make-ssl-client-stream
     (socket &key certificate key password (method 'ssl-v23-method) external-format
               close-callback (unwrap-stream-p t)
               (cipher-list *default-cipher-list*)
-              (verify (if (ssl-check-verify-p) :optional :required))
+              (verify (if (ssl-check-verify-p)
+                          :optional
+                          *make-ssl-client-stream-verify-default*))
               hostname)
   "Returns an SSL stream for the client socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for

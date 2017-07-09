@@ -264,8 +264,10 @@
     <p>
       <tt>verify</tt> can be specified either as NIL if no check should be performed,
       <tt>:optional</tt> to verify the server's certificate if it presented one or
-      <tt>:required</tt> (the default) to verify the server's certificate
+      <tt>:required</tt> to verify the server's certificate
       and fail if an invalid or no certificate was presented.
+      Defaults to <tt>*make-ssl-client-stream-verify-default*</tt>
+      which is initialized to <tt>:required</tt>
     </p>
     <p>
       <tt>hostname</tt> if specified, will be sent by client during TLS negotiation,
@@ -273,6 +275,13 @@
       When server handles several domain names, this extension enables the server
       to choose certificate for right domain. Also the <tt>hostname></tt> is used for
       hostname verification if verification is enabled by <tt>verify</tt>.
+    </p>
+    <p>
+      <div class="def">Variable *make-ssl-client-stream-verify-default* :required</div>
+      Helps to mitigate the change in default behaviour of
+      <tt>make-ssl-client-stream</tt> - previously it worked as if <tt>:verify nil</tt>
+      but then <tt>:verify :required</tt> became the default.
+      Change this variable if you want the previous behaviour.
     </p>
     <p>
       <div class="def">Function CL+SSL:USE-CERTIFICATE-CHAIN-FILE (certificate-chain-file)</div>

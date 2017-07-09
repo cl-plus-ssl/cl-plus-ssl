@@ -15,6 +15,7 @@
            #:reload
            #:stream-fd
            #:make-ssl-client-stream
+           #:*make-ssl-client-stream-verify-default*
            #:make-ssl-server-stream
            #:use-certificate-chain-file
            #:random-bytes
