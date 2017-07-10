@@ -364,10 +364,18 @@ MAKE-CONTEXT also allows to enab/disable verification."
                                (ssl-free ,ssl))))
          ,@body))))
 
-(defvar *make-ssl-client-stream-verify-default* :required
+(defvar *make-ssl-client-stream-verify-default*
+  (if (member :windows *features*) ; by trivial-features
+      ;; On Windows we can't yet initizlise context with
+      ;; trusted certifying authorities from system configuration.
+      ;; ssl-ctx-set-default-verify-paths only helps
+      ;; on Unix-like platforms.
+      ;; See https://github.com/cl-plus-ssl/cl-plus-ssl/issues/54.
+      nil
+      :required)
   "Helps to mitigate the change in default behaviour of
 MAKE-SSL-CLIENT-STREAM - previously it worked as if :VERIFY NIL
-but then :VERIFY :REQUIRED became the default.
+but then :VERIFY :REQUIRED became the default on non-Windows platforms.
 Change this variable if you want the previous behaviour.")
 
 ;; fixme: free the context when errors happen in this function

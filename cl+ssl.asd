@@ -18,7 +18,7 @@
   :author "Eric Marsden, Jochen Schmidt, David Lichteblau"
   :depends-on (:cffi :trivial-gray-streams :flexi-streams #+sbcl :sb-posix
                :bordeaux-threads :trivial-garbage :uiop
-               :alexandria)
+               :alexandria :trivial-features)
   :serial t
   :components ((:module "src"
                 :serial t
