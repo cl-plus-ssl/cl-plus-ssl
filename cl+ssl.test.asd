@@ -15,7 +15,7 @@
   :maintainer "Ilya Khaprov <ilya.khaprov@publitechs.com>"
   :author "Ilya Khaprov <ilya.khaprov@publitechs.com>"
   :licence "MIT"
-  :depends-on (:fiveam :cl-coveralls :cl+ssl :usocket)
+  :depends-on (:fiveam (:feature (:or :sbcl :ccl) :cl-coveralls) :cl+ssl :usocket)
   :serial t
   :components ((:module "test"
                 :serial t
