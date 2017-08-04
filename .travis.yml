@@ -33,7 +33,7 @@ script:
          -e '(ql:quickload :cl+ssl.test)'
          -e '(let ((results
                   #+ sbcl
-                  (coveralls:with-coveralls (:exclude "test")
+                  (coveralls:with-coveralls (:exclude \"test\")
                      (5am:run :cl+ssl))
                   #- sbcl
                   (5am:run :cl+ssl)))
