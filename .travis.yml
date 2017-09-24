@@ -32,8 +32,12 @@ script:
                (format t \"(asdf:asdf-version): ~A~%\" (asdf:asdf-version)))'
          -e '(ql:quickload :cl+ssl.test)'
          -e '(let ((results
+                  #+ sbcl
                   (coveralls:with-coveralls (:exclude \"test\")
-                     (5am:run :cl+ssl))))
+                     (5am:run :cl+ssl))
+                  #- sbcl
+                  (5am:run :cl+ssl)
+                  ))
               (5am:explain! results)
               (unless (5am:results-status results)
                 (uiop:quit 1)))'"
