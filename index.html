@@ -98,7 +98,7 @@
     </p>
 -->
 
-    <h3>API functions</h3>
+    <h3>API</h3>
     <p>
       <div class="def">Function CL+SSL:ENSURE-INITIALIZED (&amp;key (method 'ssl-v23-method) (rand-seed nil))</div>
       In most cases you <strong>do not</strong> need to call this function, because it is called
@@ -300,6 +300,24 @@
       Reload <tt>libssl</tt>.  Call this function after restarting a Lisp
       core with CL+SSL dumped into it on Lisp implementations that do
       not reload shared libraries automatically.
+    </p>
+    <p>
+      <div class="def">*FEATURES* flag :CL+SSL-FOREIGN-LIBS-ALREADY-LOADED</div>
+      Allows user to load libssl (and libeay32 on Windows) himself
+      thus choosing the foreigh library(-ies) path and version to load.
+
+      <p>If specified, neither loading of the cl+ssl ASDF system
+        nor (cl+ssl:reload) try to load the foreign libraries,
+        assuming user has loaded them already.</p>
+
+      <pre>
+        (cffi:load-foreign-library "libssl.so.1.0.0")
+
+        (let ((*features* (cons :cl+ssl-foreign-libs-already-loaded
+                                *features*)))
+          (ql:quickload :cl+ssl :verbose t))
+      </pre>
+
     </p>
     <p>
       <div class="def">Function CL+SSL:STREAM-FD (stream)</div>

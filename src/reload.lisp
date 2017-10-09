@@ -50,9 +50,11 @@
   (:cygwin "cygssl-1.0.0.dll")
   (t (:default "libssl3")))
 
-(cffi:use-foreign-library libssl)
-
 (cffi:define-foreign-library libeay32
   (:windows "libeay32.dll"))
 
-(cffi:use-foreign-library libeay32)
+
+(unless (member :cl+ssl-foreign-libs-already-loaded
+                *features*)
+  (cffi:use-foreign-library libssl)
+  (cffi:use-foreign-library libeay32))

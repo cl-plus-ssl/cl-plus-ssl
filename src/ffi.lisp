@@ -786,8 +786,10 @@ context and in particular the loaded certificate chain."
 (defun reload ()
   (if *ssl-global-context*
       (ssl-ctx-free *ssl-global-context*))
-  (cffi:load-foreign-library 'libssl)
-  (cffi:load-foreign-library 'libeay32)
+  (unless (member :cl+ssl-foreign-libs-already-loaded
+                  *features*)
+    (cffi:load-foreign-library 'libssl)
+    (cffi:load-foreign-library 'libeay32))
   (setf *ssl-global-context* nil)
   (setf *ssl-global-method* nil)
   (setf *tmp-rsa-key-512* nil)
