@@ -1,3 +1,5 @@
+;;;; -*- Mode: LISP; Syntax: COMMON-LISP; indent-tabs-mode: nil; coding: utf-8; show-trailing-whitespace: t -*-
+
 (in-package :cl+ssl)
 
 (define-condition hostname-verification-error (error)

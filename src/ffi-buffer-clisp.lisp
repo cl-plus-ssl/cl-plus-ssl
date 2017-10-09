@@ -1,3 +1,5 @@
+;;;; -*- Mode: LISP; Syntax: COMMON-LISP; indent-tabs-mode: nil; coding: utf-8; show-trailing-whitespace: t -*-
+
 #+xcvb (module (:depends-on ("package" "reload" "conditions" "ffi" "ffi-buffer-all")))
 
 (in-package :cl+ssl)

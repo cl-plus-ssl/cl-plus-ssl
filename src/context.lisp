@@ -1,3 +1,5 @@
+;;;; -*- Mode: LISP; Syntax: COMMON-LISP; indent-tabs-mode: nil; coding: utf-8; show-trailing-whitespace: t -*-
+
 (in-package :cl+ssl)
 
 (define-condition verify-location-not-found-error (ssl-error)
