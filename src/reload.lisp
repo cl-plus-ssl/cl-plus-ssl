@@ -26,7 +26,15 @@
 
 (cffi:define-foreign-library libssl
   (:windows (:or "libssl32.dll" "ssleay32.dll"))
-  (:darwin (:or "libssl.dylib" "/usr/lib/libssl.dylib"))
+  ;; The default OS-X libssl seems have had insufficient crypto algos
+  ;; (missing TLSv1_[1,2]_XXX methods,
+  ;; see https://github.com/cl-plus-ssl/cl-plus-ssl/issues/56)
+  ;; so first try to load possible custom installations of libssl
+  (:darwin (:or "/opt/local/lib/libssl.dylib" ;; MacPorts
+                "/sw/lib/libssl.dylib"        ;; Fink
+                "/usr/local/lib/libssl.dylib" ;; Homebrew and personalized install
+                "libssl.dylib"                ;; default system libssl, which may have insufficient crypto
+                "/usr/lib/libssl.dylib"))
   (:solaris (:or "/lib/64/libssl.so"
                  "libssl.so.0.9.8" "libssl.so" "libssl.so.4"))
   ;; Unlike some other systems, OpenBSD linker,
