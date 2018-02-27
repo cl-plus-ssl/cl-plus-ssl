@@ -26,6 +26,16 @@
     (:openbsd "libcrypto.so"))
   (cffi:use-foreign-library libcrypto))
 
+#+(and lispworks darwin)
+(progn
+  (cffi:define-foreign-library libcrypto
+    (:darwin (:or "/opt/local/lib/libcrypto.dylib" ;; MacPorts
+                  "/sw/lib/libcrypto.dylib"        ;; Fink
+                  "/usr/local/lib/libcrypto.dylib" ;; Homebrew and personalized install
+                  "libcrypto.dylib"                ;; default system libcrypto, which may have insufficient crypto
+                  "/usr/lib/libcrypto.dylib")))
+  (cffi:use-foreign-library libcrypto))
+
 (cffi:define-foreign-library libssl
   (:windows (:or "libssl32.dll" "ssleay32.dll"))
   ;; The default OS-X libssl seems have had insufficient crypto algos

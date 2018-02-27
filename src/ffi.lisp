@@ -14,6 +14,30 @@
 
 (in-package :cl+ssl)
 
+;;; Code for checking that we got the correct foreign symbols right.
+;;; Maybe should call check-cl+ssl-symbols in ensure-initialized.
+(defvar *cl+ssl-ssl-foreign-function-names* nil)
+(defvar *cl+ssl-crypto-foreign-function-names* nil)
+#+lispworks
+(defun check-cl+ssl-symbols ()
+  (dolist (ssl-symbol *cl+ssl-ssl-foreign-function-names*)
+    (when (fli:null-pointer-p (fli:make-pointer :symbol-name ssl-symbol :module 'libssl :errorp nil))
+      (format t "Symbol ~s undefined~%" ssl-symbol)))
+  (dolist (crypto-symbol *cl+ssl-crypto-foreign-function-names*)
+    (when (fli:null-pointer-p (fli:make-pointer :symbol-name crypto-symbol :module 'libcrypto :errorp nil))
+      (format t "Symbol ~s undefined~%" crypto-symbol))))
+
+(defmacro define-ssl-function (name-and-options &body body)
+  `(progn
+     (pushnew  ,(car name-and-options)  *cl+ssl-ssl-foreign-function-names* :test 'equal) ; debugging
+     (cffi:defcfun ,(append name-and-options '(:library libssl)) ,@body)))
+
+(defmacro define-crypto-function (name-and-options &body body)
+  `(progn
+     (pushnew  ,(car name-and-options)  *cl+ssl-crypto-foreign-function-names* :test 'equal) ; debugging
+     (cffi:defcfun ,(append name-and-options #+(and lispworks darwin) '(:library libcrypto)) ,@body)))
+
+
 ;;; Global state
 ;;;
 (defvar *ssl-global-context* nil)
@@ -116,12 +140,12 @@ session-resume requests) would normally be copied into the local cache before pr
 (cffi:defctype ssl-ctx :pointer)
 (cffi:defctype ssl-pointer :pointer)
 
-(cffi:defcfun ("SSL_get_version" ssl-get-version)
+(define-ssl-function ("SSL_get_version" ssl-get-version)
     :string
   (ssl ssl-pointer))
-(cffi:defcfun ("SSL_load_error_strings" ssl-load-error-strings)
+(define-ssl-function ("SSL_load_error_strings" ssl-load-error-strings)
     :void)
-(cffi:defcfun ("SSL_library_init" ssl-library-init)
+(define-ssl-function ("SSL_library_init" ssl-library-init)
     :int)
 ;;
 ;; We don't refer SSLv2_client_method as the default
@@ -129,142 +153,142 @@ session-resume requests) would normally be copied into the local cache before pr
 ;; of the SSL v2 protocol (see https://www.openssl.org/docs/ssl/SSL_CTX_new.html
 ;; and https://github.com/cl-plus-ssl/cl-plus-ssl/issues/6)
 ;;
-;; (cffi:defcfun ("SSLv2_client_method" ssl-v2-client-method)
+;; (define-ssl-function ("SSLv2_client_method" ssl-v2-client-method)
 ;;     ssl-method)
-(cffi:defcfun ("SSLv23_client_method" ssl-v23-client-method)
+(define-ssl-function ("SSLv23_client_method" ssl-v23-client-method)
     ssl-method)
-(cffi:defcfun ("SSLv23_server_method" ssl-v23-server-method)
+(define-ssl-function ("SSLv23_server_method" ssl-v23-server-method)
     ssl-method)
-(cffi:defcfun ("SSLv23_method" ssl-v23-method)
+(define-ssl-function ("SSLv23_method" ssl-v23-method)
     ssl-method)
-(cffi:defcfun ("SSLv3_client_method" ssl-v3-client-method)
+(define-ssl-function ("SSLv3_client_method" ssl-v3-client-method)
     ssl-method)
-(cffi:defcfun ("SSLv3_server_method" ssl-v3-server-method)
+(define-ssl-function ("SSLv3_server_method" ssl-v3-server-method)
     ssl-method)
-(cffi:defcfun ("SSLv3_method" ssl-v3-method)
+(define-ssl-function ("SSLv3_method" ssl-v3-method)
     ssl-method)
-(cffi:defcfun ("TLSv1_client_method" ssl-TLSv1-client-method)
+(define-ssl-function ("TLSv1_client_method" ssl-TLSv1-client-method)
     ssl-method)
-(cffi:defcfun ("TLSv1_server_method" ssl-TLSv1-server-method)
+(define-ssl-function ("TLSv1_server_method" ssl-TLSv1-server-method)
     ssl-method)
-(cffi:defcfun ("TLSv1_method" ssl-TLSv1-method)
+(define-ssl-function ("TLSv1_method" ssl-TLSv1-method)
     ssl-method)
-(cffi:defcfun ("TLSv1_1_client_method" ssl-TLSv1-1-client-method)
+(define-ssl-function ("TLSv1_1_client_method" ssl-TLSv1-1-client-method)
     ssl-method)
-(cffi:defcfun ("TLSv1_1_server_method" ssl-TLSv1-1-server-method)
+(define-ssl-function ("TLSv1_1_server_method" ssl-TLSv1-1-server-method)
     ssl-method)
-(cffi:defcfun ("TLSv1_1_method" ssl-TLSv1-1-method)
+(define-ssl-function ("TLSv1_1_method" ssl-TLSv1-1-method)
     ssl-method)
-(cffi:defcfun ("TLSv1_2_client_method" ssl-TLSv1-2-client-method)
+(define-ssl-function ("TLSv1_2_client_method" ssl-TLSv1-2-client-method)
     ssl-method)
-(cffi:defcfun ("TLSv1_2_server_method" ssl-TLSv1-2-server-method)
+(define-ssl-function ("TLSv1_2_server_method" ssl-TLSv1-2-server-method)
     ssl-method)
-(cffi:defcfun ("TLSv1_2_method" ssl-TLSv1-2-method)
+(define-ssl-function ("TLSv1_2_method" ssl-TLSv1-2-method)
     ssl-method)
 
-(cffi:defcfun ("SSL_CTX_new" ssl-ctx-new)
+(define-ssl-function ("SSL_CTX_new" ssl-ctx-new)
     ssl-ctx
   (method ssl-method))
-(cffi:defcfun ("SSL_new" ssl-new)
+(define-ssl-function ("SSL_new" ssl-new)
     ssl-pointer
   (ctx ssl-ctx))
-(cffi:defcfun ("SSL_get_fd" ssl-get-fd)
+(define-ssl-function ("SSL_get_fd" ssl-get-fd)
     :int
   (ssl ssl-pointer))
-(cffi:defcfun ("SSL_set_fd" ssl-set-fd)
+(define-ssl-function ("SSL_set_fd" ssl-set-fd)
     :int
   (ssl ssl-pointer)
   (fd :int))
-(cffi:defcfun ("SSL_set_bio" ssl-set-bio)
+(define-ssl-function ("SSL_set_bio" ssl-set-bio)
     :void
   (ssl ssl-pointer)
   (rbio :pointer)
   (wbio :pointer))
-(cffi:defcfun ("SSL_get_error" ssl-get-error)
+(define-ssl-function ("SSL_get_error" ssl-get-error)
     :int
   (ssl ssl-pointer)
   (ret :int))
-(cffi:defcfun ("SSL_set_connect_state" ssl-set-connect-state)
+(define-ssl-function ("SSL_set_connect_state" ssl-set-connect-state)
     :void
   (ssl ssl-pointer))
-(cffi:defcfun ("SSL_set_accept_state" ssl-set-accept-state)
+(define-ssl-function ("SSL_set_accept_state" ssl-set-accept-state)
     :void
   (ssl ssl-pointer))
-(cffi:defcfun ("SSL_connect" ssl-connect)
+(define-ssl-function ("SSL_connect" ssl-connect)
     :int
   (ssl ssl-pointer))
-(cffi:defcfun ("SSL_accept" ssl-accept)
+(define-ssl-function ("SSL_accept" ssl-accept)
     :int
   (ssl ssl-pointer))
-(cffi:defcfun ("SSL_write" ssl-write)
-    :int
-  (ssl ssl-pointer)
-  (buf :pointer)
-  (num :int))
-(cffi:defcfun ("SSL_read" ssl-read)
+(define-ssl-function ("SSL_write" ssl-write)
     :int
   (ssl ssl-pointer)
   (buf :pointer)
   (num :int))
-(cffi:defcfun ("SSL_shutdown" ssl-shutdown)
+(define-ssl-function ("SSL_read" ssl-read)
+    :int
+  (ssl ssl-pointer)
+  (buf :pointer)
+  (num :int))
+(define-ssl-function ("SSL_shutdown" ssl-shutdown)
     :void
   (ssl ssl-pointer))
-(cffi:defcfun ("SSL_free" ssl-free)
+(define-ssl-function ("SSL_free" ssl-free)
     :void
   (ssl ssl-pointer))
-(cffi:defcfun ("SSL_CTX_free" ssl-ctx-free)
+(define-ssl-function ("SSL_CTX_free" ssl-ctx-free)
     :void
   (ctx ssl-ctx))
-(cffi:defcfun ("BIO_ctrl" bio-set-fd)
+(define-crypto-function ("BIO_ctrl" bio-set-fd)
     :long
   (bio :pointer)
   (cmd :int)
   (larg :long)
   (parg :pointer))
-(cffi:defcfun ("BIO_new_socket" bio-new-socket)
+(define-crypto-function ("BIO_new_socket" bio-new-socket)
     :pointer
   (fd :int)
   (close-flag :int))
-(cffi:defcfun ("BIO_new" bio-new)
+(define-crypto-function ("BIO_new" bio-new)
     :pointer
   (method :pointer))
 
-(cffi:defcfun ("ERR_get_error" err-get-error)
+(define-crypto-function ("ERR_get_error" err-get-error)
     :unsigned-long)
-(cffi:defcfun ("ERR_error_string" err-error-string)
+(define-crypto-function ("ERR_error_string" err-error-string)
     :string
   (e :unsigned-long)
   (buf :pointer))
 
-(cffi:defcfun ("SSL_set_cipher_list" ssl-set-cipher-list)
+(define-ssl-function ("SSL_set_cipher_list" ssl-set-cipher-list)
     :int
   (ssl ssl-pointer)
   (str :string))
-(cffi:defcfun ("SSL_use_RSAPrivateKey_file" ssl-use-rsa-privatekey-file)
+(define-ssl-function ("SSL_use_RSAPrivateKey_file" ssl-use-rsa-privatekey-file)
     :int
   (ssl ssl-pointer)
   (str :string)
   ;; either +ssl-filetype-pem+ or +ssl-filetype-asn1+
   (type :int))
-(cffi:defcfun
+(define-ssl-function
     ("SSL_CTX_use_RSAPrivateKey_file" ssl-ctx-use-rsa-privatekey-file)
     :int
   (ctx ssl-ctx)
   (type :int))
-(cffi:defcfun ("SSL_use_certificate_file" ssl-use-certificate-file)
+(define-ssl-function ("SSL_use_certificate_file" ssl-use-certificate-file)
     :int
   (ssl ssl-pointer)
   (str :string)
   (type :int))
 #+new-openssl
-(cffi:defcfun ("SSL_CTX_set_options" ssl-ctx-set-options)
+(define-ssl-function ("SSL_CTX_set_options" ssl-ctx-set-options)
                  :long
                (ctx :pointer)
                (options :long))
 #-new-openssl
 (defun ssl-ctx-set-options (ctx options)
   (ssl-ctx-ctrl ctx +SSL-CTRL-OPTIONS+ options (cffi:null-pointer)))
-(cffi:defcfun ("SSL_CTX_set_cipher_list" ssl-ctx-set-cipher-list%)
+(define-ssl-function ("SSL_CTX_set_cipher_list" ssl-ctx-set-cipher-list%)
     :int
   (ctx :pointer)
   (ciphers :pointer))
@@ -272,24 +296,24 @@ session-resume requests) would normally be copied into the local cache before pr
   (cffi:with-foreign-string (ciphers* ciphers)
     (when (= 0 (ssl-ctx-set-cipher-list% ctx ciphers*))
       (error 'ssl-error-initialize :reason "Can't set SSL cipher list" :queue (read-ssl-error-queue)))))
-(cffi:defcfun ("SSL_CTX_use_certificate_chain_file" ssl-ctx-use-certificate-chain-file)
+(define-ssl-function ("SSL_CTX_use_certificate_chain_file" ssl-ctx-use-certificate-chain-file)
     :int
   (ctx ssl-ctx)
   (str :string))
-(cffi:defcfun ("SSL_CTX_load_verify_locations" ssl-ctx-load-verify-locations)
+(define-ssl-function ("SSL_CTX_load_verify_locations" ssl-ctx-load-verify-locations)
     :int
   (ctx ssl-ctx)
   (CAfile :string)
   (CApath :string))
-(cffi:defcfun ("SSL_CTX_set_client_CA_list" ssl-ctx-set-client-ca-list)
+(define-ssl-function ("SSL_CTX_set_client_CA_list" ssl-ctx-set-client-ca-list)
     :void
   (ctx ssl-ctx)
   (list ssl-pointer))
-(cffi:defcfun ("SSL_load_client_CA_file" ssl-load-client-ca-file)
+(define-ssl-function ("SSL_load_client_CA_file" ssl-load-client-ca-file)
     ssl-pointer
   (file :string))
 
-(cffi:defcfun ("SSL_CTX_ctrl" ssl-ctx-ctrl)
+(define-ssl-function ("SSL_CTX_ctrl" ssl-ctx-ctrl)
     :long
   (ctx ssl-ctx)
   (cmd :int)
@@ -308,100 +332,100 @@ session-resume requests) would normally be copied into the local cache before pr
   (larg :unsigned-long)
   (parg :pointer))
 
-(cffi:defcfun ("SSL_ctrl" ssl-ctrl)
+(define-ssl-function ("SSL_ctrl" ssl-ctrl)
     :long
   (ssl :pointer)
   (cmd :int)
   (larg :long)
   (parg :pointer))
 
-(cffi:defcfun ("SSL_CTX_set_default_passwd_cb" ssl-ctx-set-default-passwd-cb)
+(define-ssl-function ("SSL_CTX_set_default_passwd_cb" ssl-ctx-set-default-passwd-cb)
     :void
   (ctx ssl-ctx)
   (pem_passwd_cb :pointer))
 
-(cffi:defcfun ("CRYPTO_num_locks" crypto-num-locks) :int)
-(cffi:defcfun ("CRYPTO_set_locking_callback" crypto-set-locking-callback)
+(define-crypto-function ("CRYPTO_num_locks" crypto-num-locks) :int)
+(define-crypto-function ("CRYPTO_set_locking_callback" crypto-set-locking-callback)
     :void
   (fun :pointer))
-(cffi:defcfun ("CRYPTO_set_id_callback" crypto-set-id-callback)
+(define-crypto-function ("CRYPTO_set_id_callback" crypto-set-id-callback)
     :void
   (fun :pointer))
 
-(cffi:defcfun ("RAND_seed" rand-seed)
+(define-crypto-function ("RAND_seed" rand-seed)
     :void
   (buf :pointer)
   (num :int))
-(cffi:defcfun ("RAND_bytes" rand-bytes)
+(define-crypto-function ("RAND_bytes" rand-bytes)
     :int
   (buf :pointer)
   (num :int))
 
-(cffi:defcfun ("SSL_CTX_set_verify_depth" ssl-ctx-set-verify-depth)
+(define-ssl-function ("SSL_CTX_set_verify_depth" ssl-ctx-set-verify-depth)
     :void
   (ctx :pointer)
   (depth :int))
 
-(cffi:defcfun ("SSL_CTX_set_verify" ssl-ctx-set-verify)
+(define-ssl-function ("SSL_CTX_set_verify" ssl-ctx-set-verify)
     :void
   (ctx :pointer)
   (mode :int)
   (verify-callback :pointer))
 
-(cffi:defcfun ("SSL_get_verify_result" ssl-get-verify-result)
+(define-ssl-function ("SSL_get_verify_result" ssl-get-verify-result)
     :long
   (ssl ssl-pointer))
 
-(cffi:defcfun ("SSL_get_peer_certificate" ssl-get-peer-certificate)
+(define-ssl-function ("SSL_get_peer_certificate" ssl-get-peer-certificate)
     :pointer
   (ssl ssl-pointer))
 
 ;;; X509 & ASN1
-(cffi:defcfun ("X509_free" x509-free)
+(define-crypto-function ("X509_free" x509-free)
     :void
   (x509 :pointer))
 
-(cffi:defcfun ("X509_NAME_oneline" x509-name-oneline)
+(define-crypto-function ("X509_NAME_oneline" x509-name-oneline)
     :pointer
   (x509-name :pointer)
   (buf :pointer)
   (size :int))
 
-(cffi:defcfun ("X509_NAME_get_index_by_NID" x509-name-get-index-by-nid)
+(define-crypto-function ("X509_NAME_get_index_by_NID" x509-name-get-index-by-nid)
     :int
   (name :pointer)
   (nid :int)
   (lastpos :int))
 
-(cffi:defcfun ("X509_NAME_get_entry" x509-name-get-entry)
+(define-crypto-function ("X509_NAME_get_entry" x509-name-get-entry)
     :pointer
   (name :pointer)
   (log :int))
 
-(cffi:defcfun ("X509_NAME_ENTRY_get_data" x509-name-entry-get-data)
+(define-crypto-function ("X509_NAME_ENTRY_get_data" x509-name-entry-get-data)
     :pointer
   (name-entry :pointer))
 
-(cffi:defcfun ("X509_get_issuer_name" x509-get-issuer-name)
+(define-crypto-function ("X509_get_issuer_name" x509-get-issuer-name)
     :pointer                            ; *X509_NAME
   (x509 :pointer))
 
-(cffi:defcfun ("X509_get_subject_name" x509-get-subject-name)
+(define-crypto-function ("X509_get_subject_name" x509-get-subject-name)
     :pointer                            ; *X509_NAME
   (x509 :pointer))
 
-(cffi:defcfun ("X509_get_ext_d2i" x509-get-ext-d2i)
+(define-crypto-function ("X509_get_ext_d2i" x509-get-ext-d2i)
     :pointer
   (cert :pointer)
   (nid :int)
   (crit :pointer)
   (idx :pointer))
 
-(cffi:defcfun ("X509_STORE_CTX_get_error" x509-store-ctx-get-error)
+(define-crypto-function ("X509_STORE_CTX_get_error" x509-store-ctx-get-error)
     :int
   (ctx :pointer))
 
-(cffi:defcfun ("d2i_X509" d2i-x509)
+(define-crypto-function ("d2i_X509" d2i-x509)
     :pointer
   (*px :pointer)
   (in :pointer)
@@ -434,12 +458,12 @@ session-resume requests) would normally be copied into the local cache before pr
   (type :int)
   (data :pointer))
 
-(cffi:defcfun ("sk_value" sk-value)
+(define-crypto-function ("sk_value" sk-value)
     :pointer
   (stack :pointer)
   (index :int))
 
-(cffi:defcfun ("sk_num" sk-num)
+(define-crypto-function ("sk_num" sk-num)
     :int
   (stack :pointer))
 
@@ -451,19 +475,19 @@ session-resume requests) would normally be copied into the local cache before pr
 (defun sk-general-name-num (names)
   (sk-num names))
 
-(cffi:defcfun ("GENERAL_NAMES_free" general-names-free)
+(define-crypto-function ("GENERAL_NAMES_free" general-names-free)
     :void
   (general-names :pointer))
 
-(cffi:defcfun ("ASN1_STRING_data" asn1-string-data)
+(define-crypto-function ("ASN1_STRING_data" asn1-string-data)
     :pointer
   (asn1-string :pointer))
 
-(cffi:defcfun ("ASN1_STRING_length" asn1-string-length)
+(define-crypto-function ("ASN1_STRING_length" asn1-string-length)
     :int
   (asn1-string :pointer))
 
-(cffi:defcfun ("ASN1_STRING_type" asn1-string-type)
+(define-crypto-function ("ASN1_STRING_type" asn1-string-type)
     :int
   (asn1-string :pointer))
 
@@ -475,22 +499,22 @@ session-resume requests) would normally be copied into the local cache before pr
 
 ;; X509 & ASN1 - end
 
-(cffi:defcfun ("SSL_CTX_set_default_verify_paths" ssl-ctx-set-default-verify-paths)
+(define-ssl-function ("SSL_CTX_set_default_verify_paths" ssl-ctx-set-default-verify-paths)
     :int
   (ctx :pointer))
 
-(cffi:defcfun ("RSA_generate_key" rsa-generate-key)
+(define-crypto-function ("RSA_generate_key" rsa-generate-key)
     :pointer
   (num :int)
   (e :unsigned-long)
   (callback :pointer)
   (opt :pointer))
 
-(cffi:defcfun ("RSA_free" rsa-free)
+(define-crypto-function ("RSA_free" rsa-free)
     :void
   (rsa :pointer))
 
-(cffi:defcfun ("SSL_CTX_set_tmp_rsa_callback" ssl-ctx-set-tmp-rsa-callback)
+(define-ssl-function ("SSL_CTX_set_tmp_rsa_callback" ssl-ctx-set-tmp-rsa-callback)
     :pointer
   (ctx :pointer)
   (callback :pointer))
