@@ -15,17 +15,17 @@
 (in-package :cl+ssl)
 
 ;;; Code for checking that we got the correct foreign symbols right.
-;;; Maybe should call check-cl+ssl-symbols in ensure-initialized.
+;;; Implemented only for LispWorks for now.
 (defvar *cl+ssl-ssl-foreign-function-names* nil)
 (defvar *cl+ssl-crypto-foreign-function-names* nil)
 #+lispworks
 (defun check-cl+ssl-symbols ()
   (dolist (ssl-symbol *cl+ssl-ssl-foreign-function-names*)
     (when (fli:null-pointer-p (fli:make-pointer :symbol-name ssl-symbol :module 'libssl :errorp nil))
-      (format t "Symbol ~s undefined~%" ssl-symbol)))
+      (format *error-output* "Symbol ~s undefined~%" ssl-symbol)))
   (dolist (crypto-symbol *cl+ssl-crypto-foreign-function-names*)
     (when (fli:null-pointer-p (fli:make-pointer :symbol-name crypto-symbol :module 'libcrypto :errorp nil))
-      (format t "Symbol ~s undefined~%" crypto-symbol))))
+      (format *error-output* "Symbol ~s undefined~%" crypto-symbol))))
 
 (defmacro define-ssl-function (name-and-options &body body)
   `(progn
@@ -793,6 +793,8 @@ See ttp://www.openssl.org/support/faq.html#USER1 for details.
 
 Hint: do not use Common Lisp RANDOM function to generate the RAND-SEED,
 because the function usually returns predictable values."
+  #+lispworks
+  (check-cl+ssl-symbols)
   (bordeaux-threads:with-recursive-lock-held (*global-lock*)
     (unless (ssl-initialized-p)
       (initialize :method method :rand-seed rand-seed))
