@@ -816,6 +816,7 @@ context and in particular the loaded certificate chain."
       (ssl-ctx-free *ssl-global-context*))
   (unless (member :cl+ssl-foreign-libs-already-loaded
                   *features*)
+    (cffi:use-foreign-library libcrypto)
     (cffi:load-foreign-library 'libssl)
     (cffi:load-foreign-library 'libeay32))
   (setf *ssl-global-context* nil)

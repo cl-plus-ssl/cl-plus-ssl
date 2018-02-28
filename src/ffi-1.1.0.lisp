@@ -6,11 +6,11 @@
   (:export #:ssl-ctx-set-default-verify-dir
            #:ssl-ctx-set-default-verify-file))
 
-(cffi:defcfun ("SSL_CTX_set_default_verify_dir" ssl-ctx-set-default-verify-dir)
+(define-ssl-function ("SSL_CTX_set_default_verify_dir" ssl-ctx-set-default-verify-dir)
     :int
   (ctx :pointer))
 
-(cffi:defcfun ("SSL_CTX_set_default_verify_file" ssl-ctx-set-default-verify-file)
+(define-ssl-function ("SSL_CTX_set_default_verify_file" ssl-ctx-set-default-verify-file)
     :int
   (ctx :pointer))
 
