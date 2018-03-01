@@ -15,7 +15,11 @@
   :maintainer "Ilya Khaprov <ilya.khaprov@publitechs.com>"
   :author "Ilya Khaprov <ilya.khaprov@publitechs.com>"
   :licence "MIT"
-  :depends-on (:fiveam (:feature (:or :sbcl :ccl) :cl-coveralls) :cl+ssl :usocket)
+  :depends-on (:fiveam
+               (:feature (:or :sbcl :ccl) :cl-coveralls)
+               :cl+ssl
+               :openssl-1.1.0 ;; for now the dependency is only included to test how the system is loaded
+               :usocket)
   :serial t
   :components ((:module "test"
                 :serial t
