@@ -6,11 +6,17 @@
   (:export #:ssl-ctx-set-default-verify-dir
            #:ssl-ctx-set-default-verify-file))
 
-(define-ssl-function ("SSL_CTX_set_default_verify_dir" ssl-ctx-set-default-verify-dir)
+(in-package :openssl-1.1.0)
+
+;; TODO: factor out define-ssl-function into a common dependency from ffi.lisp
+;; and use it here. Or just move these functions to ffi.lisp if enough time passes
+;; and OpenSSL 1.1 or later is available universally.
+
+(cffi:defcfun ("SSL_CTX_set_default_verify_dir" ssl-ctx-set-default-verify-dir)
     :int
   (ctx :pointer))
 
-(define-ssl-function ("SSL_CTX_set_default_verify_file" ssl-ctx-set-default-verify-file)
+(cffi:defcfun ("SSL_CTX_set_default_verify_file" ssl-ctx-set-default-verify-file)
     :int
   (ctx :pointer))
 
