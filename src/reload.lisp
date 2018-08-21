@@ -23,7 +23,8 @@
   (:openbsd "libcrypto.so")
   (:darwin (:or "/opt/local/lib/libcrypto.dylib" ;; MacPorts
                 "/sw/lib/libcrypto.dylib"        ;; Fink
-                "/usr/local/lib/libcrypto.dylib" ;; Homebrew and personalized install
+                "/usr/local/opt/openssl/lib/libcrypto.dylib" ;; Homebrew
+                "/usr/local/lib/libcrypto.dylib" ;; personalized install
                 "libcrypto.dylib"                ;; default system libcrypto, which may have insufficient crypto
                 "/usr/lib/libcrypto.dylib")))
 
@@ -35,7 +36,8 @@
   ;; so first try to load possible custom installations of libssl
   (:darwin (:or "/opt/local/lib/libssl.dylib" ;; MacPorts
                 "/sw/lib/libssl.dylib"        ;; Fink
-                "/usr/local/lib/libssl.dylib" ;; Homebrew and personalized install
+                "/usr/local/opt/openssl/lib/libssl.dylib" ;; Homebrew
+                "/usr/local/lib/libssl.dylib" ;; personalized install
                 "libssl.dylib"                ;; default system libssl, which may have insufficient crypto
                 "/usr/lib/libssl.dylib"))
   (:solaris (:or "/lib/64/libssl.so"
