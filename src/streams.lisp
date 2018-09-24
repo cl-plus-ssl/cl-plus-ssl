@@ -448,12 +448,41 @@ may be associated with the passphrase PASSWORD."
       (handle-external-format stream external-format))))
 
 #+openmcl
-(defmethod stream-deadline ((stream ccl::basic-stream))
-  (ccl::ioblock-deadline (ccl::stream-ioblock stream t)))
+(defgeneric stream-deadline (stream))
+
 #+openmcl
-(defmethod stream-deadline ((stream t))
+(defmethod stream-deadline (stream)
   nil)
 
+#+openmcl
+(defmethod stream-deadline ((stream ccl::basic-stream))
+  (ccl::ioblock-deadline (ccl::stream-ioblock stream t)))
+
+(defgeneric stream-input-timeout (stream))
+
+(defmethod stream-input-timeout (stream)
+  nil)
+
+#+openmcl
+(defmethod stream-input-timeout ((stream ccl::basic-stream))
+  (ccl::stream-input-timeout stream))
+
+#+sbcl
+(defmethod stream-input-timeout ((stream sb-sys:fd-stream))
+  (sb-impl::fd-stream-timeout stream))
+
+(defgeneric stream-output-timeout (stream))
+
+(defmethod stream-output-timeout (stream)
+  nil)
+
+#+openmcl
+(defmethod stream-output-timeout ((stream ccl::basic-stream))
+  (ccl::stream-output-timeout stream))
+
+#+sbcl
+(defmethod stream-output-timeout ((stream sb-sys:fd-stream))
+  (sb-impl::fd-stream-timeout stream))
 
 (defgeneric stream-fd (stream))
 (defmethod stream-fd (stream) stream)

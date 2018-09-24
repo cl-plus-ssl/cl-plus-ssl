@@ -546,23 +546,19 @@ session-resume requests) would normally be copied into the local cache before pr
 (declaim (inline ensure-ssl-funcall))
 (defun ensure-ssl-funcall (stream handle func &rest args)
   (loop
-     (let ((nbytes
-      (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
-        (apply func args))))
-       (when (plusp nbytes)
-   (return nbytes))
-       (let ((error (ssl-get-error handle nbytes)))
-   (case error
-     (#.+ssl-error-want-read+
-      (input-wait stream
-      (ssl-get-fd handle)
-      (ssl-stream-deadline stream)))
-     (#.+ssl-error-want-write+
-      (output-wait stream
-       (ssl-get-fd handle)
-       (ssl-stream-deadline stream)))
-     (t
-      (ssl-signal-error handle func error nbytes)))))))
+    (let ((nbytes
+            (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
+              (apply func args))))
+      (when (plusp nbytes)
+        (return nbytes))
+      (let ((error (ssl-get-error handle nbytes)))
+        (case error
+          (#.+ssl-error-want-read+
+           (io-wait stream (ssl-get-fd handle) :input))
+          (#.+ssl-error-want-write+
+           (io-wait stream (ssl-get-fd handle) :output))
+          (t
+            (ssl-signal-error handle func error nbytes)))))))
 
 (declaim (inline nonblocking-ssl-funcall))
 (defun nonblocking-ssl-funcall (stream handle func &rest args)
@@ -580,85 +576,62 @@ session-resume requests) would normally be copied into the local cache before pr
       (ssl-signal-error handle func error nbytes)))))))
 
 
-;;; Waiting for output to be possible
+;;; Waiting for input/output to be possible
+
+(defun deadline->timeout (deadline)
+  (/ (- deadline (get-internal-real-time))
+     internal-time-units-per-second))
 
 #+clozure-common-lisp
-(defun milliseconds-until-deadline (deadline stream)
-  (let* ((now (get-internal-real-time)))
-    (if (> now deadline)
-  (error 'ccl::communication-deadline-expired :stream stream)
-  (values
-   (round (- deadline now) (/ internal-time-units-per-second 1000))))))
-
-#+clozure-common-lisp
-(defun output-wait (stream fd deadline)
-  (unless deadline
-    (setf deadline (stream-deadline (ssl-stream-socket stream))))
-  (let* ((timeout
-    (if deadline
-        (milliseconds-until-deadline deadline stream)
-        nil)))
-    (multiple-value-bind (win timedout error)
-  (ccl::process-output-wait fd timeout)
-      (unless win
-  (if timedout
-      (error 'ccl::communication-deadline-expired :stream stream)
-      (ccl::stream-io-error stream (- error) "write"))))))
+(defun io-wait (stream fd direction)
+  (let ((socket (ssl-stream-socket stream))
+        (deadline (ssl-stream-deadline stream)))
+    (unless deadline
+      (setf deadline (stream-deadline socket)))
+    (let ((timeout (ecase direction
+                     (:input (stream-input-timeout socket))
+                     (:output (stream-output-timeout socket))))
+          (deadline-timeout (when deadline
+                              (deadline->timeout deadline)))
+          (timeout-error (case direction
+                           (:input 'ccl::input-timeout)
+                           (:output 'ccl::output-timeout))))
+      (when (and deadline-timeout (minusp deadline-timeout))
+        (error 'ccl::communication-deadline-expired :stream stream))
+      (when (and timeout (minusp timeout))
+        (error timeout-error :stream stream))
+      (when (or (not timeout)
+                (and deadline-timeout
+                     (< deadline-timeout timeout)))
+        (setf timeout deadline-timeout
+              timeout-error 'ccl::communication-deadline-expired))
+      (when timeout
+        (setf timeout (round (* 1000 timeout))))
+      (multiple-value-bind (win timedout error)
+          (case direction
+            (:input (ccl::process-input-wait fd timeout))
+            (:output (ccl::process-output-wait fd timeout)))
+        (unless win
+          (if timedout
+            (error timeout-error :stream stream)
+            (ccl::stream-io-error stream (- error) "read")))))))
 
 #+sbcl
-(defun output-wait (stream fd deadline)
-  (declare (ignore stream))
-  (let ((timeout
-   ;; *deadline* is handled by wait-until-fd-usable automatically,
-   ;; but we need to turn a user-specified deadline into a timeout
-   (when deadline
-     (/ (- deadline (get-internal-real-time))
-        internal-time-units-per-second))))
-    (sb-sys:wait-until-fd-usable fd :output timeout)))
+(defun io-wait (stream fd direction)
+  (let ((timeout (let ((socket (ssl-stream-socket stream)))
+                   (ecase direction
+                     (:input (stream-input-timeout socket))
+                     (:output (stream-output-timeout socket))))))
+    (when (or (and timeout (minusp timeout))
+              (not (sb-sys:wait-until-fd-usable fd direction timeout)))
+      (error 'sb-sys:io-timeout :seconds timeout))))
 
 #-(or clozure-common-lisp sbcl)
-(defun output-wait (stream fd deadline)
-  (declare (ignore stream fd deadline))
+(defun io-wait (stream fd direction)
+  (declare (ignore stream fd direction))
   ;; This situation means that the lisp set our fd to non-blocking mode,
   ;; and streams.lisp didn't know how to undo that.
   (warn "non-blocking stream encountered unexpectedly"))
-
-
-;;; Waiting for input to be possible
-
-#+clozure-common-lisp
-(defun input-wait (stream fd deadline)
-  (unless deadline
-    (setf deadline (stream-deadline (ssl-stream-socket stream))))
-  (let* ((timeout
-    (if deadline
-        (milliseconds-until-deadline deadline stream)
-        nil)))
-    (multiple-value-bind (win timedout error)
-  (ccl::process-input-wait fd timeout)
-      (unless win
-  (if timedout
-      (error 'ccl::communication-deadline-expired :stream stream)
-      (ccl::stream-io-error stream (- error) "read"))))))
-
-#+sbcl
-(defun input-wait (stream fd deadline)
-  (declare (ignore stream))
-  (let ((timeout
-   ;; *deadline* is handled by wait-until-fd-usable automatically,
-   ;; but we need to turn a user-specified deadline into a timeout
-   (when deadline
-     (/ (- deadline (get-internal-real-time))
-        internal-time-units-per-second))))
-    (sb-sys:wait-until-fd-usable fd :input timeout)))
-
-#-(or clozure-common-lisp sbcl)
-(defun input-wait (stream fd deadline)
-  (declare (ignore stream fd deadline))
-  ;; This situation means that the lisp set our fd to non-blocking mode,
-  ;; and streams.lisp didn't know how to undo that.
-  (warn "non-blocking stream encountered unexpectedly"))
-
 
 ;;; Encrypted PEM files support
 ;;;
