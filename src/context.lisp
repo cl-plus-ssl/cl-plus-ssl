@@ -89,6 +89,7 @@
 (defun make-context (&key (method nil method-supplied-p)
                           (disabled-protocols)
                           (options (list +SSL-OP-ALL+))
+                          (min-proto-version +TLS1-2-VERSION+)
                           (session-cache-mode +ssl-sess-cache-server+)
                           (verify-location :default)
                           (verify-depth 100)
@@ -110,6 +111,18 @@
                             (declare (ignore _))
                             (ssl-ctx-free ctx))))
       (ssl-ctx-set-options ctx (apply #'logior (append disabled-protocols options)))
+      ;; Older OpenSSL versions might not have this SSL_ctrl call.
+      ;; Having them error out is a sane default - it's better than to keep
+      ;; on running with insecure values.
+      ;; People that _have_ to use much too old OpenSSL versions will
+      ;; have to call MAKE-CONTEXT with :MIN-PROTO-VERSION nil.
+      ;;
+      ;; As an aside: OpenSSL had the "SSL_OP_NO_TLSv1_2" constant since
+      ;;   7409d7ad517    2011-04-29 22:56:51 +0000
+      ;; so requiring a "new"er OpenSSL to match CL+SSL's defauls shouldn't be a problem.
+      (if min-proto-version
+        (if (zerop (ssl-ctx-set-min-proto-version ctx min-proto-version))
+          (error "Couldn't set minimum SSL protocol version!")))
       (ssl-ctx-set-session-cache-mode ctx session-cache-mode)
       (ssl-ctx-set-verify-location ctx verify-location)
       (ssl-ctx-set-verify-depth ctx verify-depth)

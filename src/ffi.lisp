@@ -1030,3 +1030,12 @@ context and in particular the loaded certificate chain."
   (setf *ssl-global-method* nil)
   (setf *tmp-rsa-key-512* nil)
   (setf *tmp-rsa-key-1024* nil))
+
+
+
+(defconstant +TLS1-VERSION+   #x0301)
+(defconstant +TLS1-1-VERSION+ #x0302)
+(defconstant +TLS1-2-VERSION+ #x0303)
+
+(defun ssl-ctx-set-min-proto-version (ctx version)
+  (ssl-ctx-ctrl ctx 123 version (cffi:null-pointer)))
