@@ -97,10 +97,11 @@
   (when dns-names
     (error 'unable-to-match-altnames))
   ;; TODO: we are matching only first CN
-  (alexandria:if-let ((cn (first (certificate-subject-common-names cert))))
-    (progn
-      (or (try-match-hostname cn hostname)
-          (error 'unable-to-match-common-name)))
+  (alexandria:if-let ((cns (certificate-subject-common-names cert)))
+    (or (some (lambda (cn)
+                (try-match-hostname cn hostname)) 
+              cns)
+      (error 'unable-to-match-common-name))
     (error 'unable-to-decode-common-name)))
 
 (defun verify-hostname (cert hostname)
