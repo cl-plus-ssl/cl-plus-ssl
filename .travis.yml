@@ -16,10 +16,12 @@ env:
 #    - LISP=clisp
     - LISP=ecl
     - LISP=abcl
-    - LISP=allegro
 # CMUCL fails to load libssl on TravisCI, despite OpenSSL 1.0.1f is installed,
 # example log: https://travis-ci.org/cl-plus-ssl/cl-plus-ssl/jobs/479189027
 #    - LISP=cmu-bin
+# Allegro is also failing to load libssl
+# https://travis-ci.org/cl-plus-ssl/cl-plus-ssl/jobs/479194225
+#    - LISP=allegro
 
 install:
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
