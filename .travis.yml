@@ -15,6 +15,8 @@ env:
 # (As a workaround we could try to download ASDF 3 ourselves)
 #    - LISP=clisp
     - LISP=ecl
+    - LISP=abcl
+    - LISP=cmu-bin
 
 install:
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
