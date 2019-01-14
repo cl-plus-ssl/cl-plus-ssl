@@ -53,6 +53,7 @@
                                   "libssl.so.1.0.2"
                                   "libssl.so.1.0.1l"
                                   "libssl.so.1.0.1j"
+                                  "libssl.so.1.0.1f"
                                   "libssl.so.1.0.1e"
                                   "libssl.so.1.0.1"
                                   "libssl.so.1.0.0q"
