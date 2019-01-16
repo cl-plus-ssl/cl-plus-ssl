@@ -313,6 +313,17 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :int
   (ctx ssl-ctx)
   (type :int))
+(define-ssl-function ("SSL_use_PrivateKey_file" ssl-use-privatekey-file)
+  :int
+  (ssl ssl-pointer)
+  (str :string)
+  ;; either +ssl-filetype-pem+ or +ssl-filetype-asn1+
+  (type :int))
+(define-ssl-function
+    ("SSL_CTX_use_PrivateKey_file" ssl-ctx-use-privatekey-file)
+  :int
+  (ctx ssl-ctx)
+  (type :int))
 (define-ssl-function ("SSL_use_certificate_file" ssl-use-certificate-file)
     :int
   (ssl ssl-pointer)
