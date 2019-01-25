@@ -1,5 +1,4 @@
 #!/bin/bash
-echo "`dirname $0`"
 
 curdir="`dirname $0`"
 mkdir "${curdir}/bin"
