@@ -18,7 +18,7 @@
 
 ;; (run-on-many-lisps-and-openssls:clean-fasls (merge-pathnames "workdir/" *this-dir*))
 
-(let ((*print-pretty*))
+(let ((*print-pretty* t))
   (format t "~S~%"
           (time
            (run-on-many-lisps-and-openssls:run
