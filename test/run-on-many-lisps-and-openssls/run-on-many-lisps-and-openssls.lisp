@@ -14,20 +14,26 @@
 (defun fasl-root (test-run-dir)
   (merge-pathnames "fasl/" test-run-dir))
 
-(defun log-name (lisp openssl-release)
-  (substitute #\- #\.
-              ;; Substitute dots by hypens if our main process is CCL, it 
-              ;; prepends the > symbol before dots;
-              ;; for example: 1.1.0.36.mswinmt.1201-284e340 => 1>.1>.0>.36>.mswinmt.1201-284e340
-              ;; When we pass such a pathname to other lisps, they can't handle it.
-              (string-downcase (concatenate 'string
-                                            (tg-agent::implementation-identifier lisp)
-                                            "-"
-                                            openssl-release))))
+(defun sanitize-as-path (str)
+  ;; Substitute dots by hypens if our main process is CCL, it 
+  ;; prepends the > symbol before dots;
+  ;; for example: 1.1.0.36.mswinmt.1201-284e340 => 1>.1>.0>.36>.mswinmt.1201-284e340
+  ;; When we pass such a pathname to other lisps, they can't handle it.
+  (substitute #\- #\. str))
 
-(defun fasl-dir (test-run-dir lisp openssl-release)
-  (merge-pathnames (format nil "~A/" (log-name lisp openssl-release))
-                   (fasl-root test-run-dir)))
+(defun log-name (lisp openssl-release)
+  (sanitize-as-path
+   (string-downcase (concatenate 'string
+                                 (tg-agent::implementation-identifier lisp)
+                                 "-"
+                                 openssl-release))))
+
+(defun fasl-dir (test-run-dir lisp)
+  (merge-pathnames
+   (format nil
+           "~(~A~)/"
+           (sanitize-as-path (tg-agent::implementation-identifier lisp)))
+   (fasl-root test-run-dir)))
 
 (defun so-path (openssl-releases-dir openssl-release so-name)
   (merge-pathnames (format nil "~A/lib/~A" openssl-release so-name)
@@ -54,7 +60,7 @@
                                 test-run-description))
               (merge-pathnames (log-name lisp openssl-release) test-run-dir)
               quicklisp-dir
-              (fasl-dir test-run-dir lisp openssl-release)
+              (fasl-dir test-run-dir lisp)
               :eval-before-test `(progn
                                    (set (read-from-string "asdf:*central-registry*")
                                         (cons ,cl+ssl-location
@@ -62,7 +68,7 @@
                                    ,(when cl+ssl-location
                                           `(cl-user::fncall "add-asdf-output-translation"
                                                             ,cl+ssl-location
-                                                            ,(merge-pathnames "cl+ssl/" (fasl-dir test-run-dir lisp openssl-release))))
+                                                            ,(merge-pathnames "cl+ssl/" (fasl-dir test-run-dir lisp))))
                                    (cl-user::fncall "ql:quickload" :cffi)
                                    (cl-user::fncall "cffi:load-foreign-library" 
                                                     ,(so-path openssl-releases-dir openssl-release "libcrypto.so"))
