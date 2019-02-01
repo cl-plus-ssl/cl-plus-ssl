@@ -26,6 +26,7 @@
                 :components
                 ((:file "package")
                  (:file "dummy")
+                 (:file "version")
                  (:file "sni")
                  (:file "verify-hostname")
                  (:file "badssl-com")))))

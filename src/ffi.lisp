@@ -140,6 +140,39 @@ session-resume requests) would normally be copied into the local cache before pr
 (cffi:defctype ssl-ctx :pointer)
 (cffi:defctype ssl-pointer :pointer)
 
+
+;; @vanished 1.1.0
+(define-crypto-function ("SSLeay" ssl-eay)
+        :long)
+
+;; @since 1.1.0
+(define-crypto-function ("OpenSSL_version_num" openssl-version-num)
+        :long)
+
+(defun compat-openssl-version ()
+  (or (ignore-errors (openssl-version-num))
+      (ignore-errors (ssl-eay))
+      (error "No OpenSSL version number could be determined, both SSLeay and OpenSSL_version_num failed.")))
+
+(defun encode-openssl-version (major minor &optional (patch 0) (prerelease))
+  "Builds a version number to compare OpenSSL against.
+Note: the _really_ old formats (<= 0.9.4) are not supported."
+  (declare (type (integer 0 3) major)
+           (type (integer 0 10) minor)
+           (type (integer 0 20) patch))
+  (logior (ash major 28)
+          (ash minor 20)
+          (ash patch 4)
+          (if prerelease #xf #x0)))
+
+(defun openssl-is-at-least (major minor &optional (patch 0) (prerelease))
+  (>= (compat-openssl-version)
+      (encode-openssl-version major minor patch prerelease)))
+
+(defun openssl-is-not-even (major minor &optional (patch 0) (prerelease))
+  (< (compat-openssl-version)
+     (encode-openssl-version major minor patch prerelease)))
+
 (define-ssl-function ("SSL_get_version" ssl-get-version)
     :string
   (ssl ssl-pointer))
