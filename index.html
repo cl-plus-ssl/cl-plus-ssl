@@ -100,7 +100,7 @@
 
     <h3>API</h3>
     <p>
-      <div class="def">Function CL+SSL:ENSURE-INITIALIZED (&amp;key (method 'ssl-v23-method) (rand-seed nil))</div>
+      <div class="def">Function CL+SSL:ENSURE-INITIALIZED (&amp;key method (rand-seed nil))</div>
       In most cases you <strong>do not</strong> need to call this function, because it is called
       automatically. The only reason to call it explicitly is to supply the <tt>rand-seed</tt> parameter.
       In this case do it before calling any other functions.
@@ -124,7 +124,7 @@
       usually returns predictable values.
     </p>
     <p>
-      <pre class="def" style="font-family:normal;">Function CL+SSL:MAKE-CONTEXT (&amp;key (method (ssl-v23-method))
+      <pre class="def" style="font-family:normal;">Function CL+SSL:MAKE-CONTEXT (&amp;key method)
                                                                                (disabled-protocols)
                                                                                (options (list +SSL-OP-ALL+))
                                                                                (session-cache-mode +ssl-sess-cache-server+)
@@ -150,7 +150,7 @@
       Keyword arguments:
     </p>
     <p>
-      <tt>method</tt>. Specifies which supported SSL/TLS to use. Defaults to ssl-v23-method
+      <tt>method</tt>. Specifies which supported SSL/TLS to use. If not specified then TLS_method is used on OpenSSL versions supporing it (on legacy versions SSLv23_method is used).
     </p>
     <p>
       <tt>disabled-protocols</tt>. List of +SSL-OP-NO-* constants. Denotes disabled SSL/TLS versions.

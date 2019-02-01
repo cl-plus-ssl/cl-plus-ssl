@@ -96,7 +96,7 @@
                                 (unless disabled-protocols
                                   (setf disabled-protocols
                                         (list +SSL-OP-NO-SSLv2+ +SSL-OP-NO-SSLv3+)))
-                                (ssl-v23-method))))))
+                                (funcall (default-ssl-method)))))))
     (when (cffi:null-pointer-p ctx)
       (error 'ssl-error-initialize :reason "Can't create new SSL CTX" :queue (read-ssl-error-queue)))
     (handler-bind ((error (lambda (_)

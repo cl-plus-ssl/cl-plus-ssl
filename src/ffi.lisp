@@ -218,6 +218,9 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     ssl-method)
 (define-ssl-function ("TLSv1_2_method" ssl-TLSv1-2-method)
     ssl-method)
+;; @since 1.1.0
+(define-ssl-function ("TLS_method" tls-method)
+    ssl-method)
 
 (define-ssl-function ("SSL_CTX_new" ssl-ctx-new)
     ssl-ctx
@@ -787,7 +790,12 @@ will use this value.")
 Use the (MAKE-SSL-CLIENT-STREAM .. :VERIFY ?) to enable/disable verification.
 MAKE-CONTEXT also allows to enab/disable verification.")
 
-(defun initialize (&key (method 'ssl-v23-method) rand-seed)
+(defun default-ssl-method ()
+  (if (openssl-is-at-least 1 1)
+      'tls-method
+      'ssl-v23-method))
+
+(defun initialize (&key method rand-seed)
   (setf *locks* (loop
        repeat (crypto-num-locks)
        collect (bt:make-lock)))
@@ -799,7 +807,7 @@ MAKE-CONTEXT also allows to enab/disable verification.")
   (when rand-seed
     (init-prng rand-seed))
   (setf *ssl-check-verify-p* :unspecified)
-  (setf *ssl-global-method* (funcall method))
+  (setf *ssl-global-method* (funcall (or method (default-ssl-method))))
   (setf *ssl-global-context* (ssl-ctx-new *ssl-global-method*))
   (unless (eql 1 (ssl-ctx-set-default-verify-paths *ssl-global-context*))
     (error "ssl-ctx-set-default-verify-paths failed."))
@@ -809,7 +817,7 @@ MAKE-CONTEXT also allows to enab/disable verification.")
   (ssl-ctx-set-tmp-rsa-callback *ssl-global-context*
                                 (cffi:callback tmp-rsa-callback)))
 
-(defun ensure-initialized (&key (method 'ssl-v23-method) (rand-seed nil))
+(defun ensure-initialized (&key method (rand-seed nil))
   "In most cases you do *not* need to call this function, because it
 is called automatically by all other functions. The only reason to
 call it explicitly is to supply the RAND-SEED parameter. In this case

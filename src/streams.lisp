@@ -382,7 +382,7 @@ Change this variable if you want the previous behaviour.")
 
 ;; fixme: free the context when errors happen in this function
 (defun make-ssl-client-stream
-    (socket &key certificate key password (method 'ssl-v23-method) external-format
+    (socket &key certificate key password method external-format
               close-callback (unwrap-stream-p t)
               (cipher-list *default-cipher-list*)
               (verify (if (ssl-check-verify-p)
@@ -424,7 +424,7 @@ hostname verification if verification is enabled by VERIFY."
 
 ;; fixme: free the context when errors happen in this function
 (defun make-ssl-server-stream
-    (socket &key certificate key password (method 'ssl-v23-method) external-format
+    (socket &key certificate key password method external-format
                  close-callback (unwrap-stream-p t)
                  (cipher-list *default-cipher-list*))
   "Returns an SSL stream for the server socket descriptor SOCKET.
