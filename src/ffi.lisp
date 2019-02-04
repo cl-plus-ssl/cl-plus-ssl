@@ -560,6 +560,16 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :int
   (ctx :pointer))
 
+;; @since 1.1.0
+(define-ssl-function ("SSL_CTX_set_default_verify_dir" ssl-ctx-set-default-verify-dir)
+    :int
+  (ctx :pointer))
+
+;; @since 1.1.0
+(define-ssl-function ("SSL_CTX_set_default_verify_file" ssl-ctx-set-default-verify-file)
+    :int
+  (ctx :pointer))
+
 (define-crypto-function ("RSA_generate_key" rsa-generate-key)
     :pointer
   (num :int)
