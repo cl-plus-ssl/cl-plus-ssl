@@ -478,3 +478,7 @@ may be associated with the passphrase PASSWORD."
 #+ecl
 (defmethod stream-fd ((stream two-way-stream))
   (si:file-stream-fd (two-way-stream-input-stream stream)))
+
+#+allegro
+(defmethod stream-fd ((stream stream))
+  (socket:socket-os-fd stream))
