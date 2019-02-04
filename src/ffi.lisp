@@ -772,7 +772,7 @@ will use this value.")
 (defun ssl-ctx-set-session-cache-mode (ctx mode)
   (ssl-ctx-ctrl ctx +SSL_CTRL_SET_SESS_CACHE_MODE+ mode (cffi:null-pointer)))
 
-(defun SSL-set-tlsext-host-name (ctx hostname)
+(defun ssl-set-tlsext-host-name (ctx hostname)
   (ssl-ctrl ctx 55 #|SSL_CTRL_SET_TLSEXT_HOSTNAME|# 0 #|TLSEXT_NAMETYPE_host_name|# hostname))
 
 (defvar *locks*)
