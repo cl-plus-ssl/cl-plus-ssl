@@ -38,9 +38,3 @@
 (test untrusted-root
   (signals error
     (test-connect "untrusted-root.badssl.com")))
-
-(test null
-  (signals error
-    (test-connect "null.badssl.com"))
-  (finishes
-    (test-connect "null.badssl.com" :verify :optional)))

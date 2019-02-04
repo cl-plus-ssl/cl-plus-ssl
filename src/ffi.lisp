@@ -176,8 +176,10 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (define-ssl-function ("SSL_get_version" ssl-get-version)
     :string
   (ssl ssl-pointer))
+;; @vanished 1.1.0 (in OpenSSL_1_1_0-pre3-504-g2e52e7df51)
 (define-ssl-function ("SSL_load_error_strings" ssl-load-error-strings)
     :void)
+;; @vanished 1.1.0 (in OpenSSL_1_1_0-pre3-504-g2e52e7df51)
 (define-ssl-function ("SSL_library_init" ssl-library-init)
     :int)
 ;;
@@ -381,9 +383,11 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (pem_passwd_cb :pointer))
 
 (define-crypto-function ("CRYPTO_num_locks" crypto-num-locks) :int)
+;; @vanished 1.1.0 (in OpenSSL_1_1_0-pre3-504-g2e52e7df51)
 (define-crypto-function ("CRYPTO_set_locking_callback" crypto-set-locking-callback)
     :void
   (fun :pointer))
+;; @vanished 1.1.0 (in OpenSSL_1_1_0-pre3-504-g2e52e7df51)
 (define-crypto-function ("CRYPTO_set_id_callback" crypto-set-id-callback)
     :void
   (fun :pointer))
@@ -494,22 +498,39 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (type :int)
   (data :pointer))
 
+;; @vanished 1.1.0
 (define-crypto-function ("sk_value" sk-value)
     :pointer
   (stack :pointer)
   (index :int))
 
+;; @vanished 1.1.0
 (define-crypto-function ("sk_num" sk-num)
+    :int
+  (stack :pointer))
+
+;; @since 1.1.0
+(define-crypto-function ("OPENSSL_sk_value" openssl-sk-value)
+    :pointer
+  (stack :pointer)
+  (index :int))
+
+;; @since 1.1.0
+(define-crypto-function ("OPENSSL_sk_num" openssl-sk-num)
     :int
   (stack :pointer))
 
 (declaim (ftype (function (cffi:foreign-pointer fixnum) cffi:foreign-pointer) sk-general-name-value))
 (defun sk-general-name-value (names index)
-  (sk-value names index))
+  (if (openssl-is-at-least 1 1)
+      (openssl-sk-value names index)
+      (sk-value names index)))
 
 (declaim (ftype (function (cffi:foreign-pointer) fixnum) sk-general-name-num))
 (defun sk-general-name-num (names)
-  (sk-num names))
+  (if (openssl-is-at-least 1 1)
+      (openssl-sk-num names)
+      (sk-num names)))
 
 (define-crypto-function ("GENERAL_NAMES_free" general-names-free)
     :void
@@ -550,6 +571,7 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :void
   (rsa :pointer))
 
+;; @vanished 1.1.0 (in OpenSSL_1_1_0-pre5-814-gfb5b14b420)
 (define-ssl-function ("SSL_CTX_set_tmp_rsa_callback" ssl-ctx-set-tmp-rsa-callback)
     :pointer
   (ctx :pointer)
@@ -796,14 +818,15 @@ MAKE-CONTEXT also allows to enab/disable verification.")
       'ssl-v23-method))
 
 (defun initialize (&key method rand-seed)
-  (setf *locks* (loop
-       repeat (crypto-num-locks)
-       collect (bt:make-lock)))
-  (crypto-set-locking-callback (cffi:callback locking-callback))
-  (crypto-set-id-callback (cffi:callback threadid-callback))
+  (when (openssl-is-not-even 1 1)
+    (setf *locks* (loop
+                     repeat (crypto-num-locks)
+                     collect (bt:make-lock)))
+    (crypto-set-locking-callback (cffi:callback locking-callback))
+    (crypto-set-id-callback (cffi:callback threadid-callback))
+    (ssl-load-error-strings)
+    (ssl-library-init))
   (setf *bio-lisp-method* (make-bio-lisp-method))
-  (ssl-load-error-strings)
-  (ssl-library-init)
   (when rand-seed
     (init-prng rand-seed))
   (setf *ssl-check-verify-p* :unspecified)
@@ -814,8 +837,9 @@ MAKE-CONTEXT also allows to enab/disable verification.")
   (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
   (ssl-ctx-set-default-passwd-cb *ssl-global-context*
                                  (cffi:callback pem-password-callback))
-  (ssl-ctx-set-tmp-rsa-callback *ssl-global-context*
-                                (cffi:callback tmp-rsa-callback)))
+  (when (openssl-is-not-even 1 1)
+    (ssl-ctx-set-tmp-rsa-callback *ssl-global-context*
+                                  (cffi:callback tmp-rsa-callback))))
 
 (defun ensure-initialized (&key method (rand-seed nil))
   "In most cases you do *not* need to call this function, because it
