@@ -83,7 +83,7 @@
                                              :status)))
                                lisps
                                openssl-releases)
-       (merge-pathnames "resutls.lisp" test-run-dir)))))
+       (merge-pathnames "results.lisp" test-run-dir)))))
 
 (defun clean-fasls (test-run-dir)
   (cl-fad:delete-directory-and-files (fasl-root test-run-dir)))
