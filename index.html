@@ -124,8 +124,8 @@
       usually returns predictable values.
     </p>
     <p>
-      <pre class="def" style="font-family:normal;">Function CL+SSL:MAKE-CONTEXT (&amp;key method)
-                                                                               (disabled-protocols)
+      <pre class="def" style="font-family:normal;">Function CL+SSL:MAKE-CONTEXT (&amp;key method
+                                                                               disabled-protocols
                                                                                (options (list +SSL-OP-ALL+))
                                                                                (session-cache-mode +ssl-sess-cache-server+)
                                                                                (verify-location :default)
@@ -168,8 +168,8 @@
       <br>
       <ul>
         <li><tt>:default</tt> OpenSSL default directory and file will be loaded</li>
-        <li><tt>:default-file</tt> OpenSSL default file will be loaded</li>
-        <li><tt>:default-dir</tt> OpenSSL default directory will be loaded</li>
+        <li><tt>:default-file</tt> OpenSSL default file will be loaded. Requires OpenSSL &gt;= 1.1.0.</li>
+        <li><tt>:default-dir</tt> OpenSSL default directory will be loaded. Requires OpenSSL &gt;= 1.1.0.</li>
         <li><tt>STRING</tt> Directory or file path to be loaded</li>
         <li><tt>PATHNAME</tt> Directory or file path to be loaded</li>
         <li><tt>(LIST (or STRING PATHNAME))</tt> List of directories or files to be loaded</li>
