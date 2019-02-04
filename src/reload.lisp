@@ -48,7 +48,8 @@
   ;; so we can just use just "libssl.so".
   ;; More info at https://github.com/cl-plus-ssl/cl-plus-ssl/pull/2.
   (:openbsd "libssl.so")
-  ((and :unix (not :cygwin)) (:or "libssl.so.1.0.2m"
+  ((and :unix (not :cygwin)) (:or "libssl.so.1.1"
+                                  "libssl.so.1.0.2m"
                                   "libssl.so.1.0.2k"
                                   "libssl.so.1.0.2"
                                   "libssl.so.1.0.1l"
