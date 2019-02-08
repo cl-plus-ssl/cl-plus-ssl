@@ -87,3 +87,18 @@
   (with-cert ("google_universal.der" cert)
       (is-true (cl+ssl:verify-hostname cert
                                        "google.co.uk"))))
+
+(test verify-alt-names-wildcard
+  (with-cert ("google.der" cert)
+      (is-true (cl+ssl:verify-hostname cert
+                                       "foobarbaz.android.com"))))
+
+(test verify-IP-check
+  (with-cert ("localhost.der" cert)
+             (print (cl+ssl::certificate-dns-alt-names cert))
+    (is-true (cl+ssl:verify-hostname cert
+                                     "127.0.0.1"))
+    (is-true (cl+ssl:verify-hostname cert
+                                     "::1"))
+    (is-true (cl+ssl:verify-hostname cert
+                                     "localhost"))))
