@@ -27,7 +27,7 @@ env:
     - LISP=ecl OPENSSL=openssl-1.0.2q
     - LISP=ecl OPENSSL=openssl-1.1.0j
     - LISP=ecl OPENSSL=openssl-1.1.1a
-    - LISP=abcl OPENSSL=openssl-0.9.8z
+    - LISP=abcl OPENSSL=openssl-0.9.8zh
     - LISP=abcl OPENSSL=openssl-1.0.0s
     - LISP=abcl OPENSSL=openssl-1.0.2q
     - LISP=abcl OPENSSL=openssl-1.1.0j
