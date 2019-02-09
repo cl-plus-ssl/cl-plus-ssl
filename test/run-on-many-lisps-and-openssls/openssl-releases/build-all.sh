@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
-curdir="`dirname $0`"
+curdir="$(dirname "$0")"
 mkdir "${curdir}/bin"
-cd bin
+cd "${curdir}/bin"
 bindirabs=`pwd -P` # absolute path to bindir
-cd ..
+cd ../src
 
 for srcdir in openssl-0.9.8zh openssl-1.0.0s openssl-1.0.2q openssl-1.1.0j openssl-1.1.1a
 do

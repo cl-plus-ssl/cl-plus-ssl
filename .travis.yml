@@ -25,6 +25,8 @@ env:
 
 install:
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
+  - test/run-on-many-lisps-and-openssls/openssl-releases/fetch-all.sh
+  - test/run-on-many-lisps-and-openssls/openssl-releases/build-all.sh
 
 #  cache:
 #    directories:

@@ -1,5 +1,8 @@
 #!/bin/sh
-cd "`dirname $0`"
+cd "$(dirname "$0")"
+
+mkdir src
+cd src
 
 wget https://www.openssl.org/source/openssl-1.0.2q.tar.gz
 tar -xzf openssl-1.0.2q.tar.gz
