@@ -55,6 +55,10 @@ script:
                (format t \"(lisp-implementation-version): ~A~%\" (lisp-implementation-version))
                (format t \"*features*: ~A~%\" *features*)
                (format t \"(asdf:asdf-version): ~A~%\" (asdf:asdf-version)))'
+         -e '(ql:quickload :cffi)'
+         -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL/lib/libcrypto.so\")'
+         -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL/lib/libssl.so\")'
+         -e '(pushnew :cl+ssl-foreign-libs-already-loaded *features*)'
          -e '(ql:quickload :cl+ssl.test)'
          -e '(let ((results
                   #+ sbcl
