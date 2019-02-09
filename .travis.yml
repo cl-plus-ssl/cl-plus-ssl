@@ -60,6 +60,7 @@ script:
          -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL/lib/libssl.so\")'
          -e '(pushnew :cl+ssl-foreign-libs-already-loaded *features*)'
          -e '(ql:quickload :cl+ssl.test)'
+         -e '(format t \"(cl+ssl::compat-openssl-version): ~A~%\" (cl+ssl::compat-openssl-version))'
          -e '(let ((results
                   #+ sbcl
                   (coveralls:with-coveralls (:exclude \"test\")
