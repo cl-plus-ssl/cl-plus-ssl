@@ -70,20 +70,20 @@ script:
                   ))
               (5am:explain! results)
               #+abcl
-              (let* ((expected-failures '(cl+ssl.test::wrong.host
-                                          cl+ssl.test::expired))
+              (let* ((expected-failures (quote (cl+ssl.test::wrong.host
+                                                cl+ssl.test::expired)))
                      (failed-test-names (mapcar (lambda (result)
-                                                 (5am::name (5am::test-case result)))
-                                               (remove-if-not #'5am::test-failure-p
-                                                              *results*))))
+                                                  (5am::name (5am::test-case result)))
+                                                (remove-if-not (quote 5am::test-failure-p)
+                                                               *results*))))
                 (if (set-exclusive-or expected-failures
-                                        failed-test-names)
+                                      failed-test-names)
                     (progn
-                      (format t "~%ABCL: expected faileres on Travis CI: ~S, actual failures: ~S~%"
+                      (format t \"~%ABCL: expected faileres on Travis CI: ~S, actual failures: ~S~%\"
                               expected-failures
                               failed-test-names)
                       (uiop:quit 1))
-                    (format t "ABCL failed some tests as expected on Travis CI: ~S~%"
+                    (format t \"ABCL failed some tests as expected on Travis CI: ~S~%\"
                             expected-failures)))
               #-abcl
               (unless (5am:results-status results)
