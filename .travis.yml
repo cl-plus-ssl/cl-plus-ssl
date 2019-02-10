@@ -75,7 +75,7 @@ script:
                      (failed-test-names (mapcar (lambda (result)
                                                   (5am::name (5am::test-case result)))
                                                 (remove-if-not (quote 5am::test-failure-p)
-                                                               *results*))))
+                                                               results))))
                 (if (set-exclusive-or expected-failures
                                       failed-test-names)
                     (progn
