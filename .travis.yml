@@ -35,11 +35,19 @@ env:
 # CMUCL fails to load libssl on TravisCI, despite OpenSSL 1.0.1f is installed,
 # example log: https://travis-ci.org/cl-plus-ssl/cl-plus-ssl/jobs/479189027
 #    - LISP=cmu-bin
-    - LISP=allegro OPENSSL=openssl-0.9.8zh
-    - LISP=allegro OPENSSL=openssl-1.0.0s
-    - LISP=allegro OPENSSL=openssl-1.0.2q
-    - LISP=allegro OPENSSL=openssl-1.1.0j
-    - LISP=allegro OPENSSL=openssl-1.1.1a
+#
+# Allegro is also failing to load libssl
+# https://travis-ci.org/cl-plus-ssl/cl-plus-ssl/jobs/479194225
+# When we started to explicitly load OpenSSL binaries ourself
+# it reveals error "wrong ELF class: ELFCLASS64".
+# https://travis-ci.org/cl-plus-ssl/cl-plus-ssl/jobs/491537170
+# Looks like the Allegro CL installed by rowsell is 32bit,
+# while the OpenSSL binaries we build are 64 bit.
+#    - LISP=allegro OPENSSL=openssl-0.9.8zh
+#    - LISP=allegro OPENSSL=openssl-1.0.0s
+#    - LISP=allegro OPENSSL=openssl-1.0.2q
+#    - LISP=allegro OPENSSL=openssl-1.1.0j
+#    - LISP=allegro OPENSSL=openssl-1.1.1a
 
 install:
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
