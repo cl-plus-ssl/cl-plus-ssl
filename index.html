@@ -221,7 +221,7 @@
       If <tt>auto-free-p</tt> is true the context is freed using <tt>ssl-ctx-free</tt> before exit.
     </p>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-stream-p t) hostname)<br/><br/>
+      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-stream-p t) verify hostname)<br/><br/>
       Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-stream-p t))</div>
       Return an SSL stream for the client (server)
       socket <tt>fd-or-stream</tt>.  All reads and writes to this
