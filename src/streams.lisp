@@ -247,10 +247,10 @@
       (error 'ssl-error-initialize
        :reason (format nil "Can't load certificate ~A" certificate))))
   (when key
-    (unless (eql 1 (ssl-use-rsa-privatekey-file handle
+    (unless (eql 1 (ssl-use-privatekey-file handle
             key
             +ssl-filetype-pem+))
-      (error 'ssl-error-initialize :reason (format nil "Can't load RSA private key file ~A" key)))))
+      (error 'ssl-error-initialize :reason (format nil "Can't load private key file ~A" key)))))
 
 (defun x509-certificate-names (x509-certificate)
   (unless (cffi:null-pointer-p x509-certificate)
