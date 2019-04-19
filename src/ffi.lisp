@@ -533,13 +533,17 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 
 (declaim (ftype (function (cffi:foreign-pointer fixnum) cffi:foreign-pointer) sk-general-name-value))
 (defun sk-general-name-value (names index)
-  (if (openssl-is-at-least 1 1)
+  (if (and
+       (openssl-is-at-least 1 1)
+       (openssl-is-not-even 2 0))
       (openssl-sk-value names index)
       (sk-value names index)))
 
 (declaim (ftype (function (cffi:foreign-pointer) fixnum) sk-general-name-num))
 (defun sk-general-name-num (names)
-  (if (openssl-is-at-least 1 1)
+  (if (and
+       (openssl-is-at-least 1 1)
+       (openssl-is-not-even 2 0))
       (openssl-sk-num names)
       (sk-num names)))
 
