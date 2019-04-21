@@ -149,6 +149,15 @@ session-resume requests) would normally be copied into the local cache before pr
 (define-crypto-function ("OpenSSL_version_num" openssl-version-num)
         :long)
 
+(define-crypto-function ("OpenSSL_version" openssl-version)
+        :string
+        '(:int))
+
+(defun libresslp ()
+    "Returns true if LibreSSL is being used"
+  (string= "LibreSSL" 
+           (subseq (openssl-version 0) 0 8)))
+
 (defun compat-openssl-version ()
   (or (ignore-errors (openssl-version-num))
       (ignore-errors (ssl-eay))
@@ -535,7 +544,7 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (defun sk-general-name-value (names index)
   (if (and
        (openssl-is-at-least 1 1)
-       (openssl-is-not-even 2 0))
+       (not (libresslp)))
       (openssl-sk-value names index)
       (sk-value names index)))
 
@@ -543,7 +552,7 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (defun sk-general-name-num (names)
   (if (and
        (openssl-is-at-least 1 1)
-       (openssl-is-not-even 2 0))
+       (not (libresslp)))
       (openssl-sk-num names)
       (sk-num names)))
 
