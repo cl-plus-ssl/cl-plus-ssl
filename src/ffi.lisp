@@ -173,6 +173,16 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (< (compat-openssl-version)
      (encode-openssl-version major minor patch prerelease)))
 
+(defun libresslp ()
+  ;; LibreSSL can be distinguished by
+  ;; OpenSSL_version_num() always returning 0x020000000,
+  ;; where 2 is the major version number.
+  ;; http://man.openbsd.org/OPENSSL_VERSION_NUMBER.3
+  ;; And OpenSSL will never use the major version 2:
+  ;; "This document outlines the design of OpenSSL 3.0, the next version of OpenSSL after 1.1.1"
+  ;; https://www.openssl.org/docs/OpenSSL300Design.html
+  (= #x20000000 (compat-openssl-version)))
+
 (define-ssl-function ("SSL_get_version" ssl-get-version)
     :string
   (ssl ssl-pointer))
@@ -522,13 +532,15 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 
 (declaim (ftype (function (cffi:foreign-pointer fixnum) cffi:foreign-pointer) sk-general-name-value))
 (defun sk-general-name-value (names index)
-  (if (openssl-is-at-least 1 1)
+  (if (and (not (libresslp))
+           (openssl-is-at-least 1 1))
       (openssl-sk-value names index)
       (sk-value names index)))
 
 (declaim (ftype (function (cffi:foreign-pointer) fixnum) sk-general-name-num))
 (defun sk-general-name-num (names)
-  (if (openssl-is-at-least 1 1)
+  (if (and (not (libresslp))
+           (openssl-is-at-least 1 1))
       (openssl-sk-num names)
       (sk-num names)))
 
