@@ -20,6 +20,8 @@
 (in-package :cl+ssl)
 
 (cffi:define-foreign-library libcrypto
+  (:windows #+(and windows x86-64) "libcrypto-1_1-x64.dll"
+	    #+(and windows x86) "libcrypto-1_1.dll")
   (:openbsd "libcrypto.so")
   (:darwin (:or "/opt/local/lib/libcrypto.dylib" ;; MacPorts
                 "/sw/lib/libcrypto.dylib"        ;; Fink
@@ -29,7 +31,8 @@
                 "/usr/lib/libcrypto.dylib")))
 
 (cffi:define-foreign-library libssl
-  (:windows (:or "libssl32.dll" "ssleay32.dll"))
+  (:windows (:or #+(and windows x86-64) "libssl-1_1-x64.dll"
+		 #+(and windows x86) "libssl-1_1.dll"))
   ;; The default OS-X libssl seems have had insufficient crypto algos
   ;; (missing TLSv1_[1,2]_XXX methods,
   ;; see https://github.com/cl-plus-ssl/cl-plus-ssl/issues/56)
@@ -67,12 +70,7 @@
   (:cygwin "cygssl-1.0.0.dll")
   (t (:default "libssl3")))
 
-(cffi:define-foreign-library libeay32
-  (:windows "libeay32.dll"))
-
-
 (unless (member :cl+ssl-foreign-libs-already-loaded
                 *features*)
   (cffi:use-foreign-library libcrypto)
-  (cffi:use-foreign-library libssl)
-  (cffi:use-foreign-library libeay32))
+  (cffi:use-foreign-library libssl))
