@@ -61,6 +61,7 @@
            ;; x509 stuff
            #:decode-certificate-from-file
            #:decode-certificate
+           #:ssl-stream-x509-certificate
 
            ;; hostname-verification
            #:verify-hostname))
