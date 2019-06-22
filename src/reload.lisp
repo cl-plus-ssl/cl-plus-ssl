@@ -32,7 +32,7 @@
 
 (cffi:define-foreign-library libssl
   (:windows (:or #+(and windows x86-64) "libssl-1_1-x64.dll"
-		 #+(and windows x86) "libssl-1_1.dll"))
+		 #+(and windows x86)  (:or "libssl-1_1.dll" "libssl32.dll" "ssleay32.dll")))
   ;; The default OS-X libssl seems have had insufficient crypto algos
   ;; (missing TLSv1_[1,2]_XXX methods,
   ;; see https://github.com/cl-plus-ssl/cl-plus-ssl/issues/56)
