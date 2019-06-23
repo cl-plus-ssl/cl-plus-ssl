@@ -19,17 +19,41 @@
 
 (in-package :cl+ssl)
 
+
+
+;; Windows builds have been naming librypto and libssl DLLs in several different ways:
+;;
+;; - libeay32.dll, libssl32.dll
+;; - libeay32.dll, ssleay32.dll
+;;
+;; Note, the above names were used both for 32 and 64 -bit versions.
+;;
+;; - libcrypto-1_1-x64.dll, libssl-1_1-x64.dll
+;;
+;; The above are used for 64-bit only.
+;;
+;; - libcrypto-1_1.dll, libssl-1_1.dll
+;;
+;; These are 32-bit only.
+
 (cffi:define-foreign-library libcrypto
+  (:windows (:or #+(and windows x86-64) "libcrypto-1_1-x64.dll"
+                 #+(and windows x86) "libcrypto-1_1.dll"
+                 "libeay32.dll"))
   (:openbsd "libcrypto.so")
   (:darwin (:or "/opt/local/lib/libcrypto.dylib" ;; MacPorts
                 "/sw/lib/libcrypto.dylib"        ;; Fink
                 "/usr/local/opt/openssl/lib/libcrypto.dylib" ;; Homebrew
                 "/usr/local/lib/libcrypto.dylib" ;; personalized install
                 "libcrypto.dylib"                ;; default system libcrypto, which may have insufficient crypto
-                "/usr/lib/libcrypto.dylib")))
+                "/usr/lib/libcrypto.dylib"))
+  (:cygwin (:or "cygcrypto-1.1.dll" "cygcrypto-1.0.0.dll")))
 
 (cffi:define-foreign-library libssl
-  (:windows (:or "libssl32.dll" "ssleay32.dll"))
+  (:windows (:or #+(and windows x86-64) "libssl-1_1-x64.dll"
+                 #+(and windows x86) "libssl-1_1.dll"
+                 "libssl32.dll"
+                 "ssleay32.dll"))
   ;; The default OS-X libssl seems have had insufficient crypto algos
   ;; (missing TLSv1_[1,2]_XXX methods,
   ;; see https://github.com/cl-plus-ssl/cl-plus-ssl/issues/56)
@@ -64,15 +88,10 @@
                                   "libssl.so.10"
                                   "libssl.so.4"
                                   "libssl.so"))
-  (:cygwin "cygssl-1.0.0.dll")
+  (:cygwin (:or "cygssl-1.1.dll" "cygssl-1.0.0.dll"))
   (t (:default "libssl3")))
-
-(cffi:define-foreign-library libeay32
-  (:windows "libeay32.dll"))
-
 
 (unless (member :cl+ssl-foreign-libs-already-loaded
                 *features*)
   (cffi:use-foreign-library libcrypto)
-  (cffi:use-foreign-library libssl)
-  (cffi:use-foreign-library libeay32))
+  (cffi:use-foreign-library libssl))
