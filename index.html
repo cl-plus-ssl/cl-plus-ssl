@@ -46,16 +46,32 @@
       information</a>).
     </p>
 
-    <p>
-      <i>Note</i> that you need the <tt>libssl-dev</tt> package on Debian to
-      load this package without manual configuration.
-    </p>
+    <h3>OpenSSL Installation Hints</h3>
+
+    <h4>Debian</h4>
 
     <p>
-      OpenSSL binaries for Windows may be found at
+      You need the <tt>libssl-dev</tt> package on Debian to
+      load this cl+ssl without manual configuration.
+    </p>
+
+    <h4>Windows</h4>
+
+    <p>
+      <a href="https://wiki.openssl.org/index.php/Binaries">https://wiki.openssl.org/index.php/Binaries</a>
+      lists several soruces of binary distributions.
+
+      For example,
       <a href="http://www.slproweb.com/products/Win32OpenSSL.html">http://www.slproweb.com/products/Win32OpenSSL.html</a>
       (slproweb.com is a 3rd party; if you have questions about the OpenSSL installer they provide, 
       please ask in the mailing list specified on the linked page).
+    </p>
+
+    <p>
+      If you chose to install the DLLs into the OpenSSL installation's
+      "bin" directory (recommended), then be sure to add the bin directory to your
+      PATH environment variable and restart your
+      session. e.g. "C:\Program Files\OpenSSL-Win64\bin"
     </p>
 
 
