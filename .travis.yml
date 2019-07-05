@@ -8,30 +8,30 @@ env:
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
     - COVERAGE_EXCLUDE=test
   matrix:
-    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-0.9.8zh
-    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.0.0s
-    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.0.2q
-    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.1.0j
-    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.1.1a
-    - LISP=ccl-bin OPENSSL=openssl-0.9.8zh
-    - LISP=ccl-bin OPENSSL=openssl-1.0.0s
-    - LISP=ccl-bin OPENSSL=openssl-1.0.2q
-    - LISP=ccl-bin OPENSSL=openssl-1.1.0j
-    - LISP=ccl-bin OPENSSL=openssl-1.1.1a
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-0.9.8zh ARCH=x86_64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.0.0s ARCH=x86_64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.0.2q ARCH=x86_64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.1.0j ARCH=x86_64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.1.1a ARCH=x86_64
+    - LISP=ccl-bin OPENSSL=openssl-0.9.8zh ARCH=x86_64
+    - LISP=ccl-bin OPENSSL=openssl-1.0.0s ARCH=x86_64
+    - LISP=ccl-bin OPENSSL=openssl-1.0.2q ARCH=x86_64
+    - LISP=ccl-bin OPENSSL=openssl-1.1.0j ARCH=x86_64
+    - LISP=ccl-bin OPENSSL=openssl-1.1.1a ARCH=x86_64
 # CLISP is disabled because it can't load bordeaux-treads which require ASDF >= 3.1
 # Example log: https://travis-ci.org/cl-plus-ssl/cl-plus-ssl/jobs/181539210
 # (As a workaround we could try to download ASDF 3 ourselves)
 #    - LISP=clisp
-    - LISP=ecl OPENSSL=openssl-0.9.8zh
-    - LISP=ecl OPENSSL=openssl-1.0.0s
-    - LISP=ecl OPENSSL=openssl-1.0.2q
-    - LISP=ecl OPENSSL=openssl-1.1.0j
-    - LISP=ecl OPENSSL=openssl-1.1.1a
-    - LISP=abcl OPENSSL=openssl-0.9.8zh
-    - LISP=abcl OPENSSL=openssl-1.0.0s
-    - LISP=abcl OPENSSL=openssl-1.0.2q
-    - LISP=abcl OPENSSL=openssl-1.1.0j
-    - LISP=abcl OPENSSL=openssl-1.1.1a
+    - LISP=ecl OPENSSL=openssl-0.9.8zh ARCH=x86_64
+    - LISP=ecl OPENSSL=openssl-1.0.0s ARCH=x86_64
+    - LISP=ecl OPENSSL=openssl-1.0.2q ARCH=x86_64
+    - LISP=ecl OPENSSL=openssl-1.1.0j ARCH=x86_64
+    - LISP=ecl OPENSSL=openssl-1.1.1a ARCH=x86_64
+    - LISP=abcl OPENSSL=openssl-0.9.8zh ARCH=x86_64
+    - LISP=abcl OPENSSL=openssl-1.0.0s ARCH=x86_64
+    - LISP=abcl OPENSSL=openssl-1.0.2q ARCH=x86_64
+    - LISP=abcl OPENSSL=openssl-1.1.0j ARCH=x86_64
+    - LISP=abcl OPENSSL=openssl-1.1.1a ARCH=x86_64
 # CMUCL fails to load libssl on TravisCI, despite OpenSSL 1.0.1f is installed,
 # example log: https://travis-ci.org/cl-plus-ssl/cl-plus-ssl/jobs/479189027
 #    - LISP=cmu-bin
@@ -52,7 +52,8 @@ env:
 install:
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
   - test/run-on-many-lisps-and-openssls/openssl-releases/fetch.sh "$OPENSSL"
-  - test/run-on-many-lisps-and-openssls/openssl-releases/build.sh "$OPENSSL" > openssl-build.log
+  - if [ $ARCH = x86 ]; then sudo apt-get install libc6-dev-i386; fi
+  - test/run-on-many-lisps-and-openssls/openssl-releases/build.sh "$OPENSSL" "$ARCH" > openssl-build.log
 
 #  cache:
 #    directories:
@@ -66,8 +67,8 @@ script:
                (format t \"*features*: ~A~%\" *features*)
                (format t \"(asdf:asdf-version): ~A~%\" (asdf:asdf-version)))'
          -e '(ql:quickload :cffi)'
-         -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL'/lib/libcrypto.so\")'
-         -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL'/lib/libssl.so\")'
+         -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-$ARCH'/lib/libcrypto.so\")'
+         -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-$ARCH'/lib/libssl.so\")'
          -e '(pushnew :cl+ssl-foreign-libs-already-loaded *features*)'
          -e '(ql:quickload :cl+ssl.test)'
          -e '(format t \"(cl+ssl::compat-openssl-version): ~A~%\" (cl+ssl::compat-openssl-version))'
