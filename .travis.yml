@@ -32,14 +32,14 @@ env:
     - LISP=abcl OPENSSL=openssl-1.0.2q ARCH=x86_64
     - LISP=abcl OPENSSL=openssl-1.1.0j ARCH=x86_64
     - LISP=abcl OPENSSL=openssl-1.1.1a ARCH=x86_64
-    - LISP=cmu-bin OPENSSL=openssl-0.9.8zh ARCH=x86
-    - LISP=cmu-bin OPENSSL=openssl-1.0.0s ARCH=x86
-    - LISP=cmu-bin OPENSSL=openssl-1.0.2q ARCH=x86
+    - LISP=cmu-bin OPENSSL=openssl-0.9.8zh ARCH=generic32
+    - LISP=cmu-bin OPENSSL=openssl-1.0.0s ARCH=generic32
+    - LISP=cmu-bin OPENSSL=openssl-1.0.2q ARCH=generic32
     - LISP=cmu-bin OPENSSL=openssl-1.1.0j ARCH=x86
     - LISP=cmu-bin OPENSSL=openssl-1.1.1a ARCH=x86
-    - LISP=allegro OPENSSL=openssl-0.9.8zh ARCH=x86
-    - LISP=allegro OPENSSL=openssl-1.0.0s ARCH=x86
-    - LISP=allegro OPENSSL=openssl-1.0.2q ARCH=x86
+    - LISP=allegro OPENSSL=openssl-0.9.8zh ARCH=generic32
+    - LISP=allegro OPENSSL=openssl-1.0.0s ARCH=generic32
+    - LISP=allegro OPENSSL=openssl-1.0.2q ARCH=generic32
     - LISP=allegro OPENSSL=openssl-1.1.0j ARCH=x86
     - LISP=allegro OPENSSL=openssl-1.1.1a ARCH=x86
 
