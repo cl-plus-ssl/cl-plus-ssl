@@ -22,8 +22,8 @@ fi
 for srcdir in $VERSIONS
 do
   cd $srcdir
-  make clean
   ./Configure shared --prefix="${bindirabs}/${srcdir}-${ARCH}" --openssldir="${bindirabs}/${srcdir}-${ARCH}" "linux-${ARCH}"
+  make clean
   make && make install
   cd ..
 done
