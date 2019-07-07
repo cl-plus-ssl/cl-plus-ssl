@@ -13,18 +13,29 @@ then
   VERSIONS="openssl-0.9.8zh openssl-1.0.0s openssl-1.0.2q openssl-1.1.0j openssl-1.1.1a"
 fi
 
-ARCH="$2"
-if [ -z "$ARCH" ]
+BITNESSES="$2"
+if [ -z "$BITNESSES" ]
 then
-  ARCH="x86_64"
+  BITNESSES="32 64"
 fi
 
 for srcdir in $VERSIONS
 do
   cd $srcdir
-  ./Configure shared --prefix="${bindirabs}/${srcdir}-${ARCH}" --openssldir="${bindirabs}/${srcdir}-${ARCH}" "linux-${ARCH}"
-  make clean
-  make && make install
+  for bits in $BITNESSES
+  do
+    if [ "$bits" = "32" ]
+    then
+      extraflags="-m32 -L-m32"
+      target="linux-generic32"
+    else
+      extraflags=""
+      target="linux-x86_64"
+    fi
+    ./Configure "$extraflags" shared --prefix="${bindirabs}/${srcdir}-${bits}bit" --openssldir="${bindirabs}/${srcdir}-${bits}bit" "$target"
+    make clean
+    make && make install
+  done
   cd ..
 done
 

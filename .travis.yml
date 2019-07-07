@@ -8,53 +8,51 @@ env:
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
     - COVERAGE_EXCLUDE=test
   matrix:
-    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-0.9.8zh ARCH=x86_64
-    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.0.0s ARCH=x86_64
-    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.0.2q ARCH=x86_64
-    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.1.0j ARCH=x86_64
-    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.1.1a ARCH=x86_64
-    - LISP=ccl-bin OPENSSL=openssl-0.9.8zh ARCH=x86_64
-    - LISP=ccl-bin OPENSSL=openssl-1.0.0s ARCH=x86_64
-    - LISP=ccl-bin OPENSSL=openssl-1.0.2q ARCH=x86_64
-    - LISP=ccl-bin OPENSSL=openssl-1.1.0j ARCH=x86_64
-    - LISP=ccl-bin OPENSSL=openssl-1.1.1a ARCH=x86_64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-0.9.8zh BITS=64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.0.0s BITS=64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.0.2q BITS=64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.1.0j BITS=64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.1.1a BITS=64
+    - LISP=ccl-bin OPENSSL=openssl-0.9.8zh BITS=64
+    - LISP=ccl-bin OPENSSL=openssl-1.0.0s BITS=64
+    - LISP=ccl-bin OPENSSL=openssl-1.0.2q BITS=64
+    - LISP=ccl-bin OPENSSL=openssl-1.1.0j BITS=64
+    - LISP=ccl-bin OPENSSL=openssl-1.1.1a BITS=64
 # CLISP is disabled because it can't load bordeaux-treads which require ASDF >= 3.1
 # Example log: https://travis-ci.org/cl-plus-ssl/cl-plus-ssl/jobs/181539210
 # (As a workaround we could try to download ASDF 3 ourselves)
 #    - LISP=clisp
-    - LISP=ecl OPENSSL=openssl-0.9.8zh ARCH=x86_64
-    - LISP=ecl OPENSSL=openssl-1.0.0s ARCH=x86_64
-    - LISP=ecl OPENSSL=openssl-1.0.2q ARCH=x86_64
-    - LISP=ecl OPENSSL=openssl-1.1.0j ARCH=x86_64
-    - LISP=ecl OPENSSL=openssl-1.1.1a ARCH=x86_64
-    - LISP=abcl OPENSSL=openssl-0.9.8zh ARCH=x86_64
-    - LISP=abcl OPENSSL=openssl-1.0.0s ARCH=x86_64
-    - LISP=abcl OPENSSL=openssl-1.0.2q ARCH=x86_64
-    - LISP=abcl OPENSSL=openssl-1.1.0j ARCH=x86_64
-    - LISP=abcl OPENSSL=openssl-1.1.1a ARCH=x86_64
-# How to Build 32bit OpenSSL of these three versions?
-#    - LISP=cmu-bin OPENSSL=openssl-0.9.8zh ARCH=generic32
-#    - LISP=cmu-bin OPENSSL=openssl-1.0.0s ARCH=generic32
-#    - LISP=cmu-bin OPENSSL=openssl-1.0.2q ARCH=x32
-# The following is commented out because CMUCL fails currently
+    - LISP=ecl OPENSSL=openssl-0.9.8zh BITS=64
+    - LISP=ecl OPENSSL=openssl-1.0.0s BITS=64
+    - LISP=ecl OPENSSL=openssl-1.0.2q BITS=64
+    - LISP=ecl OPENSSL=openssl-1.1.0j BITS=64
+    - LISP=ecl OPENSSL=openssl-1.1.1a BITS=64
+    - LISP=abcl OPENSSL=openssl-0.9.8zh BITS=64
+    - LISP=abcl OPENSSL=openssl-1.0.0s BITS=64
+    - LISP=abcl OPENSSL=openssl-1.0.2q BITS=64
+    - LISP=abcl OPENSSL=openssl-1.1.0j BITS=64
+    - LISP=abcl OPENSSL=openssl-1.1.1a BITS=64
+# CMUCL is commented out because CMUCL fails currently
 # when loading a fasl which defines a foreign function
 # absent in the foreign library (like functions present not in
 # all OpenSSL versions), see
 # https://github.com/cl-plus-ssl/cl-plus-ssl/issues/38
-#    - LISP=cmu-bin OPENSSL=openssl-1.1.0j ARCH=x86
-#    - LISP=cmu-bin OPENSSL=openssl-1.1.1a ARCH=x86
-# How to Build 32bit OpenSSL of these three versions?
-#    - LISP=allegro OPENSSL=openssl-0.9.8zh ARCH=generic32
-#    - LISP=allegro OPENSSL=openssl-1.0.0s ARCH=generic32
-#    - LISP=allegro OPENSSL=openssl-1.0.2q ARCH=x32
-    - LISP=allegro OPENSSL=openssl-1.1.0j ARCH=x86
-    - LISP=allegro OPENSSL=openssl-1.1.1a ARCH=x86
+#    - LISP=cmu-bin OPENSSL=openssl-0.9.8zh BITS=32
+#    - LISP=cmu-bin OPENSSL=openssl-1.0.0s BITS=32
+#    - LISP=cmu-bin OPENSSL=openssl-1.0.2q BITS=32
+#    - LISP=cmu-bin OPENSSL=openssl-1.1.0j BITS=32
+#    - LISP=cmu-bin OPENSSL=openssl-1.1.1a BITS=32
+    - LISP=allegro OPENSSL=openssl-0.9.8zh BITS=32
+    - LISP=allegro OPENSSL=openssl-1.0.0s BITS=32
+    - LISP=allegro OPENSSL=openssl-1.0.2q BITS=32
+    - LISP=allegro OPENSSL=openssl-1.1.0j BITS=32
+    - LISP=allegro OPENSSL=openssl-1.1.1a BITS=32
 
 install:
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
   - test/run-on-many-lisps-and-openssls/openssl-releases/fetch.sh "$OPENSSL"
-  - if [ $ARCH = x86 ]; then sudo apt-get install libc6-dev-i386; fi
-  - test/run-on-many-lisps-and-openssls/openssl-releases/build.sh "$OPENSSL" "$ARCH" > openssl-build.log
+  - if [ $BITS = 32 ]; then sudo apt-get install libc6-dev-i386; fi
+  - test/run-on-many-lisps-and-openssls/openssl-releases/build.sh "$OPENSSL" "$BITS" > openssl-build.log
 
 #  cache:
 #    directories:
@@ -68,8 +66,8 @@ script:
                (format t \"*features*: ~A~%\" *features*)
                (format t \"(asdf:asdf-version): ~A~%\" (asdf:asdf-version)))'
          -e '(ql:quickload :cffi)'
-         -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-$ARCH'/lib/libcrypto.so\")'
-         -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-$ARCH'/lib/libssl.so\")'
+         -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libcrypto.so\")'
+         -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libssl.so\")'
          -e '(pushnew :cl+ssl-foreign-libs-already-loaded *features*)'
          -e '(ql:quickload :cl+ssl.test)'
          -e '(format t \"(cl+ssl::compat-openssl-version): ~A~%\" (cl+ssl::compat-openssl-version))'
