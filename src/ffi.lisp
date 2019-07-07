@@ -14,10 +14,88 @@
 
 (in-package :cl+ssl)
 
+;;; Some lisps (CMUCL) fail when we try to define
+;;; a foreign function which is absent in the loaded
+;;; foreign library. CMUCL fails when the compiled .fasl
+;;; file is loaded, the and failure can not be
+;;; captured even by CL condition handlers, i.e.
+;;; wrapping (defcfun "removed-function" ...)
+;;; into (ignore-errors ...) doesn't help.
+;;;
+;;; See https://gitlab.common-lisp.net/cmucl/cmucl/issues/74
+;;;
+;;; As OpenSSL often changs API (removes / adds functions)
+;;; we need to solve this problem for CMUCL.
+;;;
+;;; We do this on CMUCL by calling functions which exists
+;;; not in all OpenSSL versions through a pointer
+;;; received with cffi:foreign-symbol-pointer.
+;;; So a lisp wrapper function for such foreign function
+;;; looks up a pointer to the required function in a
+;;; hash table, lazily populating this hash table
+;;; at first call.
+
+(defparameter *late-bound-foreign-function-pointers*
+  (make-hash-table :test 'equal))
+
+(defmacro defcfun-late-bound (name-and-options &body body)
+  (assert (not (eq (alexandria:lastcar body)
+                   '&rest))
+          (body)
+          "The BODY format is implemented in a limited way
+comparing to CFFI:DEFCFUN - we don't support the &REST which specifies vararg
+functions. Feel free to implement the support if you have a use case.")
+  (assert (and (>= (length name-and-options) 2)
+               (stringp (first name-and-options))
+               (symbolp (second name-and-options)))
+          (name-and-options)
+          "Unsupported NAME-AND-OPTIONS format: ~S.
+\(Of all the NAME-AND-OPTIONS variants allowed by CFFI:DEFCFUN we have only
+implemented support for (FOREIGN-NAME LISP-NAME ...) where FOREIGN-NAME is a
+STRING and LISP-NAME is a SYMBOL. Fell free to implement support the remaining
+variants if you have use cases for them.)"
+          name-and-options)
+
+  (let ((foreign-name-str (first name-and-options))
+        (lisp-name (second name-and-options))
+        (docstring (when (stringp (car body)) (pop body)))
+        (return-type (first body))
+        (arg-names (mapcar #'first (rest body)))
+        (arg-types (mapcar #'second (rest body)))
+        (library (getf (cddr name-and-options) :library))
+        (convention (getf (cddr name-and-options) :convention))
+        (ptr-var (gensym (string 'ptr))))
+    `(progn
+       (setf (gethash ,foreign-name-str *late-bound-foreign-function-pointers*)
+             (or (cffi:foreign-symbol-pointer ,foreign-name-str
+                                              ,@(when library `(:library ',library)))
+                 'foreign-symbol-not-found))
+       (defun ,lisp-name (,@arg-names)
+         ,@(when docstring (list docstring))
+         (let ((,ptr-var (gethash ,foreign-name-str *late-bound-foreign-function-pointers*)))
+           (when (null ,ptr-var)
+             (error "Unexpacted state, no value in *late-bound-foreign-function-pointers* for ~A"
+                    ,foreign-name-str))
+           (when (eq ,ptr-var 'foreign-symbol-not-found)
+             (error "The current version of OpenSSL libcrypto doesn't provide ~A"
+                    ,foreign-name-str))
+           (cffi:foreign-funcall-pointer ,ptr-var
+                                         ,(when convention (list convention))
+                                         ,@(mapcan #'list arg-types arg-names)
+                                         ,return-type))))))
+
+(defmacro defcfun-versioned ((&key since vanished) name-and-options &body body)
+  (if (and (or since vanished)
+           (member :cmucl *features*))
+      `(defcfun-late-bound ,name-and-options ,@body)
+      `(cffi:defcfun ,name-and-options ,@body)))
+
+
 ;;; Code for checking that we got the correct foreign symbols right.
 ;;; Implemented only for LispWorks for now.
 (defvar *cl+ssl-ssl-foreign-function-names* nil)
 (defvar *cl+ssl-crypto-foreign-function-names* nil)
+
 #+lispworks
 (defun check-cl+ssl-symbols ()
   (dolist (ssl-symbol *cl+ssl-ssl-foreign-function-names*)
@@ -27,15 +105,31 @@
     (when (fli:null-pointer-p (fli:make-pointer :symbol-name crypto-symbol :module 'libcrypto :errorp nil))
       (format *error-output* "Symbol ~s undefined~%" crypto-symbol))))
 
-(defmacro define-ssl-function (name-and-options &body body)
+(defmacro define-ssl-function-ex ((&key since vanished) name-and-options &body body)
   `(progn
-     (pushnew  ,(car name-and-options)  *cl+ssl-ssl-foreign-function-names* :test 'equal) ; debugging
-     (cffi:defcfun ,(append name-and-options '(:library libssl)) ,@body)))
+     ;; debugging
+     (pushnew  ,(car name-and-options)
+               *cl+ssl-ssl-foreign-function-names*
+               :test 'equal)
+     (defcfun-versioned (:since ,since :vanished ,vanished)
+         ,(append name-and-options '(:library libssl))
+       ,@body)))
+
+(defmacro define-ssl-function (name-and-options &body body)
+  `(define-ssl-function-ex () ,name-and-options ,@body))
+
+(defmacro define-crypto-function-ex ((&key since vanished) name-and-options &body body)
+  `(progn
+     ;; debugging
+     (pushnew ,(car name-and-options)
+              *cl+ssl-crypto-foreign-function-names*
+              :test 'equal)
+     (defcfun-versioned (:since ,since :vanished ,vanished)
+         ,(append name-and-options  #+(and lispworks darwin) '(:library libcrypto))
+       ,@body)))
 
 (defmacro define-crypto-function (name-and-options &body body)
-  `(progn
-     (pushnew  ,(car name-and-options)  *cl+ssl-crypto-foreign-function-names* :test 'equal) ; debugging
-     (cffi:defcfun ,(append name-and-options #+(and lispworks darwin) '(:library libcrypto)) ,@body)))
+  `(define-crypto-function-ex () ,name-and-options ,@body))
 
 
 ;;; Global state
@@ -141,12 +235,10 @@ session-resume requests) would normally be copied into the local cache before pr
 (cffi:defctype ssl-pointer :pointer)
 
 
-;; @vanished 1.1.0
-(define-crypto-function ("SSLeay" ssl-eay)
+(define-crypto-function-ex (:vanished "1.1.0") ("SSLeay" ssl-eay)
         :long)
 
-;; @since 1.1.0
-(define-crypto-function ("OpenSSL_version_num" openssl-version-num)
+(define-crypto-function-ex (:since "1.1.0") ("OpenSSL_version_num" openssl-version-num)
         :long)
 
 (defun compat-openssl-version ()
@@ -186,11 +278,9 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (define-ssl-function ("SSL_get_version" ssl-get-version)
     :string
   (ssl ssl-pointer))
-;; @vanished 1.1.0 (in OpenSSL_1_1_0-pre3-504-g2e52e7df51)
-(define-ssl-function ("SSL_load_error_strings" ssl-load-error-strings)
+(define-ssl-function-ex (:vanished "1.1.0") ("SSL_load_error_strings" ssl-load-error-strings)
     :void)
-;; @vanished 1.1.0 (in OpenSSL_1_1_0-pre3-504-g2e52e7df51)
-(define-ssl-function ("SSL_library_init" ssl-library-init)
+(define-ssl-function-ex (:vanished "1.1.0") ("SSL_library_init" ssl-library-init)
     :int)
 ;;
 ;; We don't refer SSLv2_client_method as the default
@@ -200,17 +290,17 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 ;;
 ;; (define-ssl-function ("SSLv2_client_method" ssl-v2-client-method)
 ;;     ssl-method)
-(define-ssl-function ("SSLv23_client_method" ssl-v23-client-method)
+(define-ssl-function-ex (:vanished "1.1.0") ("SSLv23_client_method" ssl-v23-client-method)
     ssl-method)
-(define-ssl-function ("SSLv23_server_method" ssl-v23-server-method)
+(define-ssl-function-ex (:vanished "1.1.0") ("SSLv23_server_method" ssl-v23-server-method)
     ssl-method)
-(define-ssl-function ("SSLv23_method" ssl-v23-method)
+(define-ssl-function-ex (:vanished "1.1.0") ("SSLv23_method" ssl-v23-method)
     ssl-method)
-(define-ssl-function ("SSLv3_client_method" ssl-v3-client-method)
+(define-ssl-function-ex (:vanished "1.1.0") ("SSLv3_client_method" ssl-v3-client-method)
     ssl-method)
-(define-ssl-function ("SSLv3_server_method" ssl-v3-server-method)
+(define-ssl-function-ex (:vanished "1.1.0") ("SSLv3_server_method" ssl-v3-server-method)
     ssl-method)
-(define-ssl-function ("SSLv3_method" ssl-v3-method)
+(define-ssl-function-ex (:vanished "1.1.0") ("SSLv3_method" ssl-v3-method)
     ssl-method)
 (define-ssl-function ("TLSv1_client_method" ssl-TLSv1-client-method)
     ssl-method)
@@ -218,20 +308,19 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     ssl-method)
 (define-ssl-function ("TLSv1_method" ssl-TLSv1-method)
     ssl-method)
-(define-ssl-function ("TLSv1_1_client_method" ssl-TLSv1-1-client-method)
+(define-ssl-function-ex (:since "1.0.2") ("TLSv1_1_client_method" ssl-TLSv1-1-client-method)
     ssl-method)
-(define-ssl-function ("TLSv1_1_server_method" ssl-TLSv1-1-server-method)
+(define-ssl-function-ex (:since "1.0.2") ("TLSv1_1_server_method" ssl-TLSv1-1-server-method)
     ssl-method)
-(define-ssl-function ("TLSv1_1_method" ssl-TLSv1-1-method)
+(define-ssl-function-ex (:since "1.0.2") ("TLSv1_1_method" ssl-TLSv1-1-method)
     ssl-method)
-(define-ssl-function ("TLSv1_2_client_method" ssl-TLSv1-2-client-method)
+(define-ssl-function-ex (:since "1.0.2") ("TLSv1_2_client_method" ssl-TLSv1-2-client-method)
     ssl-method)
-(define-ssl-function ("TLSv1_2_server_method" ssl-TLSv1-2-server-method)
+(define-ssl-function-ex (:since "1.0.2") ("TLSv1_2_server_method" ssl-TLSv1-2-server-method)
     ssl-method)
-(define-ssl-function ("TLSv1_2_method" ssl-TLSv1-2-method)
+(define-ssl-function-ex (:since "1.0.2") ("TLSv1_2_method" ssl-TLSv1-2-method)
     ssl-method)
-;; @since 1.1.0
-(define-ssl-function ("TLS_method" tls-method)
+(define-ssl-function-ex (:since "1.1.0") ("TLS_method" tls-method)
     ssl-method)
 
 (define-ssl-function ("SSL_CTX_new" ssl-ctx-new)
@@ -403,13 +492,11 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (ctx ssl-ctx)
   (pem_passwd_cb :pointer))
 
-(define-crypto-function ("CRYPTO_num_locks" crypto-num-locks) :int)
-;; @vanished 1.1.0 (in OpenSSL_1_1_0-pre3-504-g2e52e7df51)
-(define-crypto-function ("CRYPTO_set_locking_callback" crypto-set-locking-callback)
+(define-crypto-function-ex (:vanished "1.1.0") ("CRYPTO_num_locks" crypto-num-locks) :int)
+(define-crypto-function-ex (:vanished "1.1.0") ("CRYPTO_set_locking_callback" crypto-set-locking-callback)
     :void
   (fun :pointer))
-;; @vanished 1.1.0 (in OpenSSL_1_1_0-pre3-504-g2e52e7df51)
-(define-crypto-function ("CRYPTO_set_id_callback" crypto-set-id-callback)
+(define-crypto-function-ex (:vanished "1.1.0") ("CRYPTO_set_id_callback" crypto-set-id-callback)
     :void
   (fun :pointer))
 
@@ -519,25 +606,21 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (type :int)
   (data :pointer))
 
-;; @vanished 1.1.0
-(define-crypto-function ("sk_value" sk-value)
+(define-crypto-function-ex (:vanished "1.1.0") ("sk_value" sk-value)
     :pointer
   (stack :pointer)
   (index :int))
 
-;; @vanished 1.1.0
-(define-crypto-function ("sk_num" sk-num)
+(define-crypto-function-ex (:vanished "1.1.0") ("sk_num" sk-num)
     :int
   (stack :pointer))
 
-;; @since 1.1.0
-(define-crypto-function ("OPENSSL_sk_value" openssl-sk-value)
+(define-crypto-function-ex (:since "1.1.0") ("OPENSSL_sk_value" openssl-sk-value)
     :pointer
   (stack :pointer)
   (index :int))
 
-;; @since 1.1.0
-(define-crypto-function ("OPENSSL_sk_num" openssl-sk-num)
+(define-crypto-function-ex (:since "1.1.0") ("OPENSSL_sk_num" openssl-sk-num)
     :int
   (stack :pointer))
 
@@ -583,13 +666,11 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :int
   (ctx :pointer))
 
-;; @since 1.1.0
-(define-ssl-function ("SSL_CTX_set_default_verify_dir" ssl-ctx-set-default-verify-dir)
+(define-ssl-function-ex (:since "1.1.0") ("SSL_CTX_set_default_verify_dir" ssl-ctx-set-default-verify-dir)
     :int
   (ctx :pointer))
 
-;; @since 1.1.0
-(define-ssl-function ("SSL_CTX_set_default_verify_file" ssl-ctx-set-default-verify-file)
+(define-ssl-function-ex (:since "1.1.0") ("SSL_CTX_set_default_verify_file" ssl-ctx-set-default-verify-file)
     :int
   (ctx :pointer))
 
@@ -604,8 +685,7 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :void
   (rsa :pointer))
 
-;; @vanished 1.1.0 (in OpenSSL_1_1_0-pre5-814-gfb5b14b420)
-(define-ssl-function ("SSL_CTX_set_tmp_rsa_callback" ssl-ctx-set-tmp-rsa-callback)
+(define-ssl-function-ex (:vanished "1.1.0") ("SSL_CTX_set_tmp_rsa_callback" ssl-ctx-set-tmp-rsa-callback)
     :pointer
   (ctx :pointer)
   (callback :pointer))

@@ -32,16 +32,11 @@ env:
     - LISP=abcl OPENSSL=openssl-1.0.2q BITS=64
     - LISP=abcl OPENSSL=openssl-1.1.0j BITS=64
     - LISP=abcl OPENSSL=openssl-1.1.1a BITS=64
-# CMUCL is commented out because CMUCL fails currently
-# when loading a fasl which defines a foreign function
-# absent in the foreign library (like functions present not in
-# all OpenSSL versions), see
-# https://github.com/cl-plus-ssl/cl-plus-ssl/issues/38
-#    - LISP=cmu-bin OPENSSL=openssl-0.9.8zh BITS=32
-#    - LISP=cmu-bin OPENSSL=openssl-1.0.0s BITS=32
-#    - LISP=cmu-bin OPENSSL=openssl-1.0.2q BITS=32
-#    - LISP=cmu-bin OPENSSL=openssl-1.1.0j BITS=32
-#    - LISP=cmu-bin OPENSSL=openssl-1.1.1a BITS=32
+    - LISP=cmu-bin OPENSSL=openssl-0.9.8zh BITS=32
+    - LISP=cmu-bin OPENSSL=openssl-1.0.0s BITS=32
+    - LISP=cmu-bin OPENSSL=openssl-1.0.2q BITS=32
+    - LISP=cmu-bin OPENSSL=openssl-1.1.0j BITS=32
+    - LISP=cmu-bin OPENSSL=openssl-1.1.1a BITS=32
     - LISP=allegro OPENSSL=openssl-0.9.8zh BITS=32
     - LISP=allegro OPENSSL=openssl-1.0.0s BITS=32
     - LISP=allegro OPENSSL=openssl-1.0.2q BITS=32
