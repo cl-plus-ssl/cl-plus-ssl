@@ -995,8 +995,7 @@ context and in particular the loaded certificate chain."
   (unless (member :cl+ssl-foreign-libs-already-loaded
                   *features*)
     (cffi:use-foreign-library libcrypto)
-    (cffi:load-foreign-library 'libssl)
-    (cffi:load-foreign-library 'libeay32))
+    (cffi:load-foreign-library 'libssl))
   (setf *ssl-global-context* nil)
   (setf *ssl-global-method* nil)
   (setf *tmp-rsa-key-512* nil)
