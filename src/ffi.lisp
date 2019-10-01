@@ -125,7 +125,7 @@ variants if you have use cases for them.)"
               *cl+ssl-crypto-foreign-function-names*
               :test 'equal)
      (defcfun-versioned (:since ,since :vanished ,vanished)
-         ,(append name-and-options  #+(and lispworks darwin) '(:library libcrypto))
+         ,(append name-and-options  #+(and (or abcl lispworks) darwin) '(:library libcrypto))
        ,@body)))
 
 (defmacro define-crypto-function (name-and-options &body body)
