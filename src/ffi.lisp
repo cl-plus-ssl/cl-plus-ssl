@@ -282,6 +282,8 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :void)
 (define-ssl-function-ex (:vanished "1.1.0") ("SSL_library_init" ssl-library-init)
     :int)
+(define-ssl-function-ex (:since "1.1.0") ("OPENSSL_init_ssl" openssl-init-ssl)
+    :int)
 ;;
 ;; We don't refer SSLv2_client_method as the default
 ;; builds of OpenSSL do not have it, due to insecurity
@@ -931,28 +933,32 @@ MAKE-CONTEXT also allows to enab/disable verification.")
       'ssl-v23-method))
 
 (defun initialize (&key method rand-seed)
-  (when (openssl-is-not-even 1 1)
-    (setf *locks* (loop
-                     repeat (crypto-num-locks)
-                     collect (bt:make-lock)))
-    (crypto-set-locking-callback (cffi:callback locking-callback))
-    (crypto-set-id-callback (cffi:callback threadid-callback))
-    (ssl-load-error-strings)
-    (ssl-library-init))
-  (setf *bio-lisp-method* (make-bio-lisp-method))
-  (when rand-seed
-    (init-prng rand-seed))
-  (setf *ssl-check-verify-p* :unspecified)
-  (setf *ssl-global-method* (funcall (or method (default-ssl-method))))
-  (setf *ssl-global-context* (ssl-ctx-new *ssl-global-method*))
-  (unless (eql 1 (ssl-ctx-set-default-verify-paths *ssl-global-context*))
-    (error "ssl-ctx-set-default-verify-paths failed."))
-  (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
-  (ssl-ctx-set-default-passwd-cb *ssl-global-context*
-                                 (cffi:callback pem-password-callback))
-  (when (openssl-is-not-even 1 1)
-    (ssl-ctx-set-tmp-rsa-callback *ssl-global-context*
-                                  (cffi:callback tmp-rsa-callback))))
+  (let ((api-11 (and (openssl-is-at-least 1 1)
+                     (not (libresslp)))))
+    (if api-11
+        (openssl-init-ssl)
+        (ssl-library-init))
+    (unless api-11
+      (setf *locks* (loop
+                       repeat (crypto-num-locks)
+                       collect (bt:make-lock)))
+      (crypto-set-locking-callback (cffi:callback locking-callback))
+      (crypto-set-id-callback (cffi:callback threadid-callback))
+      (ssl-load-error-strings))
+    (setf *bio-lisp-method* (make-bio-lisp-method))
+    (when rand-seed
+      (init-prng rand-seed))
+    (setf *ssl-check-verify-p* :unspecified)
+    (setf *ssl-global-method* (funcall (or method (default-ssl-method))))
+    (setf *ssl-global-context* (ssl-ctx-new *ssl-global-method*))
+    (unless (eql 1 (ssl-ctx-set-default-verify-paths *ssl-global-context*))
+      (error "ssl-ctx-set-default-verify-paths failed."))
+    (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
+    (ssl-ctx-set-default-passwd-cb *ssl-global-context*
+                                   (cffi:callback pem-password-callback))
+    (unless api-11
+      (ssl-ctx-set-tmp-rsa-callback *ssl-global-context*
+                                    (cffi:callback tmp-rsa-callback)))))
 
 (defun ensure-initialized (&key method (rand-seed nil))
   "In most cases you do *not* need to call this function, because it
