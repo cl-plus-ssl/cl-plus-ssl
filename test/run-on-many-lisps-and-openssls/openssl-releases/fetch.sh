@@ -7,12 +7,14 @@ cd src
 VERSIONS="$1"
 if [ -z "$VERSIONS" ]
 then
-  VERSIONS="openssl-0.9.8zh openssl-1.0.0s openssl-1.0.2q openssl-1.1.0j openssl-1.1.1a"
+  VERSIONS="openssl-0.9.8zh openssl-1.0.0s openssl-1.0.2q openssl-1.1.0j openssl-1.1.1a libressl-2.2.7 libressl-3.0.1"
 fi
 
 downloadUrl() {
   version="$1"
   case $version in
+      libressl*)
+          echo "https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/${version}.tar.gz";;
       openssl-1.0.2q|openssl-1.1.0j|openssl-1.1.1a)
           echo "https://www.openssl.org/source/${version}.tar.gz";;
       openssl-1.0.0s)

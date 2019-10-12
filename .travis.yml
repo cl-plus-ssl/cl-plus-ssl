@@ -13,11 +13,21 @@ env:
     - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.0.2q BITS=64
     - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.1.0j BITS=64
     - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.1.1a BITS=64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=libressl-2.2.7 BITS=64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=libressl-2.5.5 BITS=64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=libressl-2.6.5 BITS=64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=libressl-2.8.3 BITS=64
+    - LISP=sbcl-bin COVERALLS=true OPENSSL=libressl-3.0.1 BITS=64
     - LISP=ccl-bin OPENSSL=openssl-0.9.8zh BITS=64
     - LISP=ccl-bin OPENSSL=openssl-1.0.0s BITS=64
     - LISP=ccl-bin OPENSSL=openssl-1.0.2q BITS=64
     - LISP=ccl-bin OPENSSL=openssl-1.1.0j BITS=64
     - LISP=ccl-bin OPENSSL=openssl-1.1.1a BITS=64
+    - LISP=ccl-bin OPENSSL=libressl-2.2.7 BITS=64
+    - LISP=ccl-bin OPENSSL=libressl-2.5.5 BITS=64
+    - LISP=ccl-bin OPENSSL=libressl-2.6.5 BITS=64
+    - LISP=ccl-bin OPENSSL=libressl-2.8.3 BITS=64
+    - LISP=ccl-bin OPENSSL=libressl-3.0.1 BITS=64
 # CLISP is disabled because it can't load bordeaux-treads which require ASDF >= 3.1
 # Example log: https://travis-ci.org/cl-plus-ssl/cl-plus-ssl/jobs/181539210
 # (As a workaround we could try to download ASDF 3 ourselves)
@@ -27,21 +37,39 @@ env:
     - LISP=ecl OPENSSL=openssl-1.0.2q BITS=64
     - LISP=ecl OPENSSL=openssl-1.1.0j BITS=64
     - LISP=ecl OPENSSL=openssl-1.1.1a BITS=64
+    - LISP=ecl OPENSSL=libressl-2.2.7 BITS=64
+    - LISP=ecl OPENSSL=libressl-2.5.5 BITS=64
+    - LISP=ecl OPENSSL=libressl-2.6.5 BITS=64
+    - LISP=ecl OPENSSL=libressl-2.8.3 BITS=64
+    - LISP=ecl OPENSSL=libressl-3.0.1 BITS=64
+    - LISP=ecl OPENSSL=libressl-2.2.7 BITS=64
     - LISP=abcl OPENSSL=openssl-0.9.8zh BITS=64
     - LISP=abcl OPENSSL=openssl-1.0.0s BITS=64
     - LISP=abcl OPENSSL=openssl-1.0.2q BITS=64
     - LISP=abcl OPENSSL=openssl-1.1.0j BITS=64
     - LISP=abcl OPENSSL=openssl-1.1.1a BITS=64
+    - LISP=abcl OPENSSL=libressl-2.5.5 BITS=64
+    - LISP=abcl OPENSSL=libressl-2.6.5 BITS=64
+    - LISP=abcl OPENSSL=libressl-2.8.3 BITS=64
+    - LISP=abcl OPENSSL=libressl-3.0.1 BITS=64
     - LISP=cmu-bin OPENSSL=openssl-0.9.8zh BITS=32
     - LISP=cmu-bin OPENSSL=openssl-1.0.0s BITS=32
     - LISP=cmu-bin OPENSSL=openssl-1.0.2q BITS=32
     - LISP=cmu-bin OPENSSL=openssl-1.1.0j BITS=32
     - LISP=cmu-bin OPENSSL=openssl-1.1.1a BITS=32
+    - LISP=cmu-bin OPENSSL=libressl-2.5.5 BITS=32
+    - LISP=cmu-bin OPENSSL=libressl-2.6.5 BITS=32
+    - LISP=cmu-bin OPENSSL=libressl-2.8.3 BITS=32
+    - LISP=cmu-bin OPENSSL=libressl-3.0.1 BITS=32
     - LISP=allegro OPENSSL=openssl-0.9.8zh BITS=32
     - LISP=allegro OPENSSL=openssl-1.0.0s BITS=32
     - LISP=allegro OPENSSL=openssl-1.0.2q BITS=32
     - LISP=allegro OPENSSL=openssl-1.1.0j BITS=32
     - LISP=allegro OPENSSL=openssl-1.1.1a BITS=32
+    - LISP=allegro OPENSSL=libressl-2.5.5 BITS=32
+    - LISP=allegro OPENSSL=libressl-2.6.5 BITS=32
+    - LISP=allegro OPENSSL=libressl-2.8.3 BITS=32
+    - LISP=allegro OPENSSL=libressl-3.0.1 BITS=32
 
 install:
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
