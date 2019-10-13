@@ -140,6 +140,9 @@ variants if you have use cases for them.)"
          ;; that, so it's better to possibly sacrify the
          ;; :cl+ssl-foreign-libs-already-loaded (we haven't tested)
          ;; than have them broken completely.
+         ;; TODO: extend the :cl+ssl-foreign-libs-already-loaded
+         ;; mechanism with possibility for user to specify value
+         ;; for the :library option.
          ,(append name-and-options
                   #+(and (or abcl lispworks) darwin) '(:library libcrypto))
        ,@body)))
