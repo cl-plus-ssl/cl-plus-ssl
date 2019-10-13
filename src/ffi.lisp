@@ -17,7 +17,7 @@
 ;;; Some lisps (CMUCL) fail when we try to define
 ;;; a foreign function which is absent in the loaded
 ;;; foreign library. CMUCL fails when the compiled .fasl
-;;; file is loaded, the and failure can not be
+;;; file is loaded, and the failure can not be
 ;;; captured even by CL condition handlers, i.e.
 ;;; wrapping (defcfun "removed-function" ...)
 ;;; into (ignore-errors ...) doesn't help.
@@ -31,9 +31,8 @@
 ;;; not in all OpenSSL versions through a pointer
 ;;; received with cffi:foreign-symbol-pointer.
 ;;; So a lisp wrapper function for such foreign function
-;;; looks up a pointer to the required function in a
-;;; hash table, lazily populating this hash table
-;;; at first call.
+;;; looks up a pointer to the required foreign function
+;;; in a hash table.
 
 (defparameter *late-bound-foreign-function-pointers*
   (make-hash-table :test 'equal))
