@@ -950,7 +950,13 @@ MAKE-CONTEXT also allows to enab/disable verification.")
       'ssl-v23-method))
 
 (defun initialize (&key method rand-seed)
-  (when (openssl-is-not-even 1 1)
+  (when (or (openssl-is-not-even 1 1)
+            ;; Old versions of LibreSSL
+            ;; require this initialization
+            ;; (https://github.com/cl-plus-ssl/cl-plus-ssl/pull/91),
+            ;; new versions keep this API backwards
+            ;; compatible so we can call it too.
+            (libresslp))
     (setf *locks* (loop
                      repeat (crypto-num-locks)
                      collect (bt:make-lock)))
@@ -969,7 +975,12 @@ MAKE-CONTEXT also allows to enab/disable verification.")
   (ssl-ctx-set-session-cache-mode *ssl-global-context* 3)
   (ssl-ctx-set-default-passwd-cb *ssl-global-context*
                                  (cffi:callback pem-password-callback))
-  (when (openssl-is-not-even 1 1)
+  (when (or (openssl-is-not-even 1 1)
+            ;; Again, even if newer LibreSSL
+            ;; don't need this call, they keep
+            ;; the API compatibility so we can continue
+            ;; making this call.
+            (libresslp))
     (ssl-ctx-set-tmp-rsa-callback *ssl-global-context*
                                   (cffi:callback tmp-rsa-callback))))
 
