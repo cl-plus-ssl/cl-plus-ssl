@@ -48,6 +48,7 @@ env:
     - LISP=abcl OPENSSL=openssl-1.0.2q BITS=64
     - LISP=abcl OPENSSL=openssl-1.1.0j BITS=64
     - LISP=abcl OPENSSL=openssl-1.1.1a BITS=64
+    - LISP=abcl OPENSSL=libressl-2.2.7 BITS=64
     - LISP=abcl OPENSSL=libressl-2.5.5 BITS=64
     - LISP=abcl OPENSSL=libressl-2.6.5 BITS=64
     - LISP=abcl OPENSSL=libressl-2.8.3 BITS=64
@@ -57,6 +58,7 @@ env:
     - LISP=cmu-bin OPENSSL=openssl-1.0.2q BITS=32
     - LISP=cmu-bin OPENSSL=openssl-1.1.0j BITS=32
     - LISP=cmu-bin OPENSSL=openssl-1.1.1a BITS=32
+    - LISP=cmu-bin OPENSSL=libressl-2.2.7 BITS=32
     - LISP=cmu-bin OPENSSL=libressl-2.5.5 BITS=32
     - LISP=cmu-bin OPENSSL=libressl-2.6.5 BITS=32
     - LISP=cmu-bin OPENSSL=libressl-2.8.3 BITS=32
@@ -66,6 +68,7 @@ env:
     - LISP=allegro OPENSSL=openssl-1.0.2q BITS=32
     - LISP=allegro OPENSSL=openssl-1.1.0j BITS=32
     - LISP=allegro OPENSSL=openssl-1.1.1a BITS=32
+    - LISP=allegro OPENSSL=libressl-2.2.7 BITS=32
     - LISP=allegro OPENSSL=libressl-2.5.5 BITS=32
     - LISP=allegro OPENSSL=libressl-2.6.5 BITS=32
     - LISP=allegro OPENSSL=libressl-2.8.3 BITS=32
