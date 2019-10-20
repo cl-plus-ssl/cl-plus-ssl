@@ -23,6 +23,7 @@ env:
     - LISP=ccl-bin OPENSSL=openssl-1.0.2q BITS=64
     - LISP=ccl-bin OPENSSL=openssl-1.1.0j BITS=64
     - LISP=ccl-bin OPENSSL=openssl-1.1.1a BITS=64
+    - LISP=ccl-bin OPENSSL=openssl-1.1.1a BITS=64 READTABLE_CASE_INVERT=1
     - LISP=ccl-bin OPENSSL=libressl-2.2.7 BITS=64
     - LISP=ccl-bin OPENSSL=libressl-2.5.5 BITS=64
     - LISP=ccl-bin OPENSSL=libressl-2.6.5 BITS=64
@@ -86,7 +87,13 @@ install:
 #      - $HOME/.config/common-lisp
 
 script:
-  - "ros -e '(progn
+  - "ros -e '(when (uiop:getenvp \"READTABLE_CASE_INVERT\")
+               (format t \"changing readtable-case to :invert~%\")
+               (setq *readtable*
+                     (let ((rt (copy-readtable)))
+                       (setf (readtable-case rt) :invert)
+                       rt)))'
+         -e '(progn
                (format t \"(lisp-implementation-type): ~A~%\" (lisp-implementation-type))
                (format t \"(lisp-implementation-version): ~A~%\" (lisp-implementation-version))
                (format t \"*features*: ~A~%\" *features*)
@@ -95,6 +102,10 @@ script:
          -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libcrypto.so\")'
          -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libssl.so\")'
          -e '(pushnew :cl+ssl-foreign-libs-already-loaded *features*)'
+         -e '(ql:quickload :cl+ssl) ;; load cl+ssl separately from cl+ssl.test only because cl+ssl.test can not be loaded in the :invert readtable-case due to its dependency ironclad, as of 2019-10-20'
+         -e '(when (uiop:getenvp \"READTABLE_CASE_INVERT\")
+               (format t \"restoring readtable-case to :upcase before loading cl+ssl.test~%\")
+               (setf (readtable-case *readtable*) :invert))'
          -e '(ql:quickload :cl+ssl.test)'
          -e '(format t \"(cl+ssl::compat-openssl-version): ~A~%\" (cl+ssl::compat-openssl-version))'
          -e '(let ((results
