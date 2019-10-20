@@ -105,7 +105,7 @@ script:
          -e '(ql:quickload :cl+ssl) ;; load cl+ssl separately from cl+ssl.test only because cl+ssl.test can not be loaded in the :invert readtable-case due to its dependency ironclad, as of 2019-10-20'
          -e '(when (uiop:getenvp \"READTABLE_CASE_INVERT\")
                (format t \"restoring readtable-case to :upcase before loading cl+ssl.test~%\")
-               (setf (readtable-case *readtable*) :invert))'
+               (setf (readtable-case *readtable*) :upcase))'
          -e '(ql:quickload :cl+ssl.test)'
          -e '(format t \"(cl+ssl::compat-openssl-version): ~A~%\" (cl+ssl::compat-openssl-version))'
          -e '(let ((results
