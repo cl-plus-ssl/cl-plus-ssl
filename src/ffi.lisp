@@ -609,13 +609,13 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (defconstant +GEN-IPADD+  7)
 (defconstant +GEN-RID+    8)
 
-(defconstant +V-ASN1-OCTET-STRING+ 4)
-(defconstant +V-ASN1-UTF8STRING+ 12)
-(defconstant +V-ASN1-PRINTABLESTRING+ 19)
-(defconstant +V-ASN1-TELETEXSTRING+ 20)
-(defconstant +V-ASN1-IASTRING+ 22)
-(defconstant +V-ASN1-UNIVERSALSTRING+ 28)
-(defconstant +V-ASN1-BMPSTRING+ 30)
+(defconstant +v-asn1-octet-string+ 4)
+(defconstant +v-asn1-utf8string+ 12)
+(defconstant +v-asn1-printablestring+ 19)
+(defconstant +v-asn1-teletexstring+ 20)
+(defconstant +v-asn1-iastring+ 22)
+(defconstant +v-asn1-universalstring+ 28)
+(defconstant +v-asn1-bmpstring+ 30)
 
 
 (defconstant +NID-subject-alt-name+ 85)
