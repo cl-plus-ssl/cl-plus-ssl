@@ -482,3 +482,7 @@ may be associated with the passphrase PASSWORD."
 #+allegro
 (defmethod stream-fd ((stream stream))
   (socket:socket-os-fd stream))
+
+#+lispworks
+(defmethod stream-fd ((stream comm::socket-stream))
+  (comm:socket-stream-socket stream))
