@@ -1,6 +1,8 @@
 language: common-lisp
 sudo: false # lets try new infrastructure
-
+os: linux
+dist: bionic
+arch: amd64
 env:
   global:
     - PATH=~/.roswell/bin:$PATH
