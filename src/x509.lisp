@@ -135,9 +135,18 @@ ASN1 string validation references:
     (decode-asn1-string asn1-string type)))
 
 (defun slurp-stream (stream)
-  (let ((seq (make-array (file-length stream) :element-type '(unsigned-byte 8))))
+  "Returns a sequence containing the STREAM bytes; the
+sequence is created CFFI:MAKE-SHAREABLE-BYTE-VECTOR,
+therefore it can safely be passed to
+ CFFI:WITH-POINTER-TO-VECTOR-DATA."
+  (let ((seq (cffi:make-shareable-byte-vector (file-length stream))))
     (read-sequence seq stream)
     seq))
+
+(defgeneric decode-certificate (format bytes)
+  (:documentation
+   "The BYTES must be created by CFFI:MAKE-SHAREABLE-BYTE-VECTOR (because
+we are going to pass them to CFFI:WITH-POINTER-TO-VECTOR-DATA)"))
 
 (defmethod decode-certificate ((format (eql :der)) bytes)
   (cffi:with-pointer-to-vector-data (buf* bytes)
