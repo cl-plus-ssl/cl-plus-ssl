@@ -1,5 +1,35 @@
 ;;;; -*- Mode: LISP; Syntax: COMMON-LISP; indent-tabs-mode: nil; coding: utf-8; show-trailing-whitespace: t -*-
 
+;;;; CLISP speedup comments by Pixel / pinterface, 2007,
+;;;; copied from https://code.kepibu.org/cl+ssl/
+;;;;
+;;;; ## Speeding Up clisp
+;;;; cl+ssl has some serious speed issues on CLISP. For small requests,
+;;;; it's not enough to worry about, but on larger requests the speed
+;;;; issue can mean the difference between a 15 second download and a 15
+;;;; minute download. And that just won't do!
+;;;;
+;;;; ### What Makes cl+ssl on clisp so slow?
+;;;; On clisp, cffi's with-pointer-to-vector-data macro uses copy-in,
+;;;; copy-out semantics, because clisp doesn't offer a with-pinned-object
+;;;; facility or some other way of getting at the pointer to a simple-array.
+;;;; Very sad, I know. In addition to being a leaky abstraction, wptvd is really slow.
+;;;;
+;;;; ### How to Speed Things Up?
+;;;; The simplest thing that can possibly work: break the abstraction.
+;;;; I introduce several new functions (buffer-length, buffer-elt, etc.)
+;;;; and use those wherever an ssl-stream-*-buffer happens to be used,
+;;;; in place of the corresponding sequence functions.
+;;;; Those buffer-* functions operate on clisp's ffi:pointer objects,
+;;;; resulting in a tremendous speedup--and probably a memory leak or two.
+;;;;
+;;;; ### This Is Not For You If...
+;;;; While I've made an effort to ensure this patch doesn't break other
+;;;; implementations, if you have code which relies on ssl-stream-*-buffer
+;;;; returning an array you can use standard CL functions on, it will break
+;;;; on clisp under this patch. But you weren't relying on cl+ssl
+;;;; internals anyway, now were you?
+
 #+xcvb (module (:depends-on ("package" "reload" "conditions" "ffi" "ffi-buffer-all")))
 
 (in-package :cl+ssl)
