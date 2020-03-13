@@ -885,10 +885,10 @@ will use this value.")
 
 (defun init-prng (seed-byte-sequence)
   (let* ((length (length seed-byte-sequence))
-         (buf (cffi-sys::make-shareable-byte-vector length)))
+         (buf (cffi:make-shareable-byte-vector length)))
     (dotimes (i length)
       (setf (elt buf i) (elt seed-byte-sequence i)))
-    (cffi-sys::with-pointer-to-vector-data (ptr buf)
+    (cffi:with-pointer-to-vector-data (ptr buf)
       (rand-seed ptr length))))
 
 (defun ssl-ctx-set-session-cache-mode (ctx mode)

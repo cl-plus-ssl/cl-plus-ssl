@@ -5,7 +5,7 @@
 (in-package :cl+ssl)
 
 (defun make-buffer (size)
-  (cffi-sys::make-shareable-byte-vector size))
+  (cffi:make-shareable-byte-vector size))
 
 (defun buffer-length (buf)
   (length buf))
@@ -22,5 +22,5 @@
   (replace buf seq :start1 start1 :end1 end1 :start2 start2 :end2 end2))
 
 (defmacro with-pointer-to-vector-data ((ptr buf) &body body)
-  `(cffi-sys::with-pointer-to-vector-data (,ptr ,buf)
+  `(cffi:with-pointer-to-vector-data (,ptr ,buf)
     ,@body))
