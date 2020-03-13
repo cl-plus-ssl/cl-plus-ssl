@@ -80,7 +80,7 @@ env:
 install:
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
   - test/run-on-many-lisps-and-openssls/openssl-releases/fetch.sh "$OPENSSL"
-  - if [ $BITS = 32 ]; then sudo apt-get install libc6-dev-i386; fi
+  - if [ $BITS = 32 ]; then sudo apt-get install libc6-dev-i386 gcc-multilib; fi
   - test/run-on-many-lisps-and-openssls/openssl-releases/build.sh "$OPENSSL" "$BITS" > openssl-build.log
 
 #  cache:
