@@ -136,7 +136,7 @@ ASN1 string validation references:
 
 (defun slurp-stream (stream)
   "Returns a sequence containing the STREAM bytes; the
-sequence is created CFFI:MAKE-SHAREABLE-BYTE-VECTOR,
+sequence is created by CFFI:MAKE-SHAREABLE-BYTE-VECTOR,
 therefore it can safely be passed to
  CFFI:WITH-POINTER-TO-VECTOR-DATA."
   (let ((seq (cffi:make-shareable-byte-vector (file-length stream))))
