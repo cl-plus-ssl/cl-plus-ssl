@@ -208,7 +208,7 @@
   (when unwrap-stream-p
     (let ((fd (stream-fd socket)))
       (when fd
-  (setf socket fd))))
+        (setf socket fd))))
   (etypecase socket
     (integer
      (install-nonblock-flag socket)
@@ -486,3 +486,21 @@ may be associated with the passphrase PASSWORD."
 #+lispworks
 (defmethod stream-fd ((stream comm::socket-stream))
   (comm:socket-stream-socket stream))
+
+#+abcl
+(progn
+  (require :abcl-contrib)
+  (require :jss)
+
+  (defmethod stream-fd ((stream system::socket-stream))
+    ;;; Don't ask...
+    (let* ((s0
+             (#"getWrappedInputStream" (two-way-stream-input-stream stream)))
+           (s1
+             (jss:get-java-field s0 "in" t))
+           (s2
+             (jss:get-java-field s1 "ch" t)))
+      (jss:get-java-field s2 "fdVal" t))))
+    
+
+
