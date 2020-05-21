@@ -486,3 +486,24 @@ may be associated with the passphrase PASSWORD."
 #+lispworks
 (defmethod stream-fd ((stream comm::socket-stream))
   (comm:socket-stream-socket stream))
+
+#+abcl
+(progn
+  (require :abcl-contrib)
+  (require :jss)
+
+  ;;; N.b. Getting the file descriptor from a socket is not supported
+  ;;; by any published JVM API, but the following private data
+  ;;; structures have been present from openjdk6 through openjdk14 so
+  ;;; there's hope that this is somewhat unofficially official.
+  (defmethod stream-fd ((stream system::socket-stream))
+    (flet ((get-java-fields (object fields) ;; Thanks to Cyrus Harmon
+             (reduce (lambda (x y)
+                       (jss:get-java-field x y t))
+                     fields
+                     :initial-value object)))
+      (ignore-errors 
+       (get-java-fields (#"getWrappedInputStream" (two-way-stream-input-stream stream))
+                        '("in" "ch" "fdVal"))))))
+
+
