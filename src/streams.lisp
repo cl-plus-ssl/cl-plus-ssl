@@ -502,8 +502,9 @@ may be associated with the passphrase PASSWORD."
                        (jss:get-java-field x y t))
                      fields
                      :initial-value object)))
-      (ignore-errors 
-       (get-java-fields (#"getWrappedInputStream" (two-way-stream-input-stream stream))
+      (ignore-errors
+       (get-java-fields (java:jcall "getWrappedInputStream"  ;; TODO: define this as a constant
+                                    (two-way-stream-input-stream stream))
                         '("in" "ch" "fdVal"))))))
 
 
