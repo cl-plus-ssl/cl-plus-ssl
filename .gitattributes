@@ -8,4 +8,4 @@
 # And it general, I don't like any magic conversions. Better
 # to work with files as they are.
 
-* text=false
+* -text
