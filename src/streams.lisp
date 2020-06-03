@@ -493,18 +493,26 @@ may be associated with the passphrase PASSWORD."
   (require :jss)
 
   ;;; N.b. Getting the file descriptor from a socket is not supported
-  ;;; by any published JVM API, but the following private data
-  ;;; structures have been present from openjdk6 through openjdk14 so
-  ;;; there's hope that this is somewhat unofficially official.
+  ;;; by any published JVM API, so every JVM implementation may behave
+  ;;; somewhat differently.  By using the ability of
+  ;;; jss:get-java-fields to access private fields, it is usually
+  ;;; possible to "find" an access path to read the underlying integer
+  ;;; value of the file decriptor, which is all we need to pass to
+  ;;; SSL.
   (defmethod stream-fd ((stream system::socket-stream))
     (flet ((get-java-fields (object fields) ;; Thanks to Cyrus Harmon
              (reduce (lambda (x y)
                        (jss:get-java-field x y t))
                      fields
-                     :initial-value object)))
+                     :initial-value object))
+           (jvm-version ()
+             (read
+              (make-string-input-stream
+               (java:jstatic "getProperty" "java.lang.System"
+                                          "java.specification.version")))))
       (ignore-errors
        (get-java-fields (java:jcall "getWrappedInputStream"  ;; TODO: define this as a constant
                                     (two-way-stream-input-stream stream))
-                        '("in" "ch" "fdVal"))))))
-
-
+                        (if (< (jvm-version) 14)
+                            '("in" "ch" "fdVal")
+                            '("in" "this$0" "sc" "fd" "fd")))))))
