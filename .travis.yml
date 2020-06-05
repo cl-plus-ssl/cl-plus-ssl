@@ -106,6 +106,7 @@ script:
                 (format t \"abcl-contrib loaded...~%\")
                 (require :abcl-asdf)
                 (format t \"abcl-asdf loaded...~%\")
+                (format t \"*features*: ~A~%\" *features*)
                 (setf (symbol-value (read-from-string \"abcl-asdf::*default-repository*\"))
                       \"https://repo1.maven.org/maven2/\")
                 (format t \"abcl-asdf::*default-repository* assigned the HTTPS URL.~%\"))'
