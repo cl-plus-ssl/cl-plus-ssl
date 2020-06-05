@@ -76,7 +76,6 @@ env:
     - LISP=allegro OPENSSL=libressl-2.6.5 BITS=32
     - LISP=allegro OPENSSL=libressl-2.8.3 BITS=32
     - LISP=allegro OPENSSL=libressl-3.0.1 BITS=32
-
 install:
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
   - test/run-on-many-lisps-and-openssls/openssl-releases/fetch.sh "$OPENSSL"
@@ -104,14 +103,21 @@ script:
              (progn
                 (format t \"Loading abcl-asdf and switching maven repo URL to HTTPS (see https://github.com/armedbear/abcl/issues/151)~%\")
                 (require :abcl-contrib)
+                (format t \"abcl-contrib loaded...~%\")
                 (require :abcl-asdf)
+                (format t \"abcl-asdf loaded...~%\")
                 (setf (symbol-value (read-from-string \"abcl-asdf::*default-repository*\"))
-                      \"https://repo1.maven.org/maven2/\"))'
+                      \"https://repo1.maven.org/maven2/\")
+                (format t \"abcl-asdf::*default-repository* assigned the HTTPS URL.~%\"))'
          -e '(ql:quickload :cffi)'
+         -e '(format t \"cffi loaded.~%\")'
          -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libcrypto.so\")'
+         -e '(format t \"libcrypto.so loaded.~%\")'
          -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libssl.so\")'
+         -e '(format t \"libssl.so loaded.~%\")'
          -e '(pushnew :cl+ssl-foreign-libs-already-loaded *features*)'
          -e '(ql:quickload :cl+ssl) ;; load cl+ssl separately from cl+ssl.test only because cl+ssl.test can not be loaded in the :invert readtable-case due to its dependency ironclad, as of 2019-10-20'
+         -e '(format t \"cl+ssl loaded.~%\")'
          -e '(when (uiop:getenvp \"READTABLE_CASE_INVERT\")
                (format t \"restoring readtable-case to :upcase before loading cl+ssl.test~%\")
                (setf (readtable-case *readtable*) :upcase))'
