@@ -17,6 +17,7 @@
   :license "MIT"
   :author "Eric Marsden, Jochen Schmidt, David Lichteblau"
   :depends-on (:cffi :trivial-gray-streams :flexi-streams #+sbcl :sb-posix
+               #+(and sbcl win32) :sb-bsd-sockets
                :bordeaux-threads :trivial-garbage :uiop
                :alexandria :trivial-features)
   :serial t
