@@ -173,6 +173,8 @@ variants if you have use cases for them.)"
 (defconstant +SSL-CTRL-OPTIONS+ 32)
 (defconstant +SSL_CTRL_SET_SESS_CACHE_MODE+ 44)
 (defconstant +SSL_CTRL_MODE+ 33)
+(defconstant +SSL-CTRL-SET-MIN-PROTO-VERSION+ 123)
+(defconstant +SSL-CTRL-SET-MAX-PROTO-VERSION+ 124)
 
 (defconstant +SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER+ 2)
 
@@ -230,6 +232,18 @@ session-resume requests) would normally be copied into the local cache before pr
 (defconstant +SSL-OP-NO-TLSv1-2+ #x08000000)
 (defconstant +SSL-OP-NO-TLSv1-1+ #x10000000)
 
+(defconstant +SSL3-VERSION+ #x0300)
+(defconstant +TLS1-VERSION+ #x0301)
+(defconstant +TLS1-1-VERSION+ #x0302)
+(defconstant +TLS1-2-VERSION+ #x0303)
+(defconstant +TLS1-3-VERSION+ #x0304)
+(defconstant +TLS-MAX-VERSION+ +TLS1-3-VERSION+)
+(defconstant +DTLS1-VERSION+ #xFEFF)
+(defconstant +DTLS1-2-VERSION+ #xFEFD)
+(defconstant +DTLS-MIN-VERSION+ +DTLS1-VERSION+)
+(defconstant +DTLS-MAX-VERSION+ +DTLS1-2-VERSION+)
+
+
 (defvar *tmp-rsa-key-512* nil)
 (defvar *tmp-rsa-key-1024* nil)
 (defvar *tmp-rsa-key-2048* nil)
@@ -286,7 +300,7 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 
 (defun libresslp ()
   ;; LibreSSL can be distinguished by
-  ;; OpenSSL_version_num() always returning 0x020000000,
+  ;; OpenSSL_version_num() always returning #x020000000,
   ;; where 2 is the major version number.
   ;; http://man.openbsd.org/OPENSSL_VERSION_NUMBER.3
   ;; And OpenSSL will never use the major version 2:
@@ -455,6 +469,10 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 #-new-openssl
 (defun ssl-ctx-set-options (ctx options)
   (ssl-ctx-ctrl ctx +SSL-CTRL-OPTIONS+ options (cffi:null-pointer)))
+(defun ssl-ctx-set-min-proto-version (ctx version)
+  (ssl-ctx-ctrl ctx +SSL-CTRL-SET-MIN-PROTO-VERSION+ version (cffi:null-pointer)))
+(defun ssl-ctx-set-max-proto-version (ctx version)
+  (ssl-ctx-ctrl ctx +SSL-CTRL-SET-MAX-PROTO-VERSION+ version (cffi:null-pointer)))
 (define-ssl-function ("SSL_CTX_set_cipher_list" ssl-ctx-set-cipher-list%)
     :int
   (ctx :pointer)

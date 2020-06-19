@@ -46,6 +46,13 @@
            #:+ssl-op-no-tlsv1-1+
            #:+ssl-op-no-tlsv1-2+
 
+           #:+ssl3-version+
+           #:+tls1-version+
+           #:+tls1-1-version+
+           #:+tls1-2-version+
+           #:+tls1-3-version+
+           #:+tls1-max-version+
+
            #:+ssl-sess-cache-off+
            #:+ssl-sess-cache-client+
            #:+ssl-sess-cache-server+
@@ -54,7 +61,7 @@
            #:+ssl-sess-cache-no-internal-lookup+
            #:+ssl-sess-cache-no-internal-store+
            #:+ssl-sess-cache-no-internal+
-           
+
            #:make-context
            #:with-global-context
 
