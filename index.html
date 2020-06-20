@@ -356,6 +356,23 @@
       random number generator has not been seeded with enough randomness to ensure 
       an unpredictable byte sequence.
     </p>
+    <p>
+      <div class="def">Generic function CL+SSL:STREAM-INPUT-TIMEOUT (stream)</div>
+      <div class="def">Generic function CL+SSL:STREAM-OUTPUT-TIMEOUT (stream)</div>
+      <div class="def">Generic function CL+SSL:STREAM-DEADLINE (stream) ; Only in Clozure </div>
+      Some Common Lisp implementations support setting a timeout on a stream
+      associated with a socket. These functions are used to extract timeouts
+      and deadlines from the stream object passed to
+      <tt>cl+ssl:make-ssl-server-stream</tt> or
+      <tt>cl+ssl:make-ssl-client-stream</tt>. If they return a number, CL+SSL
+      uses it to set up a timeout while waiting for the stream to be able to
+      process a complete chunk of encrypted data. When a timeout is fired, an
+      implementation defined error is raised. Currently supported
+      implementations are SBCL and Clozure. For SBCL, see the section
+      "Synchronous Timeouts (Deadlines)" in the user manual and the
+      documentation on <tt>sb-sys:wait-until-fd-usable</tt>; for Clozure see
+      the documentation section "Stream Timeouts and Deadlines".
+    </p>
 
     <h3>Portability</h3>
     <p>

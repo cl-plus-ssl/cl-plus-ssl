@@ -16,6 +16,10 @@
            #:ensure-initialized
            #:reload
            #:stream-fd
+           #:stream-input-timeout
+           #:stream-output-timeout
+           #+openmcl
+           #:stream-deadline
            #:make-ssl-client-stream
            #:*make-ssl-client-stream-verify-default*
            #:make-ssl-server-stream
