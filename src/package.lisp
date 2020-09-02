@@ -54,7 +54,7 @@
            #:+ssl-sess-cache-no-internal-lookup+
            #:+ssl-sess-cache-no-internal-store+
            #:+ssl-sess-cache-no-internal+
-           
+
            #:make-context
            #:with-global-context
 
@@ -62,6 +62,8 @@
            #:decode-certificate-from-file
            #:decode-certificate
            #:ssl-stream-x509-certificate
+           #:certificate-get-not-after-time
+           #:certificate-get-not-before-time
 
            ;; hostname-verification
            #:verify-hostname))

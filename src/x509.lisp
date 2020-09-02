@@ -134,6 +134,25 @@ ASN1 string validation references:
     (assert (member (asn1-string-type asn1-string) allowed-types) nil "Invalid asn1 string type")
     (decode-asn1-string asn1-string type)))
 
+;; ASN1 Times are represented with ASN1 Strings
+(defun decode-asn1-utctime (asn1-time)
+  (when (zerop (asn1-time-check asn1-time))
+    (error "asn1-time is not a syntactically valid ASN1 UTCTime"))
+  (let ((time-string (flex:octets-to-string (asn1-string-bytes-vector asn1-time)
+                                            :external-format :ascii)))
+    (flet ((get-element (position)
+             (parse-integer (subseq time-string position (+ position 2)))))
+      (let* ((year-part (get-element 0))
+             (year      (if (>= year-part 50)
+                            (+ 1900 year-part)
+                            (+ 2000 year-part)))
+             (month  (get-element 2))
+             (day    (get-element 4))
+             (hour   (get-element 6))
+             (minute (get-element 8))
+             (second (get-element 10)))
+        (encode-universal-time second minute hour day month year 0)))))
+
 (defun slurp-stream (stream)
   "Returns a sequence containing the STREAM bytes; the
 sequence is created by CFFI:MAKE-SHAREABLE-BYTE-VECTOR,
@@ -231,3 +250,15 @@ we are going to pass them to CFFI:WITH-POINTER-TO-VECTOR-DATA)"))
         if cn collect cn
         if (not cn) do
            (loop-finish)))))
+
+(defun certificate-get-not-after-time (cert)
+  (let ((asn1-time (x509-get0-not-after cert)))
+    (when (cffi:null-pointer-p asn1-time)
+      (error "X509_get0_notAfter returned NULL"))
+    (decode-asn1-utctime asn1-time)))
+
+(defun certificate-get-not-before-time (cert)
+  (let ((asn1-time (x509-get0-not-before cert)))
+    (when (cffi:null-pointer-p asn1-time)
+      (error "X509_get0_notBefore returned NULL"))
+    (decode-asn1-utctime asn1-time)))
