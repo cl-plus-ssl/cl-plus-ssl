@@ -251,13 +251,13 @@ we are going to pass them to CFFI:WITH-POINTER-TO-VECTOR-DATA)"))
         if (not cn) do
            (loop-finish)))))
 
-(defun certificate-get-not-after-time (cert)
+(defun get-not-after-time (cert)
   (let ((asn1-time (x509-get0-not-after cert)))
     (when (cffi:null-pointer-p asn1-time)
       (error "X509_get0_notAfter returned NULL"))
     (decode-asn1-utctime asn1-time)))
 
-(defun certificate-get-not-before-time (cert)
+(defun get-not-before-time (cert)
   (let ((asn1-time (x509-get0-not-before cert)))
     (when (cffi:null-pointer-p asn1-time)
       (error "X509_get0_notBefore returned NULL"))
