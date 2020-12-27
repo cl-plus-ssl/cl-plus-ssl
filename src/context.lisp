@@ -87,9 +87,9 @@
     ok))
 
 (defun make-context (&key (method nil method-supplied-p)
-                          (disabled-protocols)
+                          disabled-protocols
                           (options (list +SSL-OP-ALL+))
-                          (min-proto-version +TLS1-2-VERSION+)
+                          min-proto-version
                           (session-cache-mode +ssl-sess-cache-server+)
                           (verify-location :default)
                           (verify-depth 100)
