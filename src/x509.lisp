@@ -202,9 +202,8 @@ we are going to pass them to CFFI:WITH-POINTER-TO-VECTOR-DATA)"))
                          (let ((address (asn1-string-bytes-vector data)))
                            (usocket:host-to-hostname address)))
                        (#. +GEN-DNS+
-                         (alexandria:if-let ((string (try-get-asn1-string-data data '(#. +v-asn1-iastring+))))
-                                            string
-                                            (error "Malformed certificate: possibly NULL in dns-alt-name")))))))
+                         (or (try-get-asn1-string-data data '(#. +v-asn1-iastring+))
+                             (error "Malformed certificate: possibly NULL in dns-alt-name")))))))
              (let ((altnames-count (sk-general-name-num altnames)))
                (loop for i from 0 below altnames-count
                      as alt-name = (sk-general-name-value altnames i)
