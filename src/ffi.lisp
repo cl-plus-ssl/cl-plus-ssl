@@ -230,6 +230,9 @@ session-resume requests) would normally be copied into the local cache before pr
 (defconstant +SSL-OP-NO-TLSv1-2+ #x08000000)
 (defconstant +SSL-OP-NO-TLSv1-1+ #x10000000)
 
+(defconstant +SSL-CTRL-SET-MIN-PROTO-VERSION+ 123)
+(defconstant +SSL-CTRL-SET-MAX-PROTO-VERSION+ 124)
+
 (defconstant +SSL3-VERSION+ #x0300)
 (defconstant +TLS1-VERSION+ #x0301)
 (defconstant +TLS1-1-VERSION+ #x0302)
