@@ -4,7 +4,7 @@
 
 (defpackage :cl+ssl.test
   (:use :cl
-        :fiveam))
+        :5am))
 
 (in-package :cl+ssl.test)
 
