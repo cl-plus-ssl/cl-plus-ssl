@@ -93,15 +93,17 @@
         when (try-match-hostname name hostname) do
            (return t)))
 
+
 (defun maybe-check-subject-cn (dns-names cert hostname)
-  (when dns-names
-    (error 'unable-to-match-altnames))
-  ;; TODO: we are matching only first CN
-  (alexandria:if-let ((cn (first (certificate-subject-common-names cert))))
-    (progn
-      (or (try-match-hostname cn hostname)
-          (error 'unable-to-match-common-name)))
-    (error 'unable-to-decode-common-name)))
+  (or (some (lambda (dns)
+              (try-match-hostname dns hostname))
+            dns-names)
+      (alexandria:if-let ((cns (certificate-subject-common-names cert)))
+        (or (some (lambda (cn)
+                    (try-match-hostname cn hostname))
+                  cns)
+            (error 'unable-to-match-common-name))
+        (error 'unable-to-decode-common-name))))
 
 (defun verify-hostname (cert hostname)
   (let* ((dns-names (certificate-dns-alt-names cert)))

@@ -19,6 +19,7 @@
   :depends-on (:cffi :trivial-gray-streams :flexi-streams #+sbcl :sb-posix
                #+(and sbcl win32) :sb-bsd-sockets
                :bordeaux-threads :trivial-garbage :uiop
+               :usocket
                :alexandria :trivial-features)
   :serial t
   :components ((:module "src"

@@ -230,6 +230,17 @@ session-resume requests) would normally be copied into the local cache before pr
 (defconstant +SSL-OP-NO-TLSv1-2+ #x08000000)
 (defconstant +SSL-OP-NO-TLSv1-1+ #x10000000)
 
+(defconstant +SSL-CTRL-SET-MIN-PROTO-VERSION+ 123)
+(defconstant +SSL-CTRL-SET-MAX-PROTO-VERSION+ 124)
+
+(defconstant +SSL3-VERSION+ #x0300)
+(defconstant +TLS1-VERSION+ #x0301)
+(defconstant +TLS1-1-VERSION+ #x0302)
+(defconstant +TLS1-2-VERSION+ #x0303)
+(defconstant +TLS1-3-VERSION+ #x0304)
+(defconstant +DTLS1-VERSION+ #xFEFF)
+(defconstant +DTLS1-2-VERSION+ #xFEFD)
+
 (defvar *tmp-rsa-key-512* nil)
 (defvar *tmp-rsa-key-1024* nil)
 (defvar *tmp-rsa-key-2048* nil)
@@ -447,38 +458,6 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (ssl ssl-pointer)
   (str :string)
   (type :int))
-#+new-openssl
-(define-ssl-function ("SSL_CTX_set_options" ssl-ctx-set-options)
-                 :long
-               (ctx :pointer)
-               (options :long))
-#-new-openssl
-(defun ssl-ctx-set-options (ctx options)
-  (ssl-ctx-ctrl ctx +SSL-CTRL-OPTIONS+ options (cffi:null-pointer)))
-(define-ssl-function ("SSL_CTX_set_cipher_list" ssl-ctx-set-cipher-list%)
-    :int
-  (ctx :pointer)
-  (ciphers :pointer))
-(defun ssl-ctx-set-cipher-list (ctx ciphers)
-  (cffi:with-foreign-string (ciphers* ciphers)
-    (when (= 0 (ssl-ctx-set-cipher-list% ctx ciphers*))
-      (error 'ssl-error-initialize :reason "Can't set SSL cipher list" :queue (read-ssl-error-queue)))))
-(define-ssl-function ("SSL_CTX_use_certificate_chain_file" ssl-ctx-use-certificate-chain-file)
-    :int
-  (ctx ssl-ctx)
-  (str :string))
-(define-ssl-function ("SSL_CTX_load_verify_locations" ssl-ctx-load-verify-locations)
-    :int
-  (ctx ssl-ctx)
-  (CAfile :string)
-  (CApath :string))
-(define-ssl-function ("SSL_CTX_set_client_CA_list" ssl-ctx-set-client-ca-list)
-    :void
-  (ctx ssl-ctx)
-  (list ssl-pointer))
-(define-ssl-function ("SSL_load_client_CA_file" ssl-load-client-ca-file)
-    ssl-pointer
-  (file :string))
 
 (define-ssl-function ("SSL_CTX_ctrl" ssl-ctx-ctrl)
     :long
@@ -505,6 +484,43 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (cmd :int)
   (larg :long)
   (parg :pointer))
+
+#+new-openssl
+(define-ssl-function ("SSL_CTX_set_options" ssl-ctx-set-options)
+                 :long
+               (ctx :pointer)
+               (options :long))
+#-new-openssl
+(defun ssl-ctx-set-options (ctx options)
+  (ssl-ctx-ctrl ctx +SSL-CTRL-OPTIONS+ options (cffi:null-pointer)))
+(defun ssl-ctx-set-min-proto-version (ctx version)
+  (ssl-ctx-ctrl ctx +SSL-CTRL-SET-MIN-PROTO-VERSION+ version (cffi:null-pointer)))
+(defun ssl-ctx-set-max-proto-version (ctx version)
+  (ssl-ctx-ctrl ctx +SSL-CTRL-SET-MAX-PROTO-VERSION+ version (cffi:null-pointer)))
+(define-ssl-function ("SSL_CTX_set_cipher_list" ssl-ctx-set-cipher-list%)
+    :int
+  (ctx :pointer)
+  (ciphers :pointer))
+(defun ssl-ctx-set-cipher-list (ctx ciphers)
+  (cffi:with-foreign-string (ciphers* ciphers)
+    (when (= 0 (ssl-ctx-set-cipher-list% ctx ciphers*))
+      (error 'ssl-error-initialize :reason "Can't set SSL cipher list" :queue (read-ssl-error-queue)))))
+(define-ssl-function ("SSL_CTX_use_certificate_chain_file" ssl-ctx-use-certificate-chain-file)
+    :int
+  (ctx ssl-ctx)
+  (str :string))
+(define-ssl-function ("SSL_CTX_load_verify_locations" ssl-ctx-load-verify-locations)
+    :int
+  (ctx ssl-ctx)
+  (CAfile :string)
+  (CApath :string))
+(define-ssl-function ("SSL_CTX_set_client_CA_list" ssl-ctx-set-client-ca-list)
+    :void
+  (ctx ssl-ctx)
+  (list ssl-pointer))
+(define-ssl-function ("SSL_load_client_CA_file" ssl-load-client-ca-file)
+    ssl-pointer
+  (file :string))
 
 (define-ssl-function ("SSL_CTX_set_default_passwd_cb" ssl-ctx-set-default-passwd-cb)
     :void

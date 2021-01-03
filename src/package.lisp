@@ -64,6 +64,7 @@
            #:ssl-stream-x509-certificate
            #:get-not-after-time
            #:get-not-before-time
+           #:certificate-subject-common-names
 
            ;; hostname-verification
            #:verify-hostname))

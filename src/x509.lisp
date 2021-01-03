@@ -214,12 +214,15 @@ we are going to pass them to CFFI:WITH-POINTER-TO-VECTOR-DATA)"))
   (let ((altnames (certificate-alt-names cert)))
     (unless (cffi:null-pointer-p altnames)
       (unwind-protect
-           (flet ((alt-name-to-string (alt-name)
-                    (cffi:with-foreign-slots ((type data) alt-name (:struct general-name))
-                      (when (= type +GEN-DNS+)
-                        (alexandria:if-let ((string (try-get-asn1-string-data data '(#.+v-asn1-iastring+))))
-                          string
-                          (error "Malformed certificate: possibly NULL in dns-alt-name"))))))
+          (flet ((alt-name-to-string (alt-name)
+                   (cffi:with-foreign-slots ((type data) alt-name (:struct general-name))
+                     (case type
+                       (#. +GEN-IPADD+
+                         (let ((address (asn1-string-bytes-vector data)))
+                           (usocket:host-to-hostname address)))
+                       (#. +GEN-DNS+
+                         (or (try-get-asn1-string-data data '(#. +v-asn1-iastring+))
+                             (error "Malformed certificate: possibly NULL in dns-alt-name")))))))
              (let ((altnames-count (sk-general-name-num altnames)))
                (loop for i from 0 below altnames-count
                      as alt-name = (sk-general-name-value altnames i)
