@@ -3,7 +3,7 @@
 (in-package :cl+ssl.test)
 
 (def-suite :cl+ssl.validity-dates :in :cl+ssl
-  :description "Hostname verification tests")
+  :description "Validity date tests")
 
 (in-suite :cl+ssl.validity-dates)
 
