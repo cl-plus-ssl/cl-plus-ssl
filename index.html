@@ -356,6 +356,18 @@
       random number generator has not been seeded with enough randomness to ensure 
       an unpredictable byte sequence.
     </p>
+    <p>
+      <div class="def">Function CL+SSL:GET-NOT-AFTER-TIME (certificate)</div>
+      Returns a universal-time representing the time after which the <tt>certificate</tt>
+      is not valid.  Signals an error if the <tt>certificate</tt> does not have a
+      properly formatted time.
+    </p>
+    <p>
+      <div class="def">Function CL+SSL:GET-NOT-BEFORE-TIME (certificate)</div>
+      Returns a universal-time representing the time before which the <tt>certificate</tt>
+      is not valid.  Signals an error if the <tt>certificate</tt> does not have a
+      properly formatted time.
+    </p>
 
     <h3>Portability</h3>
     <p>
