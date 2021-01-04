@@ -27,5 +27,7 @@
                  (:file "dummy")
                  (:file "version")
                  (:file "sni")
+                 (:file "cert-utilities")
+                 (:file "validity-dates")
                  (:file "verify-hostname")
                  (:file "badssl-com")))))
