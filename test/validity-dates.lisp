@@ -8,8 +8,8 @@
 (in-suite :cl+ssl.validity-dates)
 
 (test validity-dates-google-cert
-  (when (or (cl+ssl::openssl-is-at-least 1 1 0)
-            (cl+ssl::libresslp))
+  (when (and (cl+ssl::openssl-is-at-least 1 1 0)
+             (not  (cl+ssl::libresslp)))
     (with-cert ("google.der" cert)
       (is (= (cl+ssl:certificate-not-after-time cert)
              3641760000))
