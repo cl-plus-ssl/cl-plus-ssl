@@ -258,8 +258,9 @@ we are going to pass them to CFFI:WITH-POINTER-TO-VECTOR-DATA)"))
   "Returns a universal-time representing the time after
 which the certificate is not valid."
 
-  (when (openssl-is-not-even 1 1 0)
-    (error "certificate-not-after-time currently requires version 1.1.0 or newer"))
+  (when (or (openssl-is-not-even 1 1 0)
+            (libresslp))
+    (error "certificate-not-after-time currently requires version OpenSSL 1.1.0 or newer"))
 
   (let ((asn1-time (x509-get0-not-after certificate)))
     (when (cffi:null-pointer-p asn1-time)
@@ -270,8 +271,9 @@ which the certificate is not valid."
   "Returns a universal-time representing the time before
 which the certificate is not valid."
 
-  (when (openssl-is-not-even 1 1 0)
-    (error "certificate-not-before-time currently requires version 1.1.0 or newer"))
+  (when (or (openssl-is-not-even 1 1 0)
+            (libresslp))
+    (error "certificate-not-before-time currently requires version OpenSSL 1.1.0 or newer"))
 
   (let ((asn1-time (x509-get0-not-before certificate)))
     (when (cffi:null-pointer-p asn1-time)
