@@ -8,9 +8,10 @@
 (in-suite :cl+ssl.validity-dates)
 
 (test validity-dates-google-cert
-  (with-cert ("google.der" cert)
-    (is (= (cl+ssl:get-not-after-time cert)
-           3641760000))
-    (is (= (cl+ssl:get-not-before-time cert)
-           3634055286))))
+  (when (cl+ssl::openssl-is-at-least 1 1 0)
+    (with-cert ("google.der" cert)
+      (is (= (cl+ssl:certificate-not-after-time cert)
+             3641760000))
+      (is (= (cl+ssl:certificate-not-before-time cert)
+             3634055286)))))
 

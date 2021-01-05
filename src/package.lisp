@@ -62,8 +62,8 @@
            #:decode-certificate-from-file
            #:decode-certificate
            #:ssl-stream-x509-certificate
-           #:get-not-after-time
-           #:get-not-before-time
+           #:certificate-not-after-time
+           #:certificate-not-before-time
            #:certificate-subject-common-names
 
            ;; hostname-verification

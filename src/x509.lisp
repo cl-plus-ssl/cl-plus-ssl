@@ -254,24 +254,26 @@ we are going to pass them to CFFI:WITH-POINTER-TO-VECTOR-DATA)"))
         if (not cn) do
            (loop-finish)))))
 
-(defun get-not-after-time (certificate)
+(defun certificate-not-after-time (certificate)
   "Returns a universal-time representing the time after
 which the certificate is not valid."
-  ;; The low-level FFI changed in version 1.1.0 of OpenSSL, we'll
-  ;; try the newer one first
-  (let ((asn1-time (or (ignore-errors (x509-get0-not-after certificate))
-                       (ignore-errors (x509-get-not-after certificate)))))
+
+  (when (openssl-is-not-even 1 1 0)
+    (error "certificate-not-after-time currently requires version 1.1.0 or newer"))
+
+  (let ((asn1-time (x509-get0-not-after certificate)))
     (when (cffi:null-pointer-p asn1-time)
       (error "X509_get0_notAfter returned NULL"))
     (decode-asn1-utctime asn1-time)))
 
-(defun get-not-before-time (certificate)
+(defun certificate-not-before-time (certificate)
   "Returns a universal-time representing the time before
 which the certificate is not valid."
-  ;; The low-level FFI changed in version 1.1.0 of OpenSSL, we'll
-  ;; try the newer one first
-  (let ((asn1-time (or (ignore-errors (x509-get0-not-before certificate))
-                       (ignore-errors (x509-get-not-before certificate)))))
+
+  (when (openssl-is-not-even 1 1 0)
+    (error "certificate-not-before-time currently requires version 1.1.0 or newer"))
+
+  (let ((asn1-time (x509-get0-not-before certificate)))
     (when (cffi:null-pointer-p asn1-time)
       (error "X509_get0_notBefore returned NULL"))
     (decode-asn1-utctime asn1-time)))

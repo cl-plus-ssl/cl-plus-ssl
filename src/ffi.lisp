@@ -605,14 +605,6 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :pointer                            ; *ASN1_TIME
   (x509 :pointer))
 
-(define-crypto-function-ex (:vanished "1.1.0") ("X509_get_notBefore" x509-get-not-before)
-    :pointer                            ; *ASN1_TIME
-  (x509 :pointer))
-
-(define-crypto-function-ex (:vanished "1.1.0") ("X509_get_notAfter" x509-get-not-after)
-    :pointer                            ; *ASN1_TIME
-  (x509 :pointer))
-
 (define-crypto-function ("X509_get_ext_d2i" x509-get-ext-d2i)
     :pointer
   (cert :pointer)
