@@ -597,6 +597,14 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :pointer                            ; *X509_NAME
   (x509 :pointer))
 
+(define-crypto-function-ex (:since "1.1.0") ("X509_get0_notBefore" x509-get0-not-before)
+    :pointer                            ; *ASN1_TIME
+  (x509 :pointer))
+
+(define-crypto-function-ex (:since "1.1.0") ("X509_get0_notAfter" x509-get0-not-after)
+    :pointer                            ; *ASN1_TIME
+  (x509 :pointer))
+
 (define-crypto-function ("X509_get_ext_d2i" x509-get-ext-d2i)
     :pointer
   (cert :pointer)
@@ -694,6 +702,10 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (type :int)
   (data :pointer)
   (flags :long))
+
+(define-crypto-function ("ASN1_TIME_check" asn1-time-check)
+    :int
+  (asn1-string :pointer))
 
 ;; X509 & ASN1 - end
 
