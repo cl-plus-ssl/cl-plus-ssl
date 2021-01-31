@@ -45,8 +45,11 @@
                 "/sw/lib/libcrypto.dylib"        ;; Fink
                 "/usr/local/opt/openssl/lib/libcrypto.dylib" ;; Homebrew
                 "/usr/local/lib/libcrypto.dylib" ;; personalized install
-                "libcrypto.dylib"                ;; default system libcrypto, which may have insufficient crypto
-                "/usr/lib/libcrypto.dylib"))
+                ;; system-provided libraries
+                "/usr/lib/libcrypto.44.dylib"
+                "/usr/lib/libcrypto.42.dylib"
+                "/usr/lib/libcrypto.41.dylib"
+                "/usr/lib/libcrypto.35.dylib"))
   (:cygwin (:or "cygcrypto-1.1.dll" "cygcrypto-1.0.0.dll")))
 
 (cffi:define-foreign-library libssl
@@ -62,8 +65,11 @@
                 "/sw/lib/libssl.dylib"        ;; Fink
                 "/usr/local/opt/openssl/lib/libssl.dylib" ;; Homebrew
                 "/usr/local/lib/libssl.dylib" ;; personalized install
-                "libssl.dylib"                ;; default system libssl, which may have insufficient crypto
-                "/usr/lib/libssl.dylib"))
+                ;; system-provided libraries
+                "/usr/lib/libssl.46.dylib"
+                "/usr/lib/libssl.44.dylib"
+                "/usr/lib/libssl.43.dylib"
+                "/usr/lib/libssl.35.dylib"))
   (:solaris (:or "/lib/64/libssl.so"
                  "libssl.so.0.9.8" "libssl.so" "libssl.so.4"))
   ;; Unlike some other systems, OpenBSD linker,
