@@ -45,10 +45,13 @@
                 "/sw/lib/libcrypto.dylib"        ;; Fink
                 "/usr/local/opt/openssl/lib/libcrypto.dylib" ;; Homebrew
                 "/usr/local/lib/libcrypto.dylib" ;; personalized install
-                ;; System-provided libraries. Please note that in macOS >= 11.0,
-                ;; these paths may not exist in the file system anymore, but trying
-                ;; to load them via dlopen will work. This is because macOS ships
-                ;; all system-provided libraries as a single dyld_shared_cache bundle.
+                ;; System-provided libraries. These must be loaded with an explicit
+                ;; API version, or else the process will crash.
+                ;;
+                ;; Please note that in macOS >= 11.0, these paths may not exist in the
+                ;; file system anymore, but trying to load them via dlopen will work. This
+                ;; is because macOS ships all system-provided libraries as a single
+                ;; dyld_shared_cache bundle.
                 "/usr/lib/libcrypto.44.dylib"
                 "/usr/lib/libcrypto.42.dylib"
                 "/usr/lib/libcrypto.41.dylib"
