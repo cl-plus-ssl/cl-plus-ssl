@@ -36,7 +36,7 @@
 ;;
 ;; These are 32-bit only.
 
-(cffi:define-foreign-library libcrypto
+(cffi:define-foreign-library (libcrypto :canary "BIO_new")
   (:windows (:or #+(and windows x86-64) "libcrypto-1_1-x64.dll"
                  #+(and windows x86) "libcrypto-1_1.dll"
                  "libeay32.dll"))
@@ -75,7 +75,7 @@
                 "/usr/lib/libcrypto.dylib"))
   (:cygwin (:or "cygcrypto-1.1.dll" "cygcrypto-1.0.0.dll")))
 
-(cffi:define-foreign-library libssl
+(cffi:define-foreign-library (libssl :canary "SSL_connect")
   (:windows (:or #+(and windows x86-64) "libssl-1_1-x64.dll"
                  #+(and windows x86) "libssl-1_1.dll"
                  "libssl32.dll"
