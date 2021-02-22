@@ -233,6 +233,14 @@ session-resume requests) would normally be copied into the local cache before pr
 (defconstant +SSL-CTRL-SET-MIN-PROTO-VERSION+ 123)
 (defconstant +SSL-CTRL-SET-MAX-PROTO-VERSION+ 124)
 
+(defconstant +SSL-TLSEXT-ERR-OK+ 0)
+(defconstant +SSL-TLSEXT-ERR-ALERT-WARNING+ 1)
+(defconstant +SSL-TLSEXT-ERR-ALERT-FATAL+ 2)
+(defconstant +SSL-TLSEXT-ERR-NOACK+ 3)
+
+(defconstant +SSL-CTRL-SET-TLSEXT-SERVERNAME-CB+ 53)
+(defconstant +SSL-CTRL-SET-TLSEXT-SERVERNAME-ARG+ 54)
+
 (defconstant +SSL3-VERSION+ #x0300)
 (defconstant +TLS1-VERSION+ #x0301)
 (defconstant +TLS1-1-VERSION+ #x0302)
@@ -478,12 +486,24 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (larg :unsigned-long)
   (parg :pointer))
 
+(define-ssl-function ("SSL_CTX_callback_ctrl" ssl-ctx-callback-ctrl)
+  :long
+  (ctx ssl-ctx)
+  (cmd :int)
+  (fp :pointer))
+
 (define-ssl-function ("SSL_ctrl" ssl-ctrl)
     :long
   (ssl :pointer)
   (cmd :int)
   (larg :long)
   (parg :pointer))
+
+(define-ssl-function ("SSL_callback_ctrl" ssl-callback-ctrl)
+  :long
+  (ssl :pointer)
+  (cmd :int)
+  (fp :pointer))
 
 #+new-openssl
 (define-ssl-function ("SSL_CTX_set_options" ssl-ctx-set-options)
@@ -922,8 +942,44 @@ will use this value.")
 (defun ssl-ctx-set-session-cache-mode (ctx mode)
   (ssl-ctx-ctrl ctx +SSL_CTRL_SET_SESS_CACHE_MODE+ mode (cffi:null-pointer)))
 
+;;; SNI
+
 (defun ssl-set-tlsext-host-name (ctx hostname)
   (ssl-ctrl ctx 55 #|SSL_CTRL_SET_TLSEXT_HOSTNAME|# 0 #|TLSEXT_NAMETYPE_host_name|# hostname))
+
+(define-ssl-function ("SSL_get_servername_type" ssl-get-servername-type)
+  :int
+  (ssl ssl-pointer))
+
+(define-ssl-function ("SSL_get_servername" ssl-get-servername)
+  :pointer
+  (ssl ssl-pointer)
+  (servername-type :int))
+
+(defun ssl-ctx-set-tlsext-servername-arg (ctx arg)
+  (ssl-ctx-ctrl +SSL-CTRL-SET-TLSEXT-SERVERNAME-ARG+ 0 arg))
+
+(defun ssl-ctx-set-tlsext-servername-callback (ctx callback)
+  (ssl-ctx-callback-ctrl ctx +SSL-CTRL-SET-TLSEXT-SERVERNAME-CB+ callback))
+
+(defvar *sni-config* nil
+  "The default callback registered with SSL_CTX_set_tlsext_servername_callback
+will use this value.")
+
+(cffi:defcallback sni-callback :int
+    ((ssl ssl-pointer) (al :int) (arg :pointer))
+  (declare (ignore al arg))
+  (let* ((buf (ssl-get-servername ssl (ssl-get-servername-type ssl)))
+         (servername (cffi:foreign-string-to-lisp buf))
+         (config (cdr (assoc servername *sni-config* :test #'equal))))
+    (if config
+        (let* ((cert (cdr (assoc :certificate config)))
+               (key (cdr (assoc :key config)))
+               (passphrase (cdr (assoc :passphrase config))))
+          (with-pem-password (passphrase)
+            (install-key-and-cert ssl key cert))
+          +SSL-TLSEXT-ERR-OK+)
+        +SSL-TLSEXT-ERR-NOACK+)))
 
 (defvar *locks*)
 (defconstant +CRYPTO-LOCK+ 1)

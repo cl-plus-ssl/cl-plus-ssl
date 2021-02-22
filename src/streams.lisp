@@ -426,17 +426,19 @@ hostname verification if verification is enabled by VERIFY."
 (defun make-ssl-server-stream
     (socket &key certificate key password method external-format
                  close-callback (unwrap-stream-p t)
+                 sni-config
                  (cipher-list *default-cipher-list*))
   "Returns an SSL stream for the server socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your server. KEY is the path to the PEM-encoded key for the server, which
 may be associated with the passphrase PASSWORD."
   (ensure-initialized :method method)
-  (let ((stream (make-instance 'ssl-server-stream
-                               :socket socket
-                               :close-callback close-callback
-                               :certificate certificate
-                               :key key)))
+  (let* ((stream (make-instance 'ssl-server-stream
+                                :socket socket
+                                :close-callback close-callback
+                                :certificate certificate
+                                :key key))
+         (*sni-config* sni-config))
     (with-new-ssl (handle)
       (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
       (ssl-set-accept-state handle)

@@ -55,6 +55,11 @@
            #:+ssl-sess-cache-no-internal-store+
            #:+ssl-sess-cache-no-internal+
 
+           #:+ssl-tlsext-err-ok+
+           #:+ssl-tlsext-err-err-alert-warning+
+           #:+ssl-tlsext-err-err-alert-fatal+
+           #:+ssl-tlsext-err-err-noack+
+
            #:make-context
            #:with-global-context
 
