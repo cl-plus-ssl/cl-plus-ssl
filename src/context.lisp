@@ -96,6 +96,8 @@
                           (verify-mode +ssl-verify-peer+)
                           (verify-callback nil verify-callback-supplied-p)
                           (cipher-list +default-cipher-list+)
+                          (sni nil)
+                          (sni-callback 'sni-callback)
                           (pem-password-callback 'pem-password-callback))
   (ensure-initialized)
   (let ((ctx (ssl-ctx-new (if method-supplied-p
@@ -134,6 +136,8 @@
                                                       (cffi:callback verify-peer-callback)
                                                       (cffi:null-pointer)))))
       (ssl-ctx-set-cipher-list ctx cipher-list)
+      (when (and sni sni-callback)
+        (ssl-ctx-set-tlsext-servername-callback ctx (cffi:get-callback sni-callback)))
       (ssl-ctx-set-default-passwd-cb ctx (cffi:get-callback pem-password-callback))
       ctx)))
 
