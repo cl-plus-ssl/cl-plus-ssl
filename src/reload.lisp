@@ -44,6 +44,7 @@
   (:darwin (:or "/opt/local/lib/libcrypto.dylib" ;; MacPorts
                 "/sw/lib/libcrypto.dylib"        ;; Fink
                 "/usr/local/opt/openssl/lib/libcrypto.dylib" ;; Homebrew
+                "/opt/homebrew/opt/openssl/lib/libcrypto.dylib" ;; Homebrew Arm64
                 "/usr/local/lib/libcrypto.dylib" ;; personalized install
                 "libcrypto.dylib"                ;; default system libcrypto, which may have insufficient crypto
                 "/usr/lib/libcrypto.dylib"))
@@ -61,6 +62,7 @@
   (:darwin (:or "/opt/local/lib/libssl.dylib" ;; MacPorts
                 "/sw/lib/libssl.dylib"        ;; Fink
                 "/usr/local/opt/openssl/lib/libssl.dylib" ;; Homebrew
+                "/opt/homebrew/opt/openssl/lib/libssl.dylib" ;; Homebrew Arm64
                 "/usr/local/lib/libssl.dylib" ;; personalized install
                 "libssl.dylib"                ;; default system libssl, which may have insufficient crypto
                 "/usr/lib/libssl.dylib"))
