@@ -62,11 +62,11 @@
                 "/usr/lib/libcrypto.35.dylib"
 
                 ;; The default old system libcrypto, versionless file name,
-                ;; which may have insufficient crypto can causes
+                ;; which may have insufficient crypto and can cause
                 ;; process crash on macOS >= 11. Currently we
-                ;; are protected from crash by the presense of
+                ;; are protected from the crash by the presense of
                 ;; the versioned paths above, but in fiew years,
-                ;; after those versioned paths are not available,
+                ;; after those exacty versioned paths are not available,
                 ;; the crash may re-appear. So eventially we will
                 ;; need to delete the unversioned paths.
                 ;; Keeping them for a while for compatibility.
