@@ -45,7 +45,32 @@
                 "/sw/lib/libcrypto.dylib"        ;; Fink
                 "/usr/local/opt/openssl/lib/libcrypto.dylib" ;; Homebrew
                 "/usr/local/lib/libcrypto.dylib" ;; personalized install
-                "libcrypto.dylib"                ;; default system libcrypto, which may have insufficient crypto
+
+                ;; System-provided libraries. These must be loaded with an explicit
+                ;; API version, or else the process will crash (that was just a warning
+                ;; starging frmo maxOS > 10.15, and finally macOS >= 11 crashes the process
+                ;; with a fatal error)
+                ;;
+                ;; Please note that in macOS >= 11.0, these paths may not exist in the
+                ;; file system anymore, but trying to load them via dlopen will work. This
+                ;; is because macOS ships all system-provided libraries as a single
+                ;; dyld_shared_cache bundle.
+                "/usr/lib/libcrypto.44.dylib"
+                "/usr/lib/libcrypto.42.dylib"
+                "/usr/lib/libcrypto.41.dylib"
+                "/usr/lib/libcrypto.35.dylib"
+
+                ;; The default old system libcrypto, versionless file name,
+                ;; which may have insufficient crypto can causes
+                ;; process crash on macOS >= 11. Currently we
+                ;; are protected from crash by the presense of
+                ;; the versioned paths above, but in fiew years,
+                ;; after those versioned paths are not available,
+                ;; the crash may re-appear. So eventially we will
+                ;; need to delete the unversioned paths.
+                ;; Keeping them for a while for compatibility.
+                ;; See https://github.com/cl-plus-ssl/cl-plus-ssl/pull/115
+                "libcrypto.dylib"
                 "/usr/lib/libcrypto.dylib"))
   (:cygwin (:or "cygcrypto-1.1.dll" "cygcrypto-1.0.0.dll")))
 
