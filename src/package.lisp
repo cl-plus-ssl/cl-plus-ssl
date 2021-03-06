@@ -16,6 +16,7 @@
            #:ensure-initialized
            #:reload
            #:stream-fd
+           #:*default-buffer-size*
            #:make-ssl-client-stream
            #:*make-ssl-client-stream-verify-default*
            #:make-ssl-server-stream

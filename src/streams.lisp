@@ -23,6 +23,9 @@
 ;; Default Cipher List
 (defvar *default-cipher-list* "ALL")
 
+(defparameter *default-buffer-size* 2048
+  "The default input and output buffers size of the SSL-STREAM objects")
+
 (defclass ssl-stream
     (trivial-gray-stream-mixin
      fundamental-binary-input-stream
@@ -41,23 +44,32 @@
     :initarg :deadline
     :accessor ssl-stream-deadline)
    (output-buffer
-    :initform (make-buffer *initial-buffer-size*)
     :accessor ssl-stream-output-buffer)
    (output-pointer
     :initform 0
     :accessor ssl-stream-output-pointer)
    (input-buffer
-    :initform (make-buffer *initial-buffer-size*)
     :accessor ssl-stream-input-buffer)
    (peeked-byte
     :initform nil
     :accessor ssl-stream-peeked-byte)))
 
+(defmethod initialize-instance :after ((stream ssl-stream)
+                                       &key
+                                       (buffer-size *default-buffer-size*)
+                                       (input-buffer-size buffer-size)
+                                       (output-buffer-size buffer-size)
+                                       &allow-other-keys)
+  (setf (ssl-stream-output-buffer stream)
+        (make-buffer output-buffer-size))
+  (setf (ssl-stream-input-buffer stream)
+        (make-buffer input-buffer-size)))
+
 (defmethod print-object ((object ssl-stream) stream)
   (print-unreadable-object (object stream :type t)
     (format stream "for ~A" (ssl-stream-socket object))))
 
-(defclass ssl-server-stream (ssl-stream) 
+(defclass ssl-server-stream (ssl-stream)
   ((certificate
     :initarg :certificate
     :accessor ssl-stream-certificate)
@@ -388,7 +400,10 @@ Change this variable if you want the previous behaviour.")
               (verify (if (ssl-check-verify-p)
                           :optional
                           *make-ssl-client-stream-verify-default*))
-              hostname)
+              hostname
+              (buffer-size *default-buffer-size*)
+              (input-buffer-size buffer-size)
+              (output-buffer-size buffer-size))
   "Returns an SSL stream for the client socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your client. KEY is the path to the PEM-encoded key for the client, which
@@ -407,7 +422,9 @@ hostname verification if verification is enabled by VERIFY."
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-stream
                                :socket socket
-                               :close-callback close-callback)))
+                               :close-callback close-callback
+                               :input-buffer-size input-buffer-size
+                               :output-buffer-size output-buffer-size)))
     (with-new-ssl (handle)
       (if hostname
           (cffi:with-foreign-string (chostname hostname)
@@ -426,7 +443,10 @@ hostname verification if verification is enabled by VERIFY."
 (defun make-ssl-server-stream
     (socket &key certificate key password method external-format
                  close-callback (unwrap-stream-p t)
-                 (cipher-list *default-cipher-list*))
+                 (cipher-list *default-cipher-list*)
+                 (buffer-size *default-buffer-size*)
+                 (input-buffer-size buffer-size)
+                 (output-buffer-size buffer-size))
   "Returns an SSL stream for the server socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your server. KEY is the path to the PEM-encoded key for the server, which
@@ -436,7 +456,9 @@ may be associated with the passphrase PASSWORD."
                                :socket socket
                                :close-callback close-callback
                                :certificate certificate
-                               :key key)))
+                               :key key
+                               :input-buffer-size input-buffer-size
+                               :output-buffer-size output-buffer-size)))
     (with-new-ssl (handle)
       (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
       (ssl-set-accept-state handle)

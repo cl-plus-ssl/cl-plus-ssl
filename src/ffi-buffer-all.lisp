@@ -4,8 +4,6 @@
 
 (in-package :cl+ssl)
 
-(defparameter *initial-buffer-size* 2048)
-
 (declaim
  (inline
   make-buffer
