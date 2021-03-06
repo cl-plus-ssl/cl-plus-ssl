@@ -91,6 +91,7 @@ install:
   - make
   - sudo make install
   - ros setup
+  - cd ..
   - test/run-on-many-lisps-and-openssls/openssl-releases/fetch.sh "$OPENSSL"
   - if [ $BITS = 32 ]; then sudo apt-get install libc6-dev-i386 gcc-multilib; fi
   - test/run-on-many-lisps-and-openssls/openssl-releases/build.sh "$OPENSSL" "$BITS" > openssl-build.log
