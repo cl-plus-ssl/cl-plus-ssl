@@ -1,7 +1,7 @@
 language: common-lisp
 sudo: false # lets try new infrastructure
 os: linux
-dist: focal
+dist: bionic
 arch: amd64
 env:
   global:
@@ -78,6 +78,8 @@ env:
     - LISP=allegro OPENSSL=libressl-3.0.1 BITS=32
 install:
   - if [ $LISP = abcl ]; then sudo apt-get install maven; fi
+  - sudo add-apt-repository ppa:xapienz/curl34
+  - sudo apt-get update
 #  - sudo apt-get install libcurl3 # for roswell, see https://github.com/roswell/roswell/issues/463
 #  - sudo apt-get install curl3
   - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
