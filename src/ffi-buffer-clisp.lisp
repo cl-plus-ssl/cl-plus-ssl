@@ -34,17 +34,26 @@
 
 (in-package :cl+ssl)
 
+(defclass clisp-ffi-buffer ()
+  ((size
+    :initarg :size
+    :accessor clisp-ffi-buffer-size)
+   (pointer
+    :initarg :pointer
+    :accessor clisp-ffi-buffer-pointer)))
+
 (defun make-buffer (size)
-  (cffi-sys:%foreign-alloc size))
+  (make-instance 'clisp-ffi-buffer
+                 :size size
+                 :pointer (cffi-sys:%foreign-alloc size)))
 
 (defun buffer-length (buf)
-  (declare (ignore buf))
-  +initial-buffer-size+)
+  (clisp-ffi-buffer-size buf))
 
 (defun buffer-elt (buf index)
-  (ffi:memory-as buf 'ffi:uint8 index))
+  (ffi:memory-as (clisp-ffi-buffer-pointer buf) 'ffi:uint8 index))
 (defun set-buffer-elt (buf index val)
-  (setf (ffi:memory-as buf 'ffi:uint8 index) val))
+  (setf (ffi:memory-as (clisp-ffi-buffer-pointer buf) 'ffi:uint8 index) val))
 (defsetf buffer-elt set-buffer-elt)
 
 (declaim
@@ -61,7 +70,9 @@
     (setf end2 (calc-buf-end start2 seq start1 end1)))
   (replace
    seq
-   (ffi:memory-as buf (ffi:parse-c-type `(ffi:c-array ffi:uint8 ,(- end2 start2))) start2)
+   (ffi:memory-as (clisp-ffi-buffer-pointer buf)
+                  (ffi:parse-c-type `(ffi:c-array ffi:uint8 ,(- end2 start2)))
+                  start2)
    :start1 start1
    :end1 end1))
 
@@ -74,10 +85,12 @@
   (when (null end1)
     (setf end1 (calc-buf-end start1 seq start2 end2)))
   (setf
-   (ffi:memory-as buf (ffi:parse-c-type `(ffi:c-array ffi:uint8 ,(- end1 start1))) start1)
+   (ffi:memory-as (clisp-ffi-buffer-pointer buf)
+                  (ffi:parse-c-type `(ffi:c-array ffi:uint8 ,(- end1 start1)))
+                  start1)
    (as-vector (subseq seq start2 end2)))
   seq)
 
 (defmacro with-pointer-to-vector-data ((ptr buf) &body body)
-  `(let ((,ptr ,buf))
+  `(let ((,ptr (clisp-ffi-buffer-pointer ,buf)))
     ,@body))

@@ -4,7 +4,7 @@
 
 (in-package :cl+ssl)
 
-(defconstant +initial-buffer-size+ 2048)
+(defparameter *initial-buffer-size* 2048)
 
 (declaim
  (inline

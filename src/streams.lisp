@@ -41,13 +41,13 @@
     :initarg :deadline
     :accessor ssl-stream-deadline)
    (output-buffer
-    :initform (make-buffer +initial-buffer-size+)
+    :initform (make-buffer *initial-buffer-size*)
     :accessor ssl-stream-output-buffer)
    (output-pointer
     :initform 0
     :accessor ssl-stream-output-pointer)
    (input-buffer
-    :initform (make-buffer +initial-buffer-size+)
+    :initform (make-buffer *initial-buffer-size*)
     :accessor ssl-stream-input-buffer)
    (peeked-byte
     :initform nil
