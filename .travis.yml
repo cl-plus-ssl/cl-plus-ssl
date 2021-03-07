@@ -86,16 +86,17 @@ env:
 install:
   - if [ $LISP = abcl ]; then sudo apt-get install maven; fi
   # - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
-  # build roswell from source, as the release installation fails currently, see https://github.com/roswell/roswell/issues/463
-  - sudo apt-get -y install git build-essential automake libcurl4-openssl-dev
-  - git clone -b release https://github.com/roswell/roswell.git
-  - cd roswell
-  - sh bootstrap
-  - ./configure
-  - make
-  - sudo make install
-  - ros setup
-  - cd ..
+  - curl -L https://raw.githubusercontent.com/roswell/roswell/a8fd8a3c33078d6f06e6cda9d099dcba6fbefcb7/scripts/install-for-ci.sh | sh
+#  # build roswell from source, as the release installation fails currently, see https://github.com/roswell/roswell/issues/463
+#  - sudo apt-get -y install git build-essential automake libcurl4-openssl-dev
+#  - git clone -b release https://github.com/roswell/roswell.git
+#  - cd roswell
+#  - sh bootstrap
+#  - ./configure
+##  - make
+#  - sudo make install
+#  - ros setup
+#  - cd ..
   # Build OpenSSL libraries, if not cached yet
   - |
     if [ ! -f "test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/lib/libcrypto.so" ] || [ ! -f "test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/lib/libssl.so" ]
