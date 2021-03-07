@@ -100,6 +100,7 @@ install:
 #  - if [ $BITS = 32 ]; then sudo apt-get install libc6-dev-i386 gcc-multilib; fi
   - >
     if [ ! -f "test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/lib/libcrypto.so"] || [ ! -f "test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/lib/libssl.so" ]
+    then
       test/run-on-many-lisps-and-openssls/openssl-releases/fetch.sh "$OPENSSL"
       if [ $BITS = 32 ]; then sudo apt-get install libc6-dev-i386 gcc-multilib; fi
       rm -rf test/run-on-many-lisps-and-openssls/openssl-releases/bin/
