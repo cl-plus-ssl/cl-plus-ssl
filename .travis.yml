@@ -85,8 +85,8 @@ env:
     - LISP=allegro OPENSSL=libressl-3.0.1 BITS=32
 install:
   - if [ $LISP = abcl ]; then sudo apt-get install maven; fi
-#  - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
-# build roswell from source, as the release intallation fails currently, see https://github.com/roswell/roswell/issues/463
+  # - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
+  # build roswell from source, as the release intallation fails currently, see https://github.com/roswell/roswell/issues/463
   - sudo apt-get -y install git build-essential automake libcurl4-openssl-dev
   - git clone -b release https://github.com/roswell/roswell.git
   - cd roswell
@@ -96,10 +96,9 @@ install:
   - sudo make install
   - ros setup
   - cd ..
-#  - test/run-on-many-lisps-and-openssls/openssl-releases/fetch.sh "$OPENSSL"
-#  - if [ $BITS = 32 ]; then sudo apt-get install libc6-dev-i386 gcc-multilib; fi
+  # Build OpenSSL libraries, if not cached yet
   - |
-    if [ ! -f "test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/lib/libcrypto.so"] || [ ! -f "test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/lib/libssl.so" ]
+    if [ ! -f "test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/lib/libcrypto.so" ] || [ ! -f "test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/lib/libssl.so" ]
     then
       test/run-on-many-lisps-and-openssls/openssl-releases/fetch.sh "$OPENSSL"
       if [ $BITS = 32 ]; then sudo apt-get install libc6-dev-i386 gcc-multilib; fi
