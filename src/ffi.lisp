@@ -823,6 +823,10 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
             (error 'ccl::communication-deadline-expired :stream stream)
             (ccl::stream-io-error stream (- error) "write"))))))
 
+(defun seconds-until-deadline (deadline)
+  (/ (- deadline (get-internal-real-time))
+     internal-time-units-per-second))
+
 #+sbcl
 (defun output-wait (stream fd deadline)
   (declare (ignore stream))
@@ -830,16 +834,30 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
          ;; *deadline* is handled by wait-until-fd-usable automatically,
          ;; but we need to turn a user-specified deadline into a timeout
          (when deadline
-           (/ (- deadline (get-internal-real-time))
-              internal-time-units-per-second))))
+           (seconds-until-deadline deadline))))
     (sb-sys:wait-until-fd-usable fd :output timeout)))
 
-#-(or clozure-common-lisp sbcl)
+#+allegro
+(eval-when (:compile-top-level :load-top-level :execute)
+  (require :process))
+
+#+allegro
+(defun output-wait (stream fd deadline)
+  (declare (ignore stream))
+  (let ((timeout
+         (when deadline
+           (seconds-until-deadline deadline))))
+    (mp:process-wait-with-timeout "cl+ssl waiting for output"
+                                  timeout
+                                  'excl:write-no-hang-p
+                                  fd)))
+
+#-(or clozure-common-lisp sbcl allegro)
 (defun output-wait (stream fd deadline)
   (declare (ignore stream fd deadline))
   ;; This situation means that the lisp set our fd to non-blocking mode,
   ;; and streams.lisp didn't know how to undo that.
-  (warn "non-blocking stream encountered unexpectedly"))
+  (warn "cl+ssl::output-wait is not implemented for this lisp, but a non-blocking stream is encountered"))
 
 
 ;;; Waiting for input to be possible
@@ -866,16 +884,25 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
          ;; *deadline* is handled by wait-until-fd-usable automatically,
          ;; but we need to turn a user-specified deadline into a timeout
          (when deadline
-           (/ (- deadline (get-internal-real-time))
-              internal-time-units-per-second))))
+           (seconds-until-deadline deadline))))
     (sb-sys:wait-until-fd-usable fd :input timeout)))
 
-#-(or clozure-common-lisp sbcl)
+#+allegro
+(defun input-wait (stream fd deadline)
+  (declare (ignore stream))
+  (let ((timeout
+         (when deadline
+           (max 0 (seconds-until-deadline deadline)))))
+    (mp:wait-for-input-available fd
+                                 :timeout timeout
+                                 :whostate "cl+ssl waiting for input")))
+
+#-(or clozure-common-lisp sbcl allegro)
 (defun input-wait (stream fd deadline)
   (declare (ignore stream fd deadline))
   ;; This situation means that the lisp set our fd to non-blocking mode,
   ;; and streams.lisp didn't know how to undo that.
-  (warn "non-blocking stream encountered unexpectedly"))
+  (warn "cl+ssl::input-wait is not implemented for this lisp, but a non-blocking stream is encountered"))
 
 
 ;;; Encrypted PEM files support
