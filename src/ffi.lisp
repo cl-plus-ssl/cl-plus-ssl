@@ -398,7 +398,7 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (buf :pointer)
   (num :int))
 (define-ssl-function ("SSL_shutdown" ssl-shutdown)
-    :void
+    :int
   (ssl ssl-pointer))
 (define-ssl-function ("SSL_free" ssl-free)
     :void
