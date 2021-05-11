@@ -85,6 +85,7 @@
     ((ssl-stream-handle stream)
      (unless abort
        (force-output stream))
+     (ssl-shutdown (ssl-stream-handle stream))
      (ssl-free (ssl-stream-handle stream))
      (setf (ssl-stream-handle stream) nil)
      (when (streamp (ssl-stream-socket stream))
