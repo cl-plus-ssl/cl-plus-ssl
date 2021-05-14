@@ -372,6 +372,13 @@
       is not valid.  Signals an error if the <tt>certificate</tt> does not have a
       properly formatted time.
     </p>
+    <p>
+      <div class="def">Function CL+SSL:CERTIFICATE-FINGERPRINT (certificate
+      &optional algorithm)</div>
+      Returns the fingerprint of <tt>certificate</tt> as a
+      byte-vector. <tt>algorithm</tt> is a string designator for the digest
+      algorithm to use (it defaults to SHA-1).
+    </p>
 
     <h3>Portability</h3>
     <p>
