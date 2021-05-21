@@ -157,7 +157,8 @@ script:
               (5am:explain! results)
               #+abcl
               (let* ((expected-failures (quote (cl+ssl.test::wrong.host
-                                                cl+ssl.test::expired)))
+                                                cl+ssl.test::expired
+                                                cl+ssl.test::fingerprint-google-cert)))
                      (failed-test-names (mapcar (lambda (result)
                                                   (5am::name (5am::test-case result)))
                                                 (remove-if-not (quote 5am::test-failure-p)
