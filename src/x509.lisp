@@ -286,10 +286,14 @@ designator for the digest algorithm to use (it defaults to SHA-1)."
   (ensure-initialized)
   (let ((evp (evp-get-digest-by-name (string algorithm))))
     (when (cffi:null-pointer-p evp)
-      (error "unknown digest algorithm ~A" algorithm))
+      (error 'ssl-error-call
+             :message (format nil "unknown digest algorithm ~A" algorithm)
+             :queue (read-ssl-error-queue)))
     (let* ((size (evp-md-size evp))
            (fingerprint (cffi:make-shareable-byte-vector size)))
       (cffi:with-pointer-to-vector-data (buf fingerprint)
         (unless (= 1 (x509-digest certificate evp buf (cffi:null-pointer)))
-          (error "failed to compute fingerprint of certificate")))
+          (error 'ssl-error-call
+                 :message "failed to compute fingerprint of certificate"
+                 :queue (read-ssl-error-queue))))
       fingerprint)))
