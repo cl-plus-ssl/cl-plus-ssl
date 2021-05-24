@@ -29,5 +29,6 @@
                  (:file "sni")
                  (:file "cert-utilities")
                  (:file "validity-dates")
+                 (:file "fingerprint")
                  (:file "verify-hostname")
                  (:file "badssl-com")))))

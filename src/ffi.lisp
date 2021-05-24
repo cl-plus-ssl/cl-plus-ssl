@@ -312,6 +312,11 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :void)
 (define-ssl-function-ex (:vanished "1.1.0") ("SSL_library_init" ssl-library-init)
     :int)
+
+(define-ssl-function-ex (:vanished "1.1.0")
+    ("OpenSSL_add_all_digests" openssl-add-all-digests)
+  :void)
+
 ;;
 ;; We don't refer SSLv2_client_method as the default
 ;; builds of OpenSSL do not have it, due to insecurity
@@ -621,6 +626,25 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (*px :pointer)
   (in :pointer)
   (len :int))
+
+(define-crypto-function ("X509_digest" x509-digest)
+    :int
+  (cert :pointer)
+  (type :pointer)
+  (buf :pointer)
+  (*len :pointer))
+
+
+;;; EVP
+
+(define-crypto-function ("EVP_get_digestbyname" evp-get-digest-by-name)
+    :pointer
+  (name :string))
+
+(define-crypto-function ("EVP_MD_size" evp-md-size)
+    :int
+  (evp :pointer))
+
 
 ;; GENERAL-NAME types
 (defconstant +GEN-OTHERNAME+  0)
@@ -1018,7 +1042,8 @@ MAKE-CONTEXT also allows to enab/disable verification.")
     (crypto-set-locking-callback (cffi:callback locking-callback))
     (crypto-set-id-callback (cffi:callback threadid-callback))
     (ssl-load-error-strings)
-    (ssl-library-init))
+    (ssl-library-init)
+    (openssl-add-all-digests))
   (setf *bio-lisp-method* (make-bio-lisp-method))
   (when rand-seed
     (init-prng rand-seed))
