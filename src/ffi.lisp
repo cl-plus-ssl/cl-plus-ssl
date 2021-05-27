@@ -125,25 +125,6 @@ variants if you have use cases for them.)"
               *cl+ssl-crypto-foreign-function-names*
               :test 'equal)
      (defcfun-versioned (:since ,since :vanished ,vanished)
-         ;; On Darwin, LispWorks has boringssl always loaded
-         ;; (https://github.com/cl-plus-ssl/cl-plus-ssl/issues/61),
-         ;; ABCL somehow has libressl loaded
-         ;; (https://github.com/cl-plus-ssl/cl-plus-ssl/pull/89),
-         ;; and when we load openssl and declare ffi functions
-         ;; without explicitly specifying the :library option,
-         ;; some foreign symbols are resolved as boringssl / libressl symbols,
-         ;; others are resolved as openssl functions.
-         ;; This mix results in failures, of course.
-         ;; We fix these two implementations by passing the :library option.
-         ;; Not for other implementations because this may be
-         ;; incompatible with :cl+ssl-foreign-libs-already-loaded
-         ;; but these two implementations just break without
-         ;; that, so it's better to possibly sacrify the
-         ;; :cl+ssl-foreign-libs-already-loaded (we haven't tested)
-         ;; than have them broken completely.
-         ;; TODO: extend the :cl+ssl-foreign-libs-already-loaded
-         ;; mechanism with possibility for user to specify value
-         ;; for the :library option.
          ,(append name-and-options
                   #-cl+ssl-foreign-libs-already-loaded '(:library libcrypto))
        ,@body)))
