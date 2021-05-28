@@ -13,6 +13,8 @@
 (defpackage :cl+ssl
   (:use :common-lisp :trivial-gray-streams)
   (:export #:*default-cipher-list*
+           #:define-libssl-path
+           #:define-libcrypto-path
            #:ensure-initialized
            #:reload
            #:stream-fd
