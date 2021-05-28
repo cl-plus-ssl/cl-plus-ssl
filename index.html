@@ -332,6 +332,15 @@
         nor (cl+ssl:reload) try to load the foreign libraries,
         assuming user has loaded them already.</p>
 
+    <p>You will probably need to recompile CL+SSL for the feature to take
+      effect. See
+      macros <a href="#define-libssl-path"><code>define-libssl-path</code></a>
+      and <a href="#define-libcrypto-path"><code>define-libcrypto-path</code></a>
+      for a way of achieving the same thing that doesn't require
+      recompilation.</p>
+
+
+
       <pre>
         (cffi:load-foreign-library "libssl.so.1.0.0")
 
@@ -343,6 +352,50 @@
           ;; or just load cl+ssl
           (ql:quickload :cl+ssl))
       </pre>
+
+    </p>
+    <p>
+      <div class="def"><a name="define-libssl-path">
+        Macro CL+SSL:DEFINE-LIBSSL-PATH (path)
+      </a></div>
+
+      Define the path where libssl resides to be <code>path</code> (not
+      evaluated). This macro should be used before loading CL+SSL. This can be
+      accomplished by first loading the system <code>CL+SSL/CONFIG</code>, which
+      defines the macro.
+
+      For instance, the following piece of code defines libssl to be
+      <code>/opt/local/lib/libssl.dylib</code>:
+
+      <pre>
+(ql:quickload :cl+ssl/config)
+(cl+ssl:define-libssl-path "/opt/local/lib/libssl.dylib")
+(ql:quickload :cl+ssl)</pre>
+
+      See
+      also: <a href="#define-libcrypto-path"><code>define-libcrypto-path</code></a>
+
+    </p>
+    <p>
+      <div class="def"><a name="define-libcrypto-path">
+        Macro CL+SSL:DEFINE-LIBCRYPTO-PATH (path)
+      </a></div>
+
+      Define the path where libcrypto resides to be <code>path</code> (not
+      evaluated). This macro should be used before loading CL+SSL. This can be
+      accomplished by first loading the system <code>CL+SSL/CONFIG</code>, which
+      defines the macro.
+
+      For instance, the following piece of code defines libssl to be
+      <code>/opt/local/lib/libcrypto.dylib</code>:
+
+      <pre>
+(ql:quickload :cl+ssl/config)
+(cl+ssl:define-libcrypto-path "/opt/local/lib/libcrypto.dylib")
+(ql:quickload :cl+ssl)</pre>
+
+      See
+      also: <a href="#define-libssl-path"><code>define-libssl-path</code></a>
 
     </p>
     <p>
