@@ -921,7 +921,18 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
                                  :timeout timeout
                                  :whostate "cl+ssl waiting for input")))
 
-#-(or clozure-common-lisp sbcl allegro)
+#+lispworks
+(defun input-wait (stream fd deadline)
+  (declare (ignore fd))
+
+  (let* ((timeout
+           (when deadline
+             (max 0 (seconds-until-deadline deadline)))))
+    (system:wait-for-input-streams (list (ssl-stream-socket stream))
+                                   :timeout timeout
+                                   :wait-reason "cl+ssl waiting for input")))
+
+#-(or clozure-common-lisp sbcl allegro lispworks)
 (defun input-wait (stream fd deadline)
   (declare (ignore stream fd deadline))
   ;; This situation means that the lisp set our fd to non-blocking mode,
