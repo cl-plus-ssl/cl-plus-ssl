@@ -135,11 +135,10 @@ script:
                 (format t \"abcl-asdf::*default-repository* assigned the HTTPS URL.~%\"))'
          -e '(ql:quickload :cffi)'
          -e '(format t \"cffi loaded.~%\")'
-         -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libcrypto.so\")'
-         -e '(format t \"libcrypto.so loaded.~%\")'
-         -e '(cffi:load-foreign-library \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libssl.so\")'
-         -e '(format t \"libssl.so loaded.~%\")'
-         -e '(pushnew :cl+ssl-foreign-libs-already-loaded *features*)'
+         -e '(ql:quickload :cl+ssl/config)'
+         -e '(format t \"cl+ssl/config loaded.~%\")'
+         -e '(cl+ssl:define-libcrypto-path \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libcrypto.so\")'
+         -e '(cl+ssl:define-libssl-path \"test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libssl.so\")'
          -e '(ql:quickload :cl+ssl) ;; load cl+ssl separately from cl+ssl.test only because cl+ssl.test can not be loaded in the :invert readtable-case due to its dependency ironclad, as of 2019-10-20'
          -e '(format t \"cl+ssl loaded.~%\")'
          -e '(when (uiop:getenvp \"READTABLE_CASE_INVERT\")
@@ -155,23 +154,5 @@ script:
                   (5am:run :cl+ssl)
                   ))
               (5am:explain! results)
-              #+abcl
-              (let* ((expected-failures (quote (cl+ssl.test::wrong.host
-                                                cl+ssl.test::expired
-                                                cl+ssl.test::fingerprint-google-cert)))
-                     (failed-test-names (mapcar (lambda (result)
-                                                  (5am::name (5am::test-case result)))
-                                                (remove-if-not (quote 5am::test-failure-p)
-                                                               results))))
-                (if (set-exclusive-or expected-failures
-                                      failed-test-names)
-                    (progn
-                      (format t \"~%ABCL: expected faileres on Travis CI: ~S, actual failures: ~S~%\"
-                              expected-failures
-                              failed-test-names)
-                      (uiop:quit 1))
-                    (format t \"ABCL failed some tests as expected on Travis CI: ~S~%\"
-                            expected-failures)))
-              #-abcl
               (unless (5am:results-status results)
                 (uiop:quit 1)))'"
