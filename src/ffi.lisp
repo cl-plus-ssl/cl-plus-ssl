@@ -424,7 +424,52 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (define-crypto-function ("BIO_new" bio-new)
     :pointer
   (method :pointer))
-
+(define-crypto-function ("BIO_get_new_index" bio-new-index)
+    :int)
+(define-crypto-function ("BIO_meth_new" bio-meth-new)
+    :pointer
+  (type :int)
+  (name :string))
+(define-crypto-function ("BIO_meth_set_puts" bio-set-puts)
+  :int
+  (meth :pointer)
+  (puts :pointer))
+(define-crypto-function ("BIO_meth_set_write" bio-set-write)
+  :int
+  (meth :pointer)
+  (puts :pointer))
+(define-crypto-function ("BIO_meth_set_read" bio-set-read)
+  :pointer
+  (meth :pointer)
+  (read :pointer))
+(define-crypto-function ("BIO_meth_set_gets" bio-set-gets)
+  :pointer
+  (meth :pointer)
+  (read :pointer))
+(define-crypto-function ("BIO_meth_set_create" bio-set-create)
+  :pointer
+  (meth :pointer)
+  (read :pointer))
+(define-crypto-function ("BIO_meth_set_destroy" bio-set-destroy)
+  :pointer
+  (meth :pointer)
+  (read :pointer))
+(define-crypto-function ("BIO_meth_set_ctrl" bio-set-ctrl)
+  :pointer
+  (meth :pointer)
+  (read :pointer))
+(define-crypto-function ("BIO_set_init" bio-set-init)
+  :int
+  (meth :pointer)
+  (value :int))
+(define-crypto-function ("BIO_set_flags" bio-set-flags)
+  :int
+  (meth :pointer)
+  (value :int))
+(define-crypto-function ("BIO_clear_flags" bio-clear-flags)
+  :int
+  (meth :pointer)
+  (value :int))
 (define-crypto-function ("ERR_get_error" err-get-error)
     :unsigned-long)
 (define-crypto-function ("ERR_error_string" err-error-string)
