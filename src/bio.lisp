@@ -69,17 +69,14 @@
   n)
 
 (defun clear-retry-flags (bio)
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-  (logandc2 (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-      (logior +BIO_FLAGS_READ+
-        +BIO_FLAGS_WRITE+
-        +BIO_FLAGS_SHOULD_RETRY+))))
+  (bio-clear-flags bio
+                   (logior +BIO_FLAGS_READ+
+                           +BIO_FLAGS_WRITE+
+                           +BIO_FLAGS_SHOULD_RETRY+)))
 
 (defun set-retry-read (bio)
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-  (logior (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-    +BIO_FLAGS_READ+
-    +BIO_FLAGS_SHOULD_RETRY+)))
+  (bio-set-flags bio
+   (logior +BIO_FLAGS_READ+ +BIO_FLAGS_SHOULD_RETRY+)))
 
 (cffi:defcallback lisp-read :int ((bio :pointer) (buf :pointer) (n :int))
   bio buf n
@@ -115,10 +112,11 @@
       0)))
 
 (cffi:defcallback lisp-create :int ((bio :pointer))
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'init) 1)
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'num) 0)
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'ptr) (cffi:null-pointer))
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
+;  (setf (cffi:foreign-slot-value bio '(:struct bio) 'init) 1)
+;  (setf (cffi:foreign-slot-value bio '(:struct bio) 'num) 0)
+;  (setf (cffi:foreign-slot-value bio '(:struct bio) 'ptr) (cffi:null-pointer))
+;  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
+  (bio-set-init bio 1)
   1)
 
 (cffi:defcallback lisp-destroy :int ((bio :pointer))
