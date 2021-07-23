@@ -98,9 +98,36 @@
       (end-of-file ()))
     i))
 
+(cffi:defcallback lisp-gets :int ((bio :pointer) (buf :pointer) (n :int))
+  (let ((i 0))
+    (handler-case
+        (unless (or (cffi:null-pointer-p buf) (null n))
+          (clear-retry-flags bio)
+          (when (or *blockp* (listen *socket*))
+            (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
+            (incf i))
+          (loop
+            with char
+            and exit = nil
+            while (and (< i n)
+                       (null exit)
+                       (or (null *partial-read-p*) (listen *socket*)))
+            do
+               (setf char (read-byte *socket*)
+                     exit (= char 10))
+               (unless exit
+                 (setf (cffi:mem-ref buf :unsigned-char i) char)
+                 (incf i))))
+      (end-of-file ()))
+    (unless (>= i n)
+      (setf (cffi:mem-ref buf :unsigned-char i) 0))
+    i))
+
 (cffi:defcallback lisp-puts :int ((bio :pointer) (buf :string))
-  bio buf
-  (error "lisp-puts not implemented"))
+  (declare (ignore bio))
+  (write-line buf (flex:make-flexi-stream *socket* :external-format :ascii))
+  ;; puts is not specified to return length, but BIO expects it :(
+  (1+ (length buf)))
 
 (cffi:defcallback lisp-ctrl :int
   ((bio :pointer) (cmd :int) (larg :long) (parg :pointer))
