@@ -31,4 +31,5 @@
                  (:file "validity-dates")
                  (:file "fingerprint")
                  (:file "verify-hostname")
-                 (:file "badssl-com")))))
+                 (:file "badssl-com")
+		 (:file "bio")))))
