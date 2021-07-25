@@ -682,6 +682,18 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (buf :pointer)
   (*len :pointer))
 
+(define-crypto-function ("PEM_write_bio_X509" pem-write-x509)
+  :int
+  (bio :pointer)
+  (x509 :pointer))
+
+(define-crypto-function ("PEM_read_bio_X509" pem-read-x509)
+  :pointer
+  ;; all args are :pointers in fact, but they are NULL anyway
+  (bio :pointer)
+  (x509 :int)
+  (callback :int)
+  (passphrase :int))
 
 ;;; EVP
 
