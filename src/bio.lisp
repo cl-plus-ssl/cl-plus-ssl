@@ -95,7 +95,8 @@
     (incf i))
     #+(or)
     (when (zerop i) (set-retry-read bio)))
-      (end-of-file ()))
+      (end-of-file ()
+        (setf (cffi:mem-ref buf :unsigned-char i) 0)))
     i))
 
 (cffi:defcallback lisp-gets :int ((bio :pointer) (buf :pointer) (n :int))
