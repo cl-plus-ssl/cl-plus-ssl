@@ -154,4 +154,27 @@
       (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
       1)))
 
+;;;; Convenience macros
+(defmacro with-bio-output-to-string ((bio &key (element-type ''character) (transformer '#'code-char)) &body body)
+  "Evaluate BODY with BIO bound to a SSL BIO structure that writes to a
+Common Lisp string.  The string is returned."
+  `(let ((*socket* (flex:make-in-memory-output-stream :element-type ,element-type :transformer ,transformer))
+	 (,bio (bio-new-lisp)))
+     (unwind-protect
+          (progn ,@body)
+       (bio-free ,bio))
+     (flex:get-output-stream-sequence *socket*)))
+
+(defmacro with-bio-input-from-string ((bio string &key (transformer '#'char-code))
+				      &body body)
+  "Evaluate BODY with BIO bound to a SSL BIO structure that reads from
+a Common Lisp STRING."
+  `(let ((*socket* (flex:make-in-memory-input-stream ,string :transformer ,transformer))
+	 (,bio (bio-new-lisp)))
+     (unwind-protect
+          (progn ,@body)
+       (bio-free ,bio))))
+
+(setf *bio-lisp-method* (make-bio-lisp-method))
+
 (setf *bio-lisp-method* nil)    ;force reinit if anything changed here

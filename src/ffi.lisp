@@ -424,6 +424,9 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (define-crypto-function ("BIO_new" bio-new)
     :pointer
   (method :pointer))
+(define-crypto-function ("BIO_free" bio-free)
+    :pointer
+  (method :pointer))
 (define-crypto-function ("BIO_get_new_index" bio-new-index)
     :int)
 (define-crypto-function ("BIO_meth_new" bio-meth-new)
