@@ -1,7 +1,7 @@
 language: common-lisp
 sudo: false # lets try new infrastructure
 os: linux
-dist: bionic
+dist: focal
 arch: amd64
 env:
   global:
