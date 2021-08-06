@@ -52,7 +52,7 @@
     (bio-set-gets m  (cffi:callback lisp-gets))
     (bio-set-create m  (cffi:callback lisp-create))
 ;    (bio-set-destroy m  (cffi:callback lisp-destroy))
-;    (bio-set-ctrl m  (cffi:callback lisp-ctrl))
+    (bio-set-ctrl m  (cffi:callback lisp-ctrl))
     m))
 
 (defun bio-new-lisp ()
