@@ -396,7 +396,7 @@ Change this variable if you want the previous behaviour.")
 ;; fixme: free the context when errors happen in this function
 (defun make-ssl-client-stream
     (socket &key certificate key password method external-format
-              close-callback (unwrap-stream-p t)
+              close-callback (unwrap-stream-p nil)
               (cipher-list *default-cipher-list*)
               (verify (if (ssl-check-verify-p)
                           :optional
@@ -443,7 +443,7 @@ hostname verification if verification is enabled by VERIFY."
 ;; fixme: free the context when errors happen in this function
 (defun make-ssl-server-stream
     (socket &key certificate key password method external-format
-                 close-callback (unwrap-stream-p t)
+                 close-callback (unwrap-stream-p)
                  (cipher-list *default-cipher-list*)
                  (buffer-size *default-buffer-size*)
                  (input-buffer-size buffer-size)
