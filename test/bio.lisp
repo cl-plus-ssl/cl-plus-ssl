@@ -31,19 +31,18 @@
 
 (test bio-read
       (is (equalp
-	   (with-bio-input-from-string (bio "Hello")
+	   (cl+ssl::with-bio-input-from-string (bio "Hello")
 	     (cffi:with-foreign-object (array :char 32)
 	       (list
 		(bio-read bio array 3)
 		(cffi:foreign-string-to-lisp array)
 		(bio-read bio array 32)
 		(cffi:foreign-string-to-lisp array))))
-	   ;; there is a bug somewhere, lol should be lo
 	   '(3 "Hel" 2 "lo"))))
 
 (test bio-gets
       (is (equalp
-	   (with-bio-input-from-string (bio "Hello
+	   (cl+ssl::with-bio-input-from-string (bio "Hello
 bar")
 	     (cffi:with-foreign-object (array :char 32)
 	       (list
@@ -55,7 +54,7 @@ bar")
 
 (test bio-write-puts
       (is (equalp
-	   (with-bio-output-to-string (bio)
+	   (cl+ssl::with-bio-output-to-string (bio)
 	     (bio-write bio  #1="Hello " (length #1#))
 	     (bio-puts bio "Hi")
 	     (bio-write bio  #2="Hallo" (length #2#)))
