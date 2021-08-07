@@ -5,25 +5,25 @@
 
 (in-suite :cl+ssl.bio)
 
-(define-crypto-function ("BIO_write" bio-write)
+(cl+ssl::define-crypto-function ("BIO_write" bio-write)
   :int
   (bio :pointer)
   (text :string)
   (len :int))
 
-(define-crypto-function ("BIO_read" bio-read)
+(cl+ssl::define-crypto-function ("BIO_read" bio-read)
   :int
   (bio :pointer)
   (text :pointer)
   (len :int))
 
-(define-crypto-function ("BIO_gets" bio-gets)
+(cl+ssl::define-crypto-function ("BIO_gets" bio-gets)
   :int
   (bio :pointer)
   (text :pointer)
   (len :int))
 
-(define-crypto-function ("BIO_puts" bio-puts)
+(cl+ssl::define-crypto-function ("BIO_puts" bio-puts)
   :int
   (bio :pointer)
   (text :string))
