@@ -14,46 +14,71 @@
 (defconstant +BIO_FLAGS_SHOULD_RETRY+ 8)
 (defconstant +BIO_CTRL_FLUSH+ 11)
 
-(cffi:defcstruct bio-method
-  (type :int)
-  (name :pointer)
-  (bwrite :pointer)
-  (bread :pointer)
-  (bputs :pointer)
-  (bgets :pointer)
-  (ctrl :pointer)
-  (create :pointer)
-  (destroy :pointer)
-  (callback-ctrl :pointer))
+(unless *bio-methods-have-opaque-slots*
+  (cffi:defcstruct bio-method
+    (type :int)
+    (name :pointer)
+    (bwrite :pointer)
+    (bread :pointer)
+    (bputs :pointer)
+    (bgets :pointer)
+    (ctrl :pointer)
+    (create :pointer)
+    (destroy :pointer)
+    (callback-ctrl :pointer))
 
-(cffi:defcstruct bio
-  (method :pointer)
-  (callback :pointer)
-  (cb-arg :pointer)
-  (init :int)
-  (shutdown :int)
-  (flags :int)
-  (retry-reason :int)
-  (num :int)
-  (ptr :pointer)
-  (next-bio :pointer)
-  (prev-bio :pointer)
-  (references :int)
-  (num-read :unsigned-long)
-  (num-write :unsigned-long)
-  (crypto-ex-data-stack :pointer)
-  (crypto-ex-data-dummy :int))
+  (cffi:defcstruct bio
+    (method :pointer)
+    (callback :pointer)
+    (cb-arg :pointer)
+    (init :int)
+    (shutdown :int)
+    (flags :int)
+    (retry-reason :int)
+    (num :int)
+    (ptr :pointer)
+    (next-bio :pointer)
+    (prev-bio :pointer)
+    (references :int)
+    (num-read :unsigned-long)
+    (num-write :unsigned-long)
+    (crypto-ex-data-stack :pointer)
+    (crypto-ex-data-dummy :int)))
 
-(defun make-bio-lisp-method ()
+(defun make-bio-lisp-method-using-slots ()
+  (let ((m (cffi:foreign-alloc '(:struct bio-method))))
+    (setf (cffi:foreign-slot-value m '(:struct bio-method) 'type)
+    ;; fixme: this is wrong, but presumably still better than some
+    ;; random value here.
+    +bio-type-socket+)
+    (macrolet ((slot (name)
+     `(cffi:foreign-slot-value m '(:struct bio-method) ,name)))
+      (setf (slot 'name) (cffi:foreign-string-alloc "lisp"))
+      (setf (slot 'bwrite) (cffi:callback lisp-write))
+      (setf (slot 'bread) (cffi:callback lisp-read))
+      (setf (slot 'bputs) (cffi:callback lisp-puts))
+      (setf (slot 'bgets) (cffi:null-pointer))
+      (setf (slot 'ctrl) (cffi:callback lisp-ctrl))
+      (setf (slot 'create) (cffi:callback lisp-create-slots))
+      (setf (slot 'destroy) (cffi:callback lisp-destroy))
+      (setf (slot 'callback-ctrl) (cffi:null-pointer)))
+    m))
+
+(defun make-bio-lisp-method-opaque ()
   (let ((m (bio-meth-new (load-time-value (bio-new-index)) "lisp")))
     (bio-set-puts m  (cffi:callback lisp-puts))
     (bio-set-write m  (cffi:callback lisp-write))
     (bio-set-read m  (cffi:callback lisp-read))
     (bio-set-gets m  (cffi:callback lisp-gets))
-    (bio-set-create m  (cffi:callback lisp-create))
+    (bio-set-create m  (cffi:callback lisp-create-opaque))
 ;    (bio-set-destroy m  (cffi:callback lisp-destroy))
     (bio-set-ctrl m  (cffi:callback lisp-ctrl))
     m))
+
+(defun make-bio-lisp-method ()
+  (if *bio-methods-have-opaque-slots*
+      (make-bio-lisp-method-opaque)
+      (make-bio-lisp-method-using-slots)))
 
 (defun bio-new-lisp ()
   (bio-new *bio-lisp-method*))
@@ -69,14 +94,27 @@
   n)
 
 (defun clear-retry-flags (bio)
-  (bio-clear-flags bio
-                   (logior +BIO_FLAGS_READ+
-                           +BIO_FLAGS_WRITE+
-                           +BIO_FLAGS_SHOULD_RETRY+)))
+  (if *bio-methods-have-opaque-slots*
+      (bio-clear-flags bio
+                       (logior +BIO_FLAGS_READ+
+                               +BIO_FLAGS_WRITE+
+                               +BIO_FLAGS_SHOULD_RETRY+))
+      (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+            (logandc2 (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+                      (logior +BIO_FLAGS_READ+
+                              +BIO_FLAGS_WRITE+
+                              +BIO_FLAGS_SHOULD_RETRY+)))))
 
-(defun set-retry-read (bio)
+(defun set-retry-read-slots (bio)
+  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+  (logior (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+    +BIO_FLAGS_READ+
+    +BIO_FLAGS_SHOULD_RETRY+)))
+
+
+(defun set-retry-read-opaque (bio)
   (bio-set-flags bio
-   (logior +BIO_FLAGS_READ+ +BIO_FLAGS_SHOULD_RETRY+)))
+                 (logior +BIO_FLAGS_READ+ +BIO_FLAGS_SHOULD_RETRY+)))
 
 (cffi:defcallback lisp-read :int ((bio :pointer) (buf :pointer) (n :int))
   bio buf n
@@ -139,11 +177,14 @@
       ;; (warn "lisp-ctrl(~A,~A,~A)" cmd larg parg)
       0)))
 
-(cffi:defcallback lisp-create :int ((bio :pointer))
-;  (setf (cffi:foreign-slot-value bio '(:struct bio) 'init) 1)
-;  (setf (cffi:foreign-slot-value bio '(:struct bio) 'num) 0)
-;  (setf (cffi:foreign-slot-value bio '(:struct bio) 'ptr) (cffi:null-pointer))
-;  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
+(cffi:defcallback lisp-create-slots :int ((bio :pointer))
+  (setf (cffi:foreign-slot-value bio '(:struct bio) 'init) 1)
+  (setf (cffi:foreign-slot-value bio '(:struct bio) 'num) 0)
+  (setf (cffi:foreign-slot-value bio '(:struct bio) 'ptr) (cffi:null-pointer))
+  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
+  1)
+
+(cffi:defcallback lisp-create-opaque :int ((bio :pointer))
   (bio-set-init bio 1)
   1)
 
@@ -175,7 +216,5 @@ a Common Lisp STRING."
      (unwind-protect
           (progn ,@body)
        (bio-free ,bio))))
-
-(setf *bio-lisp-method* (make-bio-lisp-method))
 
 (setf *bio-lisp-method* nil)    ;force reinit if anything changed here

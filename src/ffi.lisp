@@ -305,6 +305,11 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   ;; https://www.openssl.org/docs/OpenSSL300Design.html
   (= #x20000000 (compat-openssl-version)))
 
+(defvar *bio-methods-have-opaque-slots*
+  (openssl-is-at-least 1 1)
+  "Since openssl 1.1.0, slot in bio methods should be accessed using
+  functions, not directly. Set this parameter to T to achieve this.")
+
 (define-ssl-function ("SSL_get_version" ssl-get-version)
     :string
   (ssl ssl-pointer))
@@ -427,49 +432,50 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (define-crypto-function ("BIO_free" bio-free)
     :pointer
   (method :pointer))
-(define-crypto-function ("BIO_get_new_index" bio-new-index)
-    :int)
-(define-crypto-function ("BIO_meth_new" bio-meth-new)
+(define-crypto-function-ex (:since "1.1.0") ("BIO_get_new_index" bio-new-index)
+  :int)
+
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_new" bio-meth-new)
     :pointer
   (type :int)
   (name :string))
-(define-crypto-function ("BIO_meth_set_puts" bio-set-puts)
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_puts" bio-set-puts)
   :int
   (meth :pointer)
   (puts :pointer))
-(define-crypto-function ("BIO_meth_set_write" bio-set-write)
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_write" bio-set-write)
   :int
   (meth :pointer)
   (puts :pointer))
-(define-crypto-function ("BIO_meth_set_read" bio-set-read)
-  :pointer
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_read" bio-set-read)
+  :int
   (meth :pointer)
   (read :pointer))
-(define-crypto-function ("BIO_meth_set_gets" bio-set-gets)
-  :pointer
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_gets" bio-set-gets)
+  :int
   (meth :pointer)
   (read :pointer))
-(define-crypto-function ("BIO_meth_set_create" bio-set-create)
-  :pointer
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_create" bio-set-create)
+  :int
   (meth :pointer)
   (read :pointer))
-(define-crypto-function ("BIO_meth_set_destroy" bio-set-destroy)
-  :pointer
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_destroy" bio-set-destroy)
+  :int
   (meth :pointer)
   (read :pointer))
-(define-crypto-function ("BIO_meth_set_ctrl" bio-set-ctrl)
-  :pointer
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_ctrl" bio-set-ctrl)
+  :int
   (meth :pointer)
   (read :pointer))
-(define-crypto-function ("BIO_set_init" bio-set-init)
+(define-crypto-function-ex (:since "1.1.0") ("BIO_set_init" bio-set-init)
   :int
   (meth :pointer)
   (value :int))
-(define-crypto-function ("BIO_set_flags" bio-set-flags)
+(define-crypto-function-ex (:since "1.1.0") ("BIO_set_flags" bio-set-flags)
   :int
   (meth :pointer)
   (value :int))
-(define-crypto-function ("BIO_clear_flags" bio-clear-flags)
+(define-crypto-function-ex (:since "1.1.0") ("BIO_clear_flags" bio-clear-flags)
   :int
   (meth :pointer)
   (value :int))
