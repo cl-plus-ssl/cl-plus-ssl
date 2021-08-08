@@ -1054,7 +1054,11 @@ MAKE-CONTEXT also allows to enab/disable verification.")
     (crypto-set-id-callback (cffi:callback threadid-callback))
     (ssl-load-error-strings)
     (ssl-library-init)
-    (openssl-add-all-digests))
+    ;; However, for OpenSSL_add_all_digests the LibreSSL breaks
+    ;; the backward compatibility by removing the function.
+    ;; https://github.com/cl-plus-ssl/cl-plus-ssl/pull/134
+    (unless (libresslp)
+      (openssl-add-all-digests)))
   (setf *bio-lisp-method* (make-bio-lisp-method))
   (when rand-seed
     (init-prng rand-seed))
