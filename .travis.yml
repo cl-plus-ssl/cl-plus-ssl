@@ -96,9 +96,10 @@ install:
   - |
     if [ ! -f "test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/lib/libcrypto.so" ] || [ ! -f "test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/lib/libssl.so" ]
     then
+      echo Building OpenSSL binaries for "$OPENSSL" "$BITS"bit.
       test/run-on-many-lisps-and-openssls/openssl-releases/fetch.sh "$OPENSSL"
       if [ $BITS = 32 ]; then sudo apt-get install libc6-dev-i386 gcc-multilib; fi
-      rm -rf test/run-on-many-lisps-and-openssls/openssl-releases/bin/
+      rm -rf test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/
       test/run-on-many-lisps-and-openssls/openssl-releases/build.sh "$OPENSSL" "$BITS" > openssl-build.log
     else
       echo Found cached OpenSSL binaries
