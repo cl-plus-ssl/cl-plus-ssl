@@ -1092,8 +1092,6 @@ See ttp://www.openssl.org/support/faq.html#USER1 for details.
 
 Hint: do not use Common Lisp RANDOM function to generate the RAND-SEED,
 because the function usually returns predictable values."
-  #+lispworks
-  (check-cl+ssl-symbols)
   (bordeaux-threads:with-recursive-lock-held (*global-lock*)
     (unless (ssl-initialized-p)
       (initialize :method method :rand-seed rand-seed))
