@@ -306,9 +306,13 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (= #x20000000 (compat-openssl-version)))
 
 (defvar *bio-methods-have-opaque-slots*
-  (openssl-is-at-least 1 1)
+;  (openssl-is-at-least 1 1)
+  (not (null (cffi:foreign-symbol-pointer "BIO_get_new_index")))
   "Since openssl 1.1.0, slot in bio methods should be accessed using
   functions, not directly. Set this parameter to T to achieve this.")
+
+(when *bio-methods-have-opaque-slots*
+  (push :bio-opaque-slots *features*))
 
 (define-ssl-function ("SSL_get_version" ssl-get-version)
     :string
