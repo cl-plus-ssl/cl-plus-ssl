@@ -99,10 +99,10 @@ variants if you have use cases for them.)"
 (defun check-cl+ssl-symbols ()
   (dolist (ssl-symbol *cl+ssl-ssl-foreign-function-names*)
     (when (fli:null-pointer-p (fli:make-pointer :symbol-name ssl-symbol :module 'libssl :errorp nil))
-      (format *error-output* "Symbol ~s undefined~%" ssl-symbol)))
+      (format *error-output* "cl+ssl can not locate symbol ~s in the module 'libssl~%" ssl-symbol)))
   (dolist (crypto-symbol *cl+ssl-crypto-foreign-function-names*)
     (when (fli:null-pointer-p (fli:make-pointer :symbol-name crypto-symbol :module 'libcrypto :errorp nil))
-      (format *error-output* "Symbol ~s undefined~%" crypto-symbol))))
+      (format *error-output* "cl+ssl can not locate symbol ~s in the module 'libcrypto~%" crypto-symbol))))
 
 (defmacro define-ssl-function-ex ((&key since vanished) name-and-options &body body)
   `(progn
