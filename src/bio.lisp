@@ -14,7 +14,6 @@
 (defconstant +BIO_FLAGS_SHOULD_RETRY+ 8)
 (defconstant +BIO_CTRL_FLUSH+ 11)
 
-#-bio-opaque-slots
 (cffi:defcstruct bio-method
   (type :int)
   (name :pointer)
@@ -27,7 +26,6 @@
   (destroy :pointer)
   (callback-ctrl :pointer))
 
-#-bio-opaque-slots
 (cffi:defcstruct bio
   (method :pointer)
   (callback :pointer)
