@@ -82,12 +82,37 @@
 
 ;;; "cargo cult"
 
+;;;; Error handling in callbacks:
+
+;;;; Catch all serious conditions and return -1 on error for reads (as
+;;;; we cannot guarantee that anything was really written unless
+;;;; output is finished) and number of bytes read for writes.
+
+;;;; If read or write fails and the call was blocking, ensure that
+;;;; BIO_should_retry says do not retry.
+
+;;;; Possible improvements:
+;;;; - communicate error reasons either offline (as is *socket* kept offline now) or in retry-reason variable.
+;;;; - handle some specific error situations specifically (timeouts, end-of-file, no data on wire at the moment)
+
+;;;; Rationale: Man page for BIO_meth_get_write (3) and similar states
+;;;; that the callback function behave same as write etc.
+
+;;;; Man page for BIO_read etc reads:
+;;;; "(...) return either the amount of data successfully read or
+;;;; written (if the return value is positive) or that no data was
+;;;; successfully read or written if the result is 0 or -1. If the
+;;;; return value is -2 then the operation is not implemented in the
+;;;; specific BIO type. The trailing NUL is not included in the length
+;;;; returned by BIO_gets()."
 (cffi:defcallback lisp-write :int ((bio :pointer) (buf :pointer) (n :int))
   bio
-  (dotimes (i n)
-    (write-byte (cffi:mem-ref buf :unsigned-char i) *socket*))
-  (finish-output *socket*)
-  n)
+  (handler-case
+      (progn (dotimes (i n)
+               (write-byte (cffi:mem-ref buf :unsigned-char i) *socket*))
+             (finish-output *socket*)
+             n)
+    (serious-condition () -1)))
 
 (defun clear-retry-flags (bio)
   #+bio-opaque-slots
@@ -130,10 +155,17 @@
         do
     (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
     (incf i))
-    #+(or)
+    i
     (when (zerop i) (set-retry-read bio)))
       (end-of-file ()
-        (setf (cffi:mem-ref buf :unsigned-char i) 0)))
+        ;; could this be part of serious condition?
+        (clear-retry-flags bio)
+        (setf (cffi:mem-ref buf :unsigned-char i) 0))
+      (serious-condition ()
+        (clear-retry-flags bio)
+        ;; we could set BIO_set_retry_reason() if we defined
+        ;; codes. Could be useful for timeouts, but not implemented now.
+        ))
     i))
 
 (cffi:defcallback lisp-gets :int ((bio :pointer) (buf :pointer) (n :int))
@@ -156,16 +188,20 @@
                (unless exit
                  (setf (cffi:mem-ref buf :unsigned-char i) char)
                  (incf i))))
-      (end-of-file ()))
+      (serious-condition ()
+        (clear-retry-flags bio)))
     (unless (>= i n)
       (setf (cffi:mem-ref buf :unsigned-char i) 0))
     i))
 
 (cffi:defcallback lisp-puts :int ((bio :pointer) (buf :string))
   (declare (ignore bio))
-  (write-line buf (flex:make-flexi-stream *socket* :external-format :ascii))
-  ;; puts is not specified to return length, but BIO expects it :(
-  (1+ (length buf)))
+  (restart-case
+      (progn
+        (write-line buf (flex:make-flexi-stream *socket* :external-format :ascii))
+        ;; puts is not specified to return length, but BIO expects it :(
+        (1+ (length buf)))
+    (serious-condition () -1)))
 
 (cffi:defcallback lisp-ctrl :int
   ((bio :pointer) (cmd :int) (larg :long) (parg :pointer))
