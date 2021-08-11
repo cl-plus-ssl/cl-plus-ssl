@@ -77,7 +77,12 @@
     m))
 
 (defun bio-new-lisp ()
-  (bio-new *bio-lisp-method*))
+  (unless *bio-lisp-method* (initialize))
+  (let ((new (bio-new *bio-lisp-method*)))
+    (if (or (null new) (cffi:null-pointer-p new))
+        (error "Cannot create bio method: ~a"
+               (cl+ssl::err-error-string (cl+ssl::err-get-error) (cffi:null-pointer)))
+        new)))
 
 
 ;;; "cargo cult"
@@ -105,6 +110,17 @@
 ;;;; return value is -2 then the operation is not implemented in the
 ;;;; specific BIO type. The trailing NUL is not included in the length
 ;;;; returned by BIO_gets()."
+
+(defconstant +bio-retry-eof+ 0)
+(defconstant +bio-retry-generic-error+ 1)
+(defconstant +bio-retry-no-data+ 2)
+(defconstant +bio-retry-timeout+ 3)
+
+#+nil(defun set-retry-reason-from-error (bio error)
+  (let ((reason-code
+          (case (class-of error)
+            (end-of-file 0))))))
+
 (cffi:defcallback lisp-write :int ((bio :pointer) (buf :pointer) (n :int))
   bio
   (handler-case
