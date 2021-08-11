@@ -114,21 +114,23 @@
              n)
     (serious-condition () -1)))
 
+#-bio-opaque-slots
 (defun clear-retry-flags (bio)
-  #+bio-opaque-slots
-  (bio-clear-flags bio
-                   (logior +BIO_FLAGS_READ+
-                           +BIO_FLAGS_WRITE+
-                           +BIO_FLAGS_SHOULD_RETRY+))
-  #-bio-opaque-slots
   (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
         (logandc2 (cffi:foreign-slot-value bio '(:struct bio) 'flags)
                   (logior +BIO_FLAGS_READ+
                           +BIO_FLAGS_WRITE+
                           +BIO_FLAGS_SHOULD_RETRY+))))
 
+#+bio-opaque-slots
+(defun clear-retry-flags (bio)
+  (bio-clear-flags bio
+                   (logior +BIO_FLAGS_READ+
+                           +BIO_FLAGS_WRITE+
+                           +BIO_FLAGS_SHOULD_RETRY+)))
+
 #-bio-opaque-slots
-(defun set-retry-read-slots (bio)
+(defun set-retry-read (bio)
   (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
   (logior (cffi:foreign-slot-value bio '(:struct bio) 'flags)
     +BIO_FLAGS_READ+
@@ -136,7 +138,7 @@
 
 
 #+bio-opaque-slots
-(defun set-retry-read-opaque (bio)
+(defun set-retry-read (bio)
   (bio-set-flags bio
                  (logior +BIO_FLAGS_READ+ +BIO_FLAGS_SHOULD_RETRY+)))
 
