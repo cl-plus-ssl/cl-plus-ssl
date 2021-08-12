@@ -203,9 +203,8 @@
             do
                (setf char (read-byte *socket*)
                      exit (= char 10))
-               (unless exit
-                 (setf (cffi:mem-ref buf :unsigned-char i) char)
-                 (incf i))))
+               (setf (cffi:mem-ref buf :unsigned-char i) char)
+               (incf i)))
       (serious-condition ()
         (clear-retry-flags bio)))
     (unless (>= i n)
