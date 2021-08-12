@@ -33,12 +33,15 @@
       (is (equalp
 	   (cl+ssl::with-bio-input-from-string (bio "Hello")
 	     (cffi:with-foreign-object (array :char 32)
-	       (list
-		(bio-read bio array 3)
-		(cffi:foreign-string-to-lisp array)
-		(bio-read bio array 32)
-		(cffi:foreign-string-to-lisp array))))
-	   '(3 "Hel" 2 "lo"))))
+	       (flet ((bio-read-to-string (len)
+			(let ((size (bio-read bio array len)))
+			  (assert (< size 31))
+			  (setf (cffi:mem-ref array :unsigned-char size) 0)
+			  (cffi:foreign-string-to-lisp array))))
+		 (list
+		  (bio-read-to-string 3)
+		  (bio-read-to-string 32)))))
+	   '("Hel" "lo"))))
 
 (test bio-gets
       (is (equalp
@@ -50,7 +53,8 @@ bar")
 		(cffi:foreign-string-to-lisp array)
 		(bio-gets bio array 32)
 		(cffi:foreign-string-to-lisp array))))
-	   '(5 "Hello" 3 "bar"))))
+	   '(6 "Hello
+" 3 "bar"))))
 
 (test bio-write-puts
       (is (equalp
