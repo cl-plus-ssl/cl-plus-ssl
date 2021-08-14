@@ -56,20 +56,20 @@
   (crypto-ex-data-dummy :int))
 
 (defun lisp-bio-type ()
-  ;; Old OpenSSL and LibreSSL do not nave BIO_get_new_index,
-  ;; in this case fallback to BIO_TYPE_SOCKET.
   (or (ignore-errors
         (logior (bio-new-index) +BIO_TYPE_SOURCE_SINK+))
+      ;; Old OpenSSL and LibreSSL do not nave BIO_get_new_index,
+      ;; in this case fallback to BIO_TYPE_SOCKET.
+      ;; fixmy: Maybe that's wrong, but presumably still better than some
+      ;; random value here.
       +bio-type-socket+))
 
 (defun make-bio-lisp-method-slots ()
   (let ((m (cffi:foreign-alloc '(:struct bio-method))))
     (setf (cffi:foreign-slot-value m '(:struct bio-method) 'type)
-    ;; fixme: this is wrong, but presumably still better than some
-    ;; random value here.
-    +bio-type-socket+)
+          *lisp-bio-type*)
     (macrolet ((slot (name)
-     `(cffi:foreign-slot-value m '(:struct bio-method) ,name)))
+                 `(cffi:foreign-slot-value m '(:struct bio-method) ,name)))
       (setf (slot 'name) (cffi:foreign-string-alloc "lisp"))
       (setf (slot 'bwrite) (cffi:callback lisp-write))
       (setf (slot 'bread) (cffi:callback lisp-read))
@@ -82,7 +82,7 @@
     m))
 
 (defun make-bio-lisp-method-opaque ()
-  (let ((m (bio-meth-new (lisp-bio-type) "lisp")))
+  (let ((m (bio-meth-new *lisp-bio-type* "lisp")))
     (bio-set-puts m (cffi:callback lisp-puts))
     (bio-set-write m (cffi:callback lisp-write))
     (bio-set-read m (cffi:callback lisp-read))
@@ -190,7 +190,6 @@
       (err-add-error-data 1 :string err-msg))))
 
 (cffi:defcallback lisp-write :int ((bio :pointer) (buf :pointer) (n :int))
-  bio
   (handler-case
       (progn (dotimes (i n)
                (write-byte (cffi:mem-ref buf :unsigned-char i) *socket*))
@@ -202,7 +201,6 @@
       -1)))
 
 (cffi:defcallback lisp-read :int ((bio :pointer) (buf :pointer) (n :int))
-  bio buf n
   (handler-case
       (let ((i 0))
         (handler-case
@@ -270,13 +268,13 @@
       -1)))
 
 (cffi:defcallback lisp-ctrl :int
-  ((bio :pointer) (cmd :int) (larg :long) (parg :pointer))
-  bio larg parg
+    ((bio :pointer) (cmd :int) (larg :long) (parg :pointer))
+  (declare (ignore bio larg parg))
   (cond
     ((eql cmd +BIO_CTRL_FLUSH+) 1)
     (t
-      ;; (warn "lisp-ctrl(~A,~A,~A)" cmd larg parg)
-      0)))
+     ;; (warn "lisp-ctrl(~A,~A,~A)" cmd larg parg)
+     0)))
 
 ;;; The create and destroy handlers mostly consist
 ;;; of setting zero values to some BIO fields,
