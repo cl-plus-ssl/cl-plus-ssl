@@ -1,6 +1,7 @@
 ;;;; -*- Mode: LISP; Syntax: COMMON-LISP; indent-tabs-mode: nil; coding: utf-8; show-trailing-whitespace: t -*-
 ;;;
 ;;; Copyright (C) 2021  Tomas Zellerin (zellerin@gmail.com, https://github.com/zellerin)
+;;; Copyright (C) 2021  Anton Vodonosov (avodonosov@yandex.ru, https://github.com/avodonosov)
 ;;;
 ;;; See LICENSE for details.
 
@@ -36,18 +37,18 @@
 
 
 (test bio-read
-      (is (equalp
-	   (cl+ssl::with-bio-input-from-string (bio "Hello")
-	     (cffi:with-foreign-object (array :char 32)
-	       (flet ((bio-read-to-string (len)
-			(let ((size (bio-read bio array len)))
-			  (assert (< size 31))
-			  (setf (cffi:mem-ref array :unsigned-char size) 0)
-			  (cffi:foreign-string-to-lisp array))))
-		 (list
-		  (bio-read-to-string 3)
-		  (bio-read-to-string 32)))))
-	   '("Hel" "lo"))))
+  (is (equalp
+       '("Hel" "lo")
+       (cl+ssl::with-bio-input-from-string (bio "Hello")
+         (cffi:with-foreign-object (array :char 32)
+           (flet ((bio-read-to-string (len)
+                    (let ((size (bio-read bio array len)))
+                      (assert (< size 31))
+                      (setf (cffi:mem-ref array :unsigned-char size) 0)
+                      (cffi:foreign-string-to-lisp array))))
+             (list
+              (bio-read-to-string 3)
+              (bio-read-to-string 32))))))))
 
 (test bio-gets
   (cffi:with-foreign-object (array :char 32)
@@ -77,10 +78,10 @@ bar")
     (is (= 0 (cffi:mem-ref array :unsigned-char 0)))))
 
 (test bio-write-puts
-      (is (equalp
-	   (cl+ssl::with-bio-output-to-string (bio)
-	     (bio-write bio  #1="Hello " (length #1#))
-	     (bio-puts bio "Hi")
-	     (bio-write bio  #2="Hallo" (length #2#)))
-	   "Hello Hi
-Hallo")))
+  (is (equalp
+       "Hello Hi
+Hallo"
+       (cl+ssl::with-bio-output-to-string (bio)
+         (bio-write bio  #1="Hello " (length #1#))
+         (bio-puts bio "Hi")
+         (bio-write bio  #2="Hallo" (length #2#))))))
