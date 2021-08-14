@@ -114,5 +114,5 @@ cache:
 script:
   - LIB_LOAD_MODE=new ./.travis-run-tests.sh
   - ls ~/.cache/common-lisp/
-  - rm ~/.cache/common-lisp/
+  - rm -rf ~/.cache/common-lisp/
   - LIB_LOAD_MODE=old ./.travis-run-tests.sh

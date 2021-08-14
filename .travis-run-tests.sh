@@ -6,8 +6,6 @@ set -euo pipefail
 # verbose
 set -v
 
-echo LIB_LOAD_MODE is received as ${LIB_LOAD_MODE}
-
 ros -e '(when (uiop:getenvp "READTABLE_CASE_INVERT")
           (format t "changing readtable-case to :invert~%")
           (setq *readtable*
