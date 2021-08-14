@@ -148,37 +148,46 @@
 ;;;   1) Lisp: cl+ssl stream user code ->
 ;;;   2) C: OpenSSL C functions ->
 ;;;   3) Lisp: BIO implementation function
-;;;        signals error and the controls is passe
-;;;        to 1), without proper C cleanup.
+;;;        signals error and the controls is passed
+;;;        to (1), without proper C cleanup.
 ;;;
 ;;; Therefore our BIO implementation functions catch all unexpected
 ;;; serious-conditions, arrange for BIO_should_retry
 ;;; to say "do not retry", and return -1.
 ;;;
-;;; We could try to indicate the real number of bytes read / written -
+;;; We could try to return the real number of bytes read / written -
 ;;; the documentation of BIO_read and friends just says return byte
 ;;; number without making any special case for error:
 ;;;
-;;; "(...) return either the amount of data successfully read or
-;;; written (if the return value is positive) or that no data was
-;;; successfully read or written if the result is 0 or -1. If the
-;;; return value is -2 then the operation is not implemented in the
-;;; specific BIO type. The trailing NUL is not included in the length
-;;; returned by BIO_gets().
+;;; >    (...) return either the amount of data successfully read or
+;;; >    written (if the return value is positive) or that no data was
+;;; >    successfully read or written if the result is 0 or -1. If the
+;;; >    return value is -2 then the operation is not implemented in the
+;;; >    specific BIO type. The trailing NUL is not included in the length
+;;; >    returned by BIO_gets().
 ;;;
-;;; But let's not complicate the implementation, esp. taking into
+;;; But let's not complicate the implementation, especially taking into
 ;;; account that we don't know how many bytes the low level
-;;; Lisp writing function has really written before signalling
+;;; Lisp function has really written before signalling
 ;;; the condition. Our main goal is to avoid crossing C stack,
 ;;; and we only consider unexpected errors here.
-;;;
-;;; TODO: communicate error reasons to users of cl+ssl streams.
-;;;    Possible approaches
-;;;      - introduce a dynamic variable *bio-error*
-;;;        (similar to the *socket*), set this value when our
-;;;        BIO method fails, and use this value by when creating
-;;;        a condition instance in ssl-signal-error
-;;;      - Use the OpenSSL error facility, see ERR_raise_data.
+
+(defparameter *file-name* (cffi:foreign-string-alloc "cl+ssl/src/bio.lisp"))
+
+(defun put-to-openssl-error-queue (condition)
+  (ignore-errors
+
+    ;; TODO: starting from OpenSSL 3.0.0 use ERR_raise_data instead
+    ;; of the ERR_put_error / ERR_add_error_data combination.
+
+
+    (err-put-error +err_lib_none+ 0 +err_r_internal_error+ *file-name* 0)
+
+    #-cffi-sys::no-foreign-funcall ; because err-add-error-data is a vararg function
+    (let ((err-msg (format nil
+                           "Unexpected SERIOUS-CONDITION in the Lisp BIO: ~A"
+                           condition)))
+      (err-add-error-data 1 :string err-msg))))
 
 (cffi:defcallback lisp-write :int ((bio :pointer) (buf :pointer) (n :int))
   bio
@@ -187,8 +196,9 @@
                (write-byte (cffi:mem-ref buf :unsigned-char i) *socket*))
              (finish-output *socket*)
              n)
-    (serious-condition ()
+    (serious-condition (c)
       (clear-retry-flags bio)
+      (put-to-openssl-error-queue c)
       -1)))
 
 (cffi:defcallback lisp-read :int ((bio :pointer) (buf :pointer) (n :int))
@@ -212,8 +222,9 @@
             ;; do nothing,  will just return the number of bytes read so far
             ))
         i)
-    (serious-condition ()
+    (serious-condition (c)
       (clear-retry-flags bio)
+      (put-to-openssl-error-queue c)
       -1)))
 
 (cffi:defcallback lisp-gets :int ((bio :pointer) (buf :pointer) (n :int))
@@ -242,8 +253,9 @@
             ))
         (setf (cffi:mem-ref buf :unsigned-char i) 0)
         i)
-    (serious-condition ()
+    (serious-condition (c)
       (clear-retry-flags bio)
+      (put-to-openssl-error-queue c)
       -1)))
 
 (cffi:defcallback lisp-puts :int ((bio :pointer) (buf :string))
@@ -253,8 +265,9 @@
         (write-line buf (flex:make-flexi-stream *socket* :external-format :ascii))
         ;; puts is not specified to return length, but BIO expects it :(
         (1+ (length buf)))
-    (serious-condition ()
+    (serious-condition (c)
       (clear-retry-flags bio)
+      (put-to-openssl-error-queue c)
       -1)))
 
 (cffi:defcallback lisp-ctrl :int
@@ -322,5 +335,13 @@ a Common Lisp STRING."
      (unwind-protect
           (progn ,@body)
        (bio-free ,bio))))
+
+;; TODO: Refactor dependendies, err-print-error-to-sting is used
+;;       in conditions.lisp, earlier than it is defined in the bio.lisp.
+;;       Becuase we can only define it after BIO functionality is implemented.
+;;       And bio.lisp depends on ffi.lisp, and ffi.lisp depends on conditions.lisp.
+(defun err-print-errors-to-string ()
+  (with-bio-output-to-string (bio)
+    (err-print-errors bio)))
 
 (setf *bio-lisp-method* nil)    ;force reinit if anything changed here

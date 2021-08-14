@@ -35,6 +35,13 @@
 QUEUE-DESIGNATOR is either a list of error codes (as returned
 by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
   (flet ((body (stream)
+
+           ;; If printed-queue is present, just use it
+           (when (and (typep queue-designator 'ssl-error)
+                      (printed-queue queue-designator))
+             (format stream (printed-queue queue-designator))
+             (return-from body))
+
            (let ((queue (etypecase queue-designator
                           (ssl-error (ssl-error-queue queue-designator))
                           (list queue-designator))))
@@ -62,7 +69,22 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
   (
    ;; Stores list of error codes
    ;; (as returned by the READ-SSL-ERROR-QUEUE function)
-   (queue :initform nil :initarg :queue :reader ssl-error-queue)))
+   (queue :initform nil :initarg :queue :reader ssl-error-queue)
+
+   ;; The queue formatted using ERR_print_errors.
+   ;; If this value is present, ignore the QUEUE field (which will
+   ;; be empty, most likely, because ERR_print_errors cleans the queue).
+   ;;
+   ;; That's the preferred way, becuase it includes more info
+   ;; the printing we implemented in Lisp. In particualr, in includes
+   ;; the optional string added by ERR_add_error_data, which
+   ;; we use to provide error details of unexpected lisp errors
+   ;; in Lisp BIO. Consider migrating all the code to PRINTED-QUEUE,
+   ;; for example, when working on
+   ;; https://github.com/cl-plus-ssl/cl-plus-ssl/issues/75.
+   (printed-queue :initform nil
+                  :initarg :printed-queue
+                  :reader printed-queue)))
 
 (define-condition ssl-error/handle (ssl-error)
   ((ret :initarg :ret
@@ -223,12 +245,14 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
        (format-ssl-error-queue stream condition))))
 
 (defun ssl-signal-error (handle syscall error-code original-error)
-  (let ((queue (read-ssl-error-queue)))
+  (let ((printed-queue (err-print-errors-to-string))
+        (queue (read-ssl-error-queue)))
     (if (and (eql error-code #.+ssl-error-syscall+)
        (not (zerop original-error)))
   (error 'ssl-error-syscall
          :handle handle
          :ret error-code
+         :printed-queue printed-queue
          :queue queue
          :syscall syscall)
       (error (case error-code
@@ -243,6 +267,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
          (t 'ssl-error/handle))
        :handle handle
        :ret error-code
+       :printed-queue printed-queue
        :queue queue))))
 
 (defparameter *ssl-verify-error-alist*
@@ -299,12 +324,14 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
                        code (ssl-verify-error-keyword code)))))
   (:documentation "This condition is signalled on SSL connection when a peer certificate doesn't verify."))
 
-(define-condition ssl-error-call (cl+ssl::ssl-error)
+(define-condition ssl-error-call (ssl-error)
   ((message :initarg :message))
   (:documentation
    "A failure in the SSL library occurred..")
   (:report (lambda (condition stream)
-             (format stream "A failure in OpenSSL library occurred~@[: ~A~].~%" (slot-value condition 'message)) (cl+ssl::format-ssl-error-queue stream (cl+ssl::ssl-error-queue condition)))))
+             (format stream "A failure in OpenSSL library occurred~@[: ~A~].~%"
+                     (slot-value condition 'message))
+             (format-ssl-error-queue stream (ssl-error-queue condition)))))
 
 (define-condition asn1-error (cl+ssl-error)
   ()

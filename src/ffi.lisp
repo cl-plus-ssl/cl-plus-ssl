@@ -485,6 +485,30 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :string
   (e :unsigned-long)
   (buf :pointer))
+(define-crypto-function-ex (:vanished "3.0.0") ("ERR_put_error" err-put-error)
+  :void
+  (lib :int)
+  (func :int)
+  (reason :int)
+  ;; The file is :pointer instead of :string, becasue the file
+  ;; name should not be dalocated after the function call
+  ;; returns - that must be a long living char array.
+  (file :pointer)
+  (line :int))
+
+(defconstant +err_lib_none+ 1)
+(defconstant +err_r_fatal+ 64)
+(defconstant +err_r_internal_error+ (logior 4 +err_r_fatal+))
+
+#-cffi-sys::no-foreign-funcall ; vararg functions require foreign-funcall
+(define-crypto-function ("ERR_add_error_data" err-add-error-data)
+  :void
+  (num :int)
+  &rest)
+
+(define-crypto-function ("ERR_print_errors" err-print-errors)
+  :void
+  (bio :pointer))
 
 (define-ssl-function ("SSL_set_cipher_list" ssl-set-cipher-list)
     :int
