@@ -1,4 +1,4 @@
-;;; -*- mode: lisp -*-
+;;;; -*- Mode: LISP; Syntax: COMMON-LISP; indent-tabs-mode: nil; coding: utf-8; show-trailing-whitespace: t -*-
 ;;;
 ;;; Copyright (C) 2015 Ilya Khaprov <ilya.khaprov@publitechs.com>
 ;;;
@@ -32,4 +32,4 @@
                  (:file "fingerprint")
                  (:file "verify-hostname")
                  (:file "badssl-com")
-		 (:file "bio")))))
+                 (:file "bio")))))
