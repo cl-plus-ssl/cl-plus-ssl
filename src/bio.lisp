@@ -87,41 +87,48 @@
         new)))
 
 
-;;; "cargo cult"
-
-;;;; Error handling in callbacks:
-
-;;;; Catch all serious conditions and return -1 on error for reads (as
-;;;; we cannot guarantee that anything was really written unless
-;;;; output is finished) and number of bytes read for writes.
-
-;;;; If read or write fails and the call was blocking, ensure that
-;;;; BIO_should_retry says do not retry.
-
-;;;; Possible improvements:
-;;;; - communicate error reasons either offline (as is *socket* kept offline now) or in retry-reason variable.
-;;;; - handle some specific error situations specifically (timeouts, end-of-file, no data on wire at the moment)
-
-;;;; Rationale: Man page for BIO_meth_get_write (3) and similar states
-;;;; that the callback function behave same as write etc.
-
-;;;; Man page for BIO_read etc reads:
-;;;; "(...) return either the amount of data successfully read or
-;;;; written (if the return value is positive) or that no data was
-;;;; successfully read or written if the result is 0 or -1. If the
-;;;; return value is -2 then the operation is not implemented in the
-;;;; specific BIO type. The trailing NUL is not included in the length
-;;;; returned by BIO_gets()."
-
-(defconstant +bio-retry-eof+ 0)
-(defconstant +bio-retry-generic-error+ 1)
-(defconstant +bio-retry-no-data+ 2)
-(defconstant +bio-retry-timeout+ 3)
-
-#+nil(defun set-retry-reason-from-error (bio error)
-  (let ((reason-code
-          (case (class-of error)
-            (end-of-file 0))))))
+;;; Error handling for all the defcallback's:
+;;;
+;;; We want to avoid non-local exits across C stack,
+;;; as CFFI tutorial recommends:
+;;; https://common-lisp.net/project/cffi/manual/html_node/Tutorial_002dCallbacks.html.
+;;;
+;;; In cl+ssl this means the following nested calls:
+;;;
+;;;   1) Lisp: cl+ssl stream user code ->
+;;;   2) C: OpenSSL C functions ->
+;;;   3) Lisp: BIO implementation function
+;;;        signals error and the controls is passe
+;;;        to 1), without proper C cleanup.
+;;;
+;;; Therefore our BIO implementation functions catch all unexpected
+;;; serious-conditions, arrange for BIO_should_retry
+;;; to say "do not retry", and return -1.
+;;;
+;;; We could try to indicate the real number of bytes read / written -
+;;; the documentation of BIO_read and friends just says return byte
+;;; number without making any special case for error:
+;;;
+;;; "(...) return either the amount of data successfully read or
+;;; written (if the return value is positive) or that no data was
+;;; successfully read or written if the result is 0 or -1. If the
+;;; return value is -2 then the operation is not implemented in the
+;;; specific BIO type. The trailing NUL is not included in the length
+;;; returned by BIO_gets().
+;;;
+;;; But let's not complicate the implementation, esp. taking into
+;;; account that we don't know how many bytes the low level
+;;; Lisp writing function has really written before signalling
+;;; the condition. Our main goal is to avoid crossing C stack,
+;;; and we only consider unexpected errors here.
+;;;
+;;; TODO: communicate error reasons to users of cl+ssl streams.
+;;;    Possible approaches
+;;;      - introduce a dynamic variable *bio-error*
+;;;        (similar to the *socket*), set this value when our
+;;;        BIO method fails, and use this value by when creating
+;;;        a condition instance in ssl-signal-error
+;;;      - Use the OpenSSL error facility, see ERR_raise_data.
 
 (cffi:defcallback lisp-write :int ((bio :pointer) (buf :pointer) (n :int))
   bio
@@ -130,7 +137,9 @@
                (write-byte (cffi:mem-ref buf :unsigned-char i) *socket*))
              (finish-output *socket*)
              n)
-    (serious-condition () -1)))
+    (serious-condition ()
+      (clear-retry-flags bio)
+      -1)))
 
 #-bio-opaque-slots
 (defun clear-retry-flags (bio)
@@ -162,31 +171,28 @@
 
 (cffi:defcallback lisp-read :int ((bio :pointer) (buf :pointer) (n :int))
   bio buf n
-  (let ((i 0))
-    (handler-case
-  (unless (or (cffi:null-pointer-p buf) (null n))
-    (clear-retry-flags bio)
-    (when (or *blockp* (listen *socket*))
-            (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
-            (incf i))
-    (loop
-        while (and (< i n)
-                         (or (null *partial-read-p*) (listen *socket*)))
-        do
-    (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
-    (incf i))
-    i
-    (when (zerop i) (set-retry-read bio)))
-      (end-of-file ()
-        ;; could this be part of serious condition?
-        (clear-retry-flags bio)
-        (setf (cffi:mem-ref buf :unsigned-char i) 0))
-      (serious-condition ()
-        (clear-retry-flags bio)
-        ;; we could set BIO_set_retry_reason() if we defined
-        ;; codes. Could be useful for timeouts, but not implemented now.
-        ))
-    i))
+  (handler-case
+      (let ((i 0))
+        (handler-case
+            (progn
+              (clear-retry-flags bio)
+              (when (or *blockp* (listen *socket*))
+                (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
+                (incf i))
+              (loop
+                 while (and (< i n)
+                            (or (null *partial-read-p*) (listen *socket*)))
+                 do
+                   (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
+                   (incf i))
+              (when (zerop i) (set-retry-read bio)))
+          (end-of-file ()
+            ;; do nothing,  will just return the number of bytes read so far
+            ))
+        i)
+    (serious-condition ()
+      (clear-retry-flags bio)
+      -1)))
 
 (cffi:defcallback lisp-gets :int ((bio :pointer) (buf :pointer) (n :int))
   (handler-case
@@ -225,7 +231,9 @@
         (write-line buf (flex:make-flexi-stream *socket* :external-format :ascii))
         ;; puts is not specified to return length, but BIO expects it :(
         (1+ (length buf)))
-    (serious-condition () -1)))
+    (serious-condition ()
+      (clear-retry-flags bio)
+      -1)))
 
 (cffi:defcallback lisp-ctrl :int
   ((bio :pointer) (cmd :int) (larg :long) (parg :pointer))
