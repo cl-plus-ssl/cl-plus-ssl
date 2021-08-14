@@ -1125,7 +1125,8 @@ MAKE-CONTEXT also allows to enab/disable verification.")
   (setf *bio-is-opaque*
         ;; (openssl-is-at-least 1 1) - this is not precise in case of LibreSSL,
         ;; therefore use the following:
-        (not (null (cffi:foreign-symbol-pointer "BIO_get_new_index")))
+        (not (null (cffi:foreign-symbol-pointer "BIO_get_new_index"
+                                                :library 'libcrypto)))
 
         *lisp-bio-type* (lisp-bio-type)
         *bio-lisp-method* (make-bio-lisp-method))
