@@ -216,9 +216,9 @@
 ;;; interface functions
 ;;;
 
-(defvar *default-unwrap-stream-p* nil
+(defvar *default-unwrap-stream-p* t
   "Default value for UNWRAP-STREAM-P parameter.
-If set (which is default), give OpenSSL the file descriptor of the stream, instead of a Lisp BIO.")
+If true (the default), give OpenSSL the file descriptor of the stream, instead of a Lisp BIO.")
 
 (defun install-handle-and-bio (stream handle socket unwrap-stream-p)
   (setf (ssl-stream-handle stream) handle)
