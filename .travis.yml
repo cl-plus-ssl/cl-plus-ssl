@@ -113,3 +113,4 @@ cache:
 
 script:
   - LIB_LOAD_MODE=new ./.travis-run-tests.sh
+  - LIB_LOAD_MODE=old ./.travis-run-tests.sh

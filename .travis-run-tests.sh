@@ -34,8 +34,19 @@ ros -e '(when (uiop:getenvp "READTABLE_CASE_INVERT")
     -e '(format t "cffi loaded.~%")' \
     -e '(ql:quickload :cl+ssl/config)' \
     -e '(format t "cl+ssl/config loaded.~%")' \
-    -e '(cl+ssl:define-libcrypto-path "test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libcrypto.so")' \
-    -e '(cl+ssl:define-libssl-path "test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libssl.so")' \
+    -e '(let ((lib-load-mode (uiop:getenvp "LIB_LOAD_MODE")))
+          (cond ((string= "new" lib-load-mode)
+                 (cl+ssl:define-libcrypto-path "test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libcrypto.so")
+                 (cl+ssl:define-libssl-path "test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libssl.so"))
+                ((string= "old" lib-load-mode)
+                 (cffi:load-foreign-library "test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libcrypto.so")
+                 (format t "libcrypto.so loaded.~%")
+                 (cffi:load-foreign-library "test/run-on-many-lisps-and-openssls/openssl-releases/bin/'$OPENSSL-${BITS}bit'/lib/libssl.so")
+                 (format t "libssl.so loaded.~%")
+                 (pushnew :cl+ssl-foreign-libs-already-loaded *features*))
+                (t
+                 (format t "Unexpected LIB_LOAD_MODE value: ~A~%" lib-load-mode)
+                 (uiop:quit 1))))' \
     -e '(ql:quickload :cl+ssl) ;; load cl+ssl separately from cl+ssl.test only because cl+ssl.test can not be loaded in the :invert readtable-case due to its dependency ironclad, as of 2019-10-20' \
     -e '(format t "cl+ssl loaded.~%")' \
     -e '(when (uiop:getenvp "READTABLE_CASE_INVERT")
