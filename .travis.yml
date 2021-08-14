@@ -16,7 +16,7 @@ env:
     # - LISP=sbcl-bin OPENSSL=openssl-1.1.0j BITS=64
     # # Coverals is disabled temprarily, until cl-coveralls issue is fixed: https://github.com/fukamachi/cl-coveralls/issues/14
     # # - LISP=sbcl-bin COVERALLS=true OPENSSL=openssl-1.1.1a BITS=64
-     - LISP=sbcl-bin OPENSSL=openssl-1.1.1a BITS=64
+#ok     - LISP=sbcl-bin OPENSSL=openssl-1.1.1a BITS=64
     # - LISP=sbcl-bin OPENSSL=libressl-2.2.7 BITS=64
     # - LISP=sbcl-bin OPENSSL=libressl-2.5.5 BITS=64
     # - LISP=sbcl-bin OPENSSL=libressl-2.6.5 BITS=64
@@ -26,8 +26,8 @@ env:
     # - LISP=ccl-bin OPENSSL=openssl-0.9.8zh BITS=64
     # - LISP=ccl-bin OPENSSL=openssl-1.0.0s BITS=64
     # - LISP=ccl-bin OPENSSL=openssl-1.0.2q BITS=64
-#    - LISP=ccl-bin OPENSSL=openssl-1.1.0j BITS=64
-     - LISP=ccl-bin OPENSSL=openssl-1.1.1a BITS=64
+#ok    - LISP=ccl-bin OPENSSL=openssl-1.1.0j BITS=64
+#ok     - LISP=ccl-bin OPENSSL=openssl-1.1.1a BITS=64
     # - LISP=ccl-bin OPENSSL=openssl-1.1.1a BITS=64 READTABLE_CASE_INVERT=1
     # - LISP=ccl-bin OPENSSL=libressl-2.2.7 BITS=64
     # - LISP=ccl-bin OPENSSL=libressl-2.5.5 BITS=64
@@ -56,7 +56,7 @@ env:
     # - LISP=ecl OPENSSL=libressl-2.6.5 BITS=64
     # - LISP=ecl OPENSSL=libressl-2.8.3 BITS=64
     # - LISP=ecl OPENSSL=libressl-3.0.1 BITS=64
-     - LISP=ecl OPENSSL=libressl-2.2.7 BITS=64
+#ok     - LISP=ecl OPENSSL=libressl-2.2.7 BITS=64
     # - LISP=abcl OPENSSL=openssl-0.9.8zh BITS=64
     # - LISP=abcl OPENSSL=openssl-1.0.0s BITS=64
     # - LISP=abcl OPENSSL=openssl-1.0.2q BITS=64
@@ -70,7 +70,7 @@ env:
     # - LISP=cmu-bin OPENSSL=openssl-0.9.8zh BITS=32
     # - LISP=cmu-bin OPENSSL=openssl-1.0.0s BITS=32
     # - LISP=cmu-bin OPENSSL=openssl-1.0.2q BITS=32
-     - LISP=cmu-bin OPENSSL=openssl-1.1.0j BITS=32
+#ok     - LISP=cmu-bin OPENSSL=openssl-1.1.0j BITS=32
     # - LISP=cmu-bin OPENSSL=openssl-1.1.1a BITS=32
     # - LISP=cmu-bin OPENSSL=libressl-2.2.7 BITS=32
     # - LISP=cmu-bin OPENSSL=libressl-2.5.5 BITS=32
@@ -78,14 +78,14 @@ env:
     # - LISP=cmu-bin OPENSSL=libressl-2.8.3 BITS=32
     # - LISP=cmu-bin OPENSSL=libressl-3.0.1 BITS=32
     # - LISP=allegro OPENSSL=openssl-0.9.8zh BITS=32
-     - LISP=allegro OPENSSL=openssl-1.0.0s BITS=32
+#ok     - LISP=allegro OPENSSL=openssl-1.0.0s BITS=32
     # - LISP=allegro OPENSSL=openssl-1.0.2q BITS=32
     # - LISP=allegro OPENSSL=openssl-1.1.0j BITS=32
     # - LISP=allegro OPENSSL=openssl-1.1.1a BITS=32
     # - LISP=allegro OPENSSL=libressl-2.2.7 BITS=32
     # - LISP=allegro OPENSSL=libressl-2.5.5 BITS=32
     # - LISP=allegro OPENSSL=libressl-2.6.5 BITS=32
-     - LISP=allegro OPENSSL=libressl-2.8.3 BITS=32
+#ok     - LISP=allegro OPENSSL=libressl-2.8.3 BITS=32
     # - LISP=allegro OPENSSL=libressl-3.0.1 BITS=32
 install:
   - if [ $LISP = abcl ]; then sudo apt-get install maven; fi
@@ -113,4 +113,6 @@ cache:
 
 script:
   - LIB_LOAD_MODE=new ./.travis-run-tests.sh
+  - ls ~/.cache/common-lisp/
+  - rm ~/.cache/common-lisp/
   - LIB_LOAD_MODE=old ./.travis-run-tests.sh
