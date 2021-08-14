@@ -155,6 +155,11 @@ variants if you have use cases for them.)"
 ;;;
 (defvar *ssl-global-context* nil)
 (defvar *ssl-global-method* nil)
+(defvar *bio-is-opaque*
+  "Since openssl 1.1.0, bio properties should be accessed using
+ functions, not directly using C structure slots.
+ Intialized to T for such openssl versions.")
+(defvar *lisp-bio-type*)
 (defvar *bio-lisp-method* nil)
 
 (defparameter *blockp* t)
@@ -424,13 +429,86 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (define-crypto-function ("BIO_new" bio-new)
     :pointer
   (method :pointer))
+(define-crypto-function ("BIO_free" bio-free)
+    :pointer
+  (method :pointer))
+(define-crypto-function-ex (:since "1.1.0") ("BIO_get_new_index" bio-new-index)
+  :int)
 
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_new" bio-meth-new)
+    :pointer
+  (type :int)
+  (name :string))
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_puts" bio-set-puts)
+  :int
+  (meth :pointer)
+  (puts :pointer))
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_write" bio-set-write)
+  :int
+  (meth :pointer)
+  (puts :pointer))
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_read" bio-set-read)
+  :int
+  (meth :pointer)
+  (read :pointer))
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_gets" bio-set-gets)
+  :int
+  (meth :pointer)
+  (read :pointer))
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_create" bio-set-create)
+  :int
+  (meth :pointer)
+  (read :pointer))
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_destroy" bio-set-destroy)
+  :int
+  (meth :pointer)
+  (read :pointer))
+(define-crypto-function-ex (:since "1.1.0") ("BIO_meth_set_ctrl" bio-set-ctrl)
+  :int
+  (meth :pointer)
+  (read :pointer))
+(define-crypto-function-ex (:since "1.1.0") ("BIO_set_init" bio-set-init)
+  :int
+  (meth :pointer)
+  (value :int))
+(define-crypto-function-ex (:since "1.1.0") ("BIO_set_flags" bio-set-flags)
+  :int
+  (meth :pointer)
+  (value :int))
+(define-crypto-function-ex (:since "1.1.0") ("BIO_clear_flags" bio-clear-flags)
+  :int
+  (meth :pointer)
+  (value :int))
 (define-crypto-function ("ERR_get_error" err-get-error)
     :unsigned-long)
 (define-crypto-function ("ERR_error_string" err-error-string)
     :string
   (e :unsigned-long)
   (buf :pointer))
+(define-crypto-function-ex (:vanished "3.0.0") ("ERR_put_error" err-put-error)
+  :void
+  (lib :int)
+  (func :int)
+  (reason :int)
+  ;; The file is :pointer instead of :string, becasue the file
+  ;; name should not be dalocated after the function call
+  ;; returns - that must be a long living char array.
+  (file :pointer)
+  (line :int))
+
+(defconstant +err_lib_none+ 1)
+(defconstant +err_r_fatal+ 64)
+(defconstant +err_r_internal_error+ (logior 4 +err_r_fatal+))
+
+#-cffi-sys::no-foreign-funcall ; vararg functions require foreign-funcall
+(define-crypto-function ("ERR_add_error_data" err-add-error-data)
+  :void
+  (num :int)
+  &rest)
+
+(define-crypto-function ("ERR_print_errors" err-print-errors)
+  :void
+  (bio :pointer))
 
 (define-ssl-function ("SSL_set_cipher_list" ssl-set-cipher-list)
     :int
@@ -634,6 +712,18 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (buf :pointer)
   (*len :pointer))
 
+(define-crypto-function ("PEM_write_bio_X509" pem-write-x509)
+  :int
+  (bio :pointer)
+  (x509 :pointer))
+
+(define-crypto-function ("PEM_read_bio_X509" pem-read-x509)
+  :pointer
+  ;; all args are :pointers in fact, but they are NULL anyway
+  (bio :pointer)
+  (x509 :int)
+  (callback :int)
+  (passphrase :int))
 
 ;;; EVP
 
@@ -1059,7 +1149,16 @@ MAKE-CONTEXT also allows to enab/disable verification.")
     ;; https://github.com/cl-plus-ssl/cl-plus-ssl/pull/134
     (unless (libresslp)
       (openssl-add-all-digests)))
-  (setf *bio-lisp-method* (make-bio-lisp-method))
+
+  (setf *bio-is-opaque*
+        ;; (openssl-is-at-least 1 1) - this is not precise in case of LibreSSL,
+        ;; therefore use the following:
+        (not (null (cffi:foreign-symbol-pointer "BIO_get_new_index"
+                                                :library 'libcrypto)))
+
+        *lisp-bio-type* (lisp-bio-type)
+        *bio-lisp-method* (make-bio-lisp-method))
+
   (when rand-seed
     (init-prng rand-seed))
   (setf *ssl-check-verify-p* :unspecified)
@@ -1100,9 +1199,7 @@ because the function usually returns predictable values."
   (check-cl+ssl-symbols)
   (bordeaux-threads:with-recursive-lock-held (*global-lock*)
     (unless (ssl-initialized-p)
-      (initialize :method method :rand-seed rand-seed))
-    (unless *bio-lisp-method*
-      (setf *bio-lisp-method* (make-bio-lisp-method)))))
+      (initialize :method method :rand-seed rand-seed))))
 
 (defun use-certificate-chain-file (certificate-chain-file)
   "Loads a PEM encoded certificate chain file CERTIFICATE-CHAIN-FILE

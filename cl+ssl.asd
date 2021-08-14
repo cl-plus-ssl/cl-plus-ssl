@@ -1,4 +1,4 @@
-;;; -*- mode: lisp -*-
+;;;; -*- Mode: LISP; Syntax: COMMON-LISP; indent-tabs-mode: nil; coding: utf-8; show-trailing-whitespace: t -*-
 ;;;
 ;;; Copyright (C) 2001, 2003  Eric Marsden
 ;;; Copyright (C) 2005  David Lichteblau
@@ -29,12 +29,12 @@
                  (:file "reload")
                  (:file "conditions")
                  (:file "ffi")
-                 (:file "x509")
                  (:file "ffi-buffer-all")
                  #-clisp (:file "ffi-buffer")
                  #+clisp (:file "ffi-buffer-clisp")
                  (:file "streams")
                  (:file "bio")
+                 (:file "x509")
                  (:file "random")
                  (:file "context")
                  (:file "verify-hostname")))))

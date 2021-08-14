@@ -297,3 +297,15 @@ designator for the digest algorithm to use (it defaults to SHA-1)."
                  :message "failed to compute fingerprint of certificate"
                  :queue (read-ssl-error-queue))))
       fingerprint)))
+
+(defun x509-cert-from-pem (pem)
+  (with-bio-input-from-string (bio pem)
+    (pem-read-x509 bio 0 0 0)))
+
+(defun certificate-pem (x509)
+  (with-bio-output-to-string (bio)
+    ;; man PEM_write_bio_X509:
+    ;; The write routines return 1 for success or 0 for failure.
+    (unless (= 1 (pem-write-x509 bio x509))
+      (error "X509 cert cant be printed: ~s"
+             (cl+ssl::err-error-string (cl+ssl::err-get-error) (cffi:null-pointer))))))

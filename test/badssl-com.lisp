@@ -15,7 +15,18 @@
                                    :hostname host
                                    :verify verify)))
 
-(test wrong.host
+(defmacro modal-test (name &body body)
+  "Defines two tests, with equal body, but first executed using file descriptor BIO,
+and the other executed with Lisp BIO."
+  `(progn
+     (test ,(read-from-string (format nil "~A.file-descriptor-bio" name))
+       (let ((cl+ssl::*default-unwrap-stream-p* t))
+         ,@body))
+     (test ,(read-from-string (format nil "~A.lisp-bio" name))
+       (let ((cl+ssl::*default-unwrap-stream-p* nil))
+         ,@body))))
+
+(modal-test wrong.host
   (signals error
     (test-connect "wrong.host.badssl.com"))
   (signals error
@@ -23,7 +34,7 @@
   (finishes
     (test-connect "wrong.host.badssl.com" :verify nil)))
 
-(test expired
+(modal-test expired
   (signals error
     (test-connect "expired.badssl.com"))
   (signals error
@@ -31,10 +42,10 @@
   (finishes
     (test-connect "expired.badssl.com" :verify nil)))
 
-(test self-signed
+(modal-test self-signed
   (signals error
     (test-connect "self-signed.badssl.com")))
 
-(test untrusted-root
+(modal-test untrusted-root
   (signals error
     (test-connect "untrusted-root.badssl.com")))
