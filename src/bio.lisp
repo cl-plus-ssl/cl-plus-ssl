@@ -187,29 +187,34 @@
     i))
 
 (cffi:defcallback lisp-gets :int ((bio :pointer) (buf :pointer) (n :int))
-  (let ((i 0))
-    (handler-case
-        (unless (or (cffi:null-pointer-p buf) (null n))
-          (clear-retry-flags bio)
-          (when (or *blockp* (listen *socket*))
-            (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
-            (incf i))
-          (loop
-            with char
-            and exit = nil
-            while (and (< i n)
-                       (null exit)
-                       (or (null *partial-read-p*) (listen *socket*)))
-            do
-               (setf char (read-byte *socket*)
-                     exit (= char 10))
-               (setf (cffi:mem-ref buf :unsigned-char i) char)
-               (incf i)))
-      (serious-condition ()
-        (clear-retry-flags bio)))
-    (unless (>= i n)
-      (setf (cffi:mem-ref buf :unsigned-char i) 0))
-    i))
+  (handler-case
+      (let ((i 0)
+            (max-chars (1- n)))
+        (clear-retry-flags bio)
+        (handler-case
+            (when (> max-chars 0)
+              (when (or *blockp* (listen *socket*))
+                (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
+                (incf i))
+              (loop
+                 with char
+                 and exit = nil
+                 while (and (< i max-chars)
+                            (null exit)
+                            (or (null *partial-read-p*) (listen *socket*)))
+                 do
+                   (setf char (read-byte *socket*)
+                         exit (= char 10))
+                   (setf (cffi:mem-ref buf :unsigned-char i) char)
+                   (incf i)))
+          (end-of-file ()
+            ;; do nothing - this just aborts the lookp
+            ))
+        (setf (cffi:mem-ref buf :unsigned-char i) 0)
+        i)
+    (serious-condition ()
+      (clear-retry-flags bio)
+      -1)))
 
 (cffi:defcallback lisp-puts :int ((bio :pointer) (buf :string))
   (declare (ignore bio))
