@@ -155,6 +155,11 @@ variants if you have use cases for them.)"
 ;;;
 (defvar *ssl-global-context* nil)
 (defvar *ssl-global-method* nil)
+(defvar *bio-is-opaque*
+  "Since openssl 1.1.0, bio properties should be accessed using
+ functions, not directly using C structure slots.
+ Intialized to T for such openssl versions.")
+(defvar *lisp-bio-type*)
 (defvar *bio-lisp-method* nil)
 
 (defparameter *blockp* t)
@@ -304,15 +309,6 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   ;; "This document outlines the design of OpenSSL 3.0, the next version of OpenSSL after 1.1.1"
   ;; https://www.openssl.org/docs/OpenSSL300Design.html
   (= #x20000000 (compat-openssl-version)))
-
-(defvar *bio-methods-have-opaque-slots*
-;  (openssl-is-at-least 1 1)
-  (not (null (cffi:foreign-symbol-pointer "BIO_get_new_index")))
-  "Since openssl 1.1.0, slot in bio methods should be accessed using
-  functions, not directly. Set this parameter to T to achieve this.")
-
-(when *bio-methods-have-opaque-slots*
-  (push :bio-opaque-slots *features*))
 
 (define-ssl-function ("SSL_get_version" ssl-get-version)
     :string
@@ -1125,7 +1121,15 @@ MAKE-CONTEXT also allows to enab/disable verification.")
     (ssl-load-error-strings)
     (ssl-library-init)
     (openssl-add-all-digests))
-  (setf *bio-lisp-method* (make-bio-lisp-method))
+
+  (setf *bio-is-opaque*
+        ;; (openssl-is-at-least 1 1) - this is not precise in case of LibreSSL,
+        ;; therefore use the following:
+        (not (null (cffi:foreign-symbol-pointer "BIO_get_new_index")))
+
+        *lisp-bio-type* (lisp-bio-type)
+        *bio-lisp-method* (make-bio-lisp-method))
+
   (when rand-seed
     (init-prng rand-seed))
   (setf *ssl-check-verify-p* :unspecified)
@@ -1166,9 +1170,7 @@ because the function usually returns predictable values."
   (check-cl+ssl-symbols)
   (bordeaux-threads:with-recursive-lock-held (*global-lock*)
     (unless (ssl-initialized-p)
-      (initialize :method method :rand-seed rand-seed))
-    (unless *bio-lisp-method*
-      (setf *bio-lisp-method* (make-bio-lisp-method)))))
+      (initialize :method method :rand-seed rand-seed))))
 
 (defun use-certificate-chain-file (certificate-chain-file)
   "Loads a PEM encoded certificate chain file CERTIFICATE-CHAIN-FILE

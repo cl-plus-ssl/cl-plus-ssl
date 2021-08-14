@@ -10,7 +10,12 @@
 
 (in-package cl+ssl)
 
-(defconstant +bio-type-socket+ (logior 5 #x0400 #x0100))
+(defconstant +BIO_TYPE_SOURCE_SINK+ #x0400)
+(defconstant +BIO_TYPE_DESCRIPTOR+ #x0100)
+
+(defconstant +bio-type-socket+ (logior 5
+                                       +BIO_TYPE_SOURCE_SINK+
+                                       +BIO_TYPE_DESCRIPTOR+))
 (defconstant +BIO_FLAGS_READ+ 1)
 (defconstant +BIO_FLAGS_WRITE+ 2)
 (defconstant +BIO_FLAGS_SHOULD_RETRY+ 8)
@@ -46,8 +51,14 @@
   (crypto-ex-data-stack :pointer)
   (crypto-ex-data-dummy :int))
 
-#-bio-opaque-slots
-(defun make-bio-lisp-method ()
+(defun lisp-bio-type ()
+  ;; Old OpenSSL and LibreSSL do not nave BIO_get_new_index,
+  ;; in this case fallback to BIO_TYPE_SOCKET.
+  (or (ignore-errors
+        (logior (bio-new-index) +BIO_TYPE_SOURCE_SINK+))
+      +bio-type-socket+))
+
+(defun make-bio-lisp-method-slots ()
   (let ((m (cffi:foreign-alloc '(:struct bio-method))))
     (setf (cffi:foreign-slot-value m '(:struct bio-method) 'type)
     ;; fixme: this is wrong, but presumably still better than some
@@ -62,21 +73,25 @@
       (setf (slot 'bgets) (cffi:callback lisp-gets))
       (setf (slot 'ctrl) (cffi:callback lisp-ctrl))
       (setf (slot 'create) (cffi:callback lisp-create-slots))
-      (setf (slot 'destroy) (cffi:callback lisp-destroy))
+      (setf (slot 'destroy) (cffi:callback lisp-destroy-slots))
       (setf (slot 'callback-ctrl) (cffi:null-pointer)))
     m))
 
-#+bio-opaque-slots
-(defun make-bio-lisp-method ()
-  (let ((m (bio-meth-new (load-time-value (bio-new-index)) "lisp")))
-    (bio-set-puts m  (cffi:callback lisp-puts))
-    (bio-set-write m  (cffi:callback lisp-write))
-    (bio-set-read m  (cffi:callback lisp-read))
-    (bio-set-gets m  (cffi:callback lisp-gets))
-    (bio-set-create m  (cffi:callback lisp-create-opaque))
-;    (bio-set-destroy m  (cffi:callback lisp-destroy))
-    (bio-set-ctrl m  (cffi:callback lisp-ctrl))
+(defun make-bio-lisp-method-opaque ()
+  (let ((m (bio-meth-new (lisp-bio-type) "lisp")))
+    (bio-set-puts m (cffi:callback lisp-puts))
+    (bio-set-write m (cffi:callback lisp-write))
+    (bio-set-read m (cffi:callback lisp-read))
+    (bio-set-gets m (cffi:callback lisp-gets))
+    (bio-set-create m (cffi:callback lisp-create-opaque))
+    (bio-set-destroy m (cffi:callback lisp-destroy-opaque))
+    (bio-set-ctrl m (cffi:callback lisp-ctrl))
     m))
+
+(defun make-bio-lisp-method ()
+  (if *bio-is-opaque*
+      (make-bio-lisp-method-opaque)
+      (make-bio-lisp-slots)))
 
 (defun bio-new-lisp ()
   (unless *bio-lisp-method* (initialize))
@@ -86,6 +101,39 @@
                (cl+ssl::err-error-string (cl+ssl::err-get-error) (cffi:null-pointer)))
         new)))
 
+(defun clear-retry-flags-slots (bio)
+  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+        (logandc2 (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+                  (logior +BIO_FLAGS_READ+
+                          +BIO_FLAGS_WRITE+
+                          +BIO_FLAGS_SHOULD_RETRY+))))
+
+(defun clear-retry-flags-opaque (bio)
+  (bio-clear-flags bio
+                   (logior +BIO_FLAGS_READ+
+                           +BIO_FLAGS_WRITE+
+                           +BIO_FLAGS_SHOULD_RETRY+)))
+
+(defun clear-retry-flags (bio)
+  (if *bio-is-opaque*
+      (clear-retry-flags-opaque bio)
+      (clear-retry-flags-slots bio)))
+
+(defun set-retry-read-opaque (bio)
+  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+        (logior (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+                +BIO_FLAGS_READ+
+                +BIO_FLAGS_SHOULD_RETRY+)))
+
+(defun set-retry-read-slots (bio)
+  (bio-set-flags bio
+                 (logior +BIO_FLAGS_READ+
+                         +BIO_FLAGS_SHOULD_RETRY+)))
+
+(defun set-retry-read (bio)
+  (if *bio-is-opaque*
+      (set-retry-read-opaque bio)
+      (set-retry-read-slots bio)))
 
 ;;; Error handling for all the defcallback's:
 ;;;
@@ -140,34 +188,6 @@
     (serious-condition ()
       (clear-retry-flags bio)
       -1)))
-
-#-bio-opaque-slots
-(defun clear-retry-flags (bio)
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-        (logandc2 (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-                  (logior +BIO_FLAGS_READ+
-                          +BIO_FLAGS_WRITE+
-                          +BIO_FLAGS_SHOULD_RETRY+))))
-
-#+bio-opaque-slots
-(defun clear-retry-flags (bio)
-  (bio-clear-flags bio
-                   (logior +BIO_FLAGS_READ+
-                           +BIO_FLAGS_WRITE+
-                           +BIO_FLAGS_SHOULD_RETRY+)))
-
-#-bio-opaque-slots
-(defun set-retry-read (bio)
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-  (logior (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-    +BIO_FLAGS_READ+
-    +BIO_FLAGS_SHOULD_RETRY+)))
-
-
-#+bio-opaque-slots
-(defun set-retry-read (bio)
-  (bio-set-flags bio
-                 (logior +BIO_FLAGS_READ+ +BIO_FLAGS_SHOULD_RETRY+)))
 
 (cffi:defcallback lisp-read :int ((bio :pointer) (buf :pointer) (n :int))
   bio buf n
@@ -244,29 +264,43 @@
       ;; (warn "lisp-ctrl(~A,~A,~A)" cmd larg parg)
       0)))
 
-#-bio-opaque-slots
+;;; The create and destroy handlers mostly consist
+;;; of setting zero values to some BIO fields,
+;;; which seem redundant, because OpenSSl most likely
+;;; does this itself. But we follow example of the
+;;; standard OpenSSL BIO types implementation.
+;;; Like the file_new / file_free here:
+;;; https://github.com/openssl/openssl/blob/4ccad35756dfa9df657f3853810101fa9d6ca525/crypto/bio/bss_file.c#L109
+
 (cffi:defcallback lisp-create-slots :int ((bio :pointer))
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'init) 1)
+  (setf (cffi:foreign-slot-value bio '(:struct bio) 'init) 1) ; the only useful thing?
   (setf (cffi:foreign-slot-value bio '(:struct bio) 'num) 0)
   (setf (cffi:foreign-slot-value bio '(:struct bio) 'ptr) (cffi:null-pointer))
   (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
   1)
 
-#+bio-opaque-slots
 (cffi:defcallback lisp-create-opaque :int ((bio :pointer))
-  (bio-set-init bio 1)
+  (bio-set-init bio 1) ; the only useful thing?
+  (clear-retry-flags bio)
   1)
 
-#-bio-opaque-slots
-(cffi:defcallback lisp-destroy :int ((bio :pointer))
+(cffi:defcallback lisp-destroy-slots :int ((bio :pointer))
   (cond
     ((cffi:null-pointer-p bio) 0)
     (t
-      (setf (cffi:foreign-slot-value bio '(:struct bio) 'init) 0)
-      (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
-      1)))
+     (setf (cffi:foreign-slot-value bio '(:struct bio) 'init) 0)
+     (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
+     1)))
 
-;;;; Convenience macros
+(cffi:defcallback lisp-destroy-opaque :int ((bio :pointer))
+  (cond
+    ((cffi:null-pointer-p bio) 0)
+    (t
+     (bio-set-init bio 0)
+     (clear-retry-flags bio)
+     1)))
+
+;;; Convenience macros
 (defmacro with-bio-output-to-string ((bio &key (element-type ''character) (transformer '#'code-char)) &body body)
   "Evaluate BODY with BIO bound to a SSL BIO structure that writes to a
 Common Lisp string.  The string is returned."
