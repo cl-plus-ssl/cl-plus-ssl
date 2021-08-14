@@ -1,6 +1,8 @@
 ;;;; -*- Mode: LISP; Syntax: COMMON-LISP; indent-tabs-mode: nil; coding: utf-8; show-trailing-whitespace: t -*-
 ;;;
 ;;; Copyright (C) 2005  David Lichteblau
+;;; Copyright (C) 2021  Tomas Zellerin (zellerin@gmail.com, https://github.com/zellerin)
+;;; Copyright (C) 2021  Anton Vodonosov (avodonosov@yandex.ru, https://github.com/avodonosov)
 ;;;
 ;;; See LICENSE for details.
 
