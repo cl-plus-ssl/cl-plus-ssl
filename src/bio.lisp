@@ -18,6 +18,10 @@
                                        +BIO_TYPE_DESCRIPTOR+))
 (defconstant +BIO_FLAGS_READ+ 1)
 (defconstant +BIO_FLAGS_WRITE+ 2)
+(defconstant +BIO_FLAGS_IO_SPECIAL+ 4)
+(defconstant +BIO_FLAGS_RWS+ (logior +BIO_FLAGS_READ+
+                                     +BIO_FLAGS_WRITE+
+                                     +BIO_FLAGS_IO_SPECIAL+))
 (defconstant +BIO_FLAGS_SHOULD_RETRY+ 8)
 (defconstant +BIO_CTRL_FLUSH+ 11)
 
@@ -104,14 +108,12 @@
 (defun clear-retry-flags-slots (bio)
   (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
         (logandc2 (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-                  (logior +BIO_FLAGS_READ+
-                          +BIO_FLAGS_WRITE+
+                  (logior +BIO_FLAGS_RWS+
                           +BIO_FLAGS_SHOULD_RETRY+))))
 
 (defun clear-retry-flags-opaque (bio)
   (bio-clear-flags bio
-                   (logior +BIO_FLAGS_READ+
-                           +BIO_FLAGS_WRITE+
+                   (logior +BIO_FLAGS_RWS+
                            +BIO_FLAGS_SHOULD_RETRY+)))
 
 (defun clear-retry-flags (bio)
