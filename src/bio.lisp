@@ -259,7 +259,6 @@
       -1)))
 
 (cffi:defcallback lisp-puts :int ((bio :pointer) (buf :string))
-  (declare (ignore bio))
   (restart-case
       (progn
         (write-line buf (flex:make-flexi-stream *socket* :external-format :ascii))
