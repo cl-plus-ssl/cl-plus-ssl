@@ -95,7 +95,7 @@
 (defun make-bio-lisp-method ()
   (if *bio-is-opaque*
       (make-bio-lisp-method-opaque)
-      (make-bio-lisp-slots)))
+      (make-bio-lisp-method-slots)))
 
 (defun bio-new-lisp ()
   (unless *bio-lisp-method* (initialize))
