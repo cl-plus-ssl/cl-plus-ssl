@@ -153,7 +153,7 @@
 ;;;
 ;;; Therefore our BIO implementation functions catch all unexpected
 ;;; serious-conditions, arrange for BIO_should_retry
-;;; to say "do not retry", and return -1.
+;;; to say "do not retry", and return error status (most often -1).
 ;;;
 ;;; We could try to return the real number of bytes read / written -
 ;;; the documentation of BIO_read and friends just says return byte
@@ -257,7 +257,7 @@
       -1)))
 
 (cffi:defcallback lisp-puts :int ((bio :pointer) (buf :string))
-  (restart-case
+  (handler-case
       (progn
         (write-line buf (flex:make-flexi-stream *socket* :external-format :ascii))
         ;; puts is not specified to return length, but BIO expects it :(
@@ -285,32 +285,50 @@
 ;;; https://github.com/openssl/openssl/blob/4ccad35756dfa9df657f3853810101fa9d6ca525/crypto/bio/bss_file.c#L109
 
 (cffi:defcallback lisp-create-slots :int ((bio :pointer))
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'init) 1) ; the only useful thing?
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'num) 0)
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'ptr) (cffi:null-pointer))
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
-  1)
+  (handler-case
+      (progn
+        (setf (cffi:foreign-slot-value bio '(:struct bio) 'init) 1) ; the only useful thing?
+        (setf (cffi:foreign-slot-value bio '(:struct bio) 'num) 0)
+        (setf (cffi:foreign-slot-value bio '(:struct bio) 'ptr) (cffi:null-pointer))
+        (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
+        1)
+    (serious-condition (c)
+      (put-to-openssl-error-queue c)
+      0)))
 
 (cffi:defcallback lisp-create-opaque :int ((bio :pointer))
-  (bio-set-init bio 1) ; the only useful thing?
-  (clear-retry-flags bio)
-  1)
+  (handler-case
+      (progn
+        (bio-set-init bio 1) ; the only useful thing?
+        (clear-retry-flags bio)
+        1)
+    (serious-condition (c)
+      (put-to-openssl-error-queue c)
+      0)))
 
 (cffi:defcallback lisp-destroy-slots :int ((bio :pointer))
-  (cond
-    ((cffi:null-pointer-p bio) 0)
-    (t
-     (setf (cffi:foreign-slot-value bio '(:struct bio) 'init) 0)
-     (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
-     1)))
+  (handler-case
+      (cond
+        ((cffi:null-pointer-p bio) 0)
+        (t
+         (setf (cffi:foreign-slot-value bio '(:struct bio) 'init) 0)
+         (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags) 0)
+         1))
+    (serious-condition (c)
+      (put-to-openssl-error-queue c)
+      0)))
 
 (cffi:defcallback lisp-destroy-opaque :int ((bio :pointer))
-  (cond
-    ((cffi:null-pointer-p bio) 0)
-    (t
-     (bio-set-init bio 0)
-     (clear-retry-flags bio)
-     1)))
+  (handler-case
+      (cond
+        ((cffi:null-pointer-p bio) 0)
+        (t
+         (bio-set-init bio 0)
+         (clear-retry-flags bio)
+         1))
+    (serious-condition (c)
+      (put-to-openssl-error-queue c)
+      0)))
 
 ;;; Convenience macros
 (defmacro with-bio-output-to-string ((bio &key (element-type ''character) (transformer '#'code-char)) &body body)
