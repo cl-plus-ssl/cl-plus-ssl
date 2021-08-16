@@ -60,28 +60,5 @@ ros -e '(when (uiop:getenvp "READTABLE_CASE_INVERT")
                   (5am:run :cl+ssl)
                   ))
           (5am:explain! results)
-          #+(and abcl cl+ssl-foreign-libs-already-loaded)
-          (let* ((expected-failures (quote (cl+ssl.test::bio-gets
-                                            cl+ssl.test::bio-read
-                                            cl+ssl.test::bio-write-puts
-                                            cl+ssl.test::expired.file-descriptor-bio
-                                            cl+ssl.test::expired.lisp-bio
-                                            cl+ssl.test::fingerprint-google-cert
-                                            cl+ssl.test::wrong.host.file-descriptor-bio
-                                            cl+ssl.test::wrong.host.lisp-bio)))
-                (failed-test-names (mapcar (lambda (result)
-                                              (5am::name (5am::test-case result)))
-                                            (remove-if-not (quote 5am::test-failure-p)
-                                                           results))))
-            (if (set-exclusive-or expected-failures
-                                  failed-test-names)
-                (progn
-                  (format t "~%ABCL: expected failures on Travis CI: ~S, actual failures: ~S~%"
-                          expected-failures
-                          failed-test-names)
-                  (uiop:quit 1))
-                (format t "ABCL failed some tests as expected on Travis CI with :cl+ssl-foreign-libs-already-loaded: ~S~%"
-                        expected-failures)))
-          #-(and abcl cl+ssl-foreign-libs-already-loaded)
           (unless (5am:results-status results)
             (uiop:quit 1)))'

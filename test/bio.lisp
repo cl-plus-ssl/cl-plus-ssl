@@ -35,7 +35,6 @@
   (bio :pointer)
   (text :string))
 
-#-(and abcl cl+ssl-foreign-libs-already-loaded)
 (test bio-read
   (is (equalp
        '("Hel" "lo")
@@ -50,7 +49,6 @@
               (bio-read-to-string 3)
               (bio-read-to-string 32))))))))
 
-#-(and abcl cl+ssl-foreign-libs-already-loaded)
 (test bio-gets
   (cffi:with-foreign-object (array :char 32)
     (is (equalp
@@ -78,7 +76,6 @@ bar")
                (bio-gets bio array 0))))
     (is (= 0 (cffi:mem-ref array :unsigned-char 0)))))
 
-#-(and abcl cl+ssl-foreign-libs-already-loaded)
 (test bio-write-puts
   (is (equalp
        "Hello Hi

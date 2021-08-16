@@ -25,7 +25,7 @@ env:
     # - LISP=sbcl-bin OPENSSL=libressl-3.0.1 BITS=64
     # - LISP=ccl-bin OPENSSL=openssl-0.9.8zh BITS=64
     # - LISP=ccl-bin OPENSSL=openssl-1.0.0s BITS=64
-    # - LISP=ccl-bin OPENSSL=openssl-1.0.2q BITS=64
+     - LISP=ccl-bin OPENSSL=openssl-1.0.2q BITS=64
 #ok    - LISP=ccl-bin OPENSSL=openssl-1.1.0j BITS=64
 #ok     - LISP=ccl-bin OPENSSL=openssl-1.1.1a BITS=64
     # - LISP=ccl-bin OPENSSL=openssl-1.1.1a BITS=64 READTABLE_CASE_INVERT=1
@@ -113,6 +113,10 @@ cache:
 
 script:
   - LIB_LOAD_MODE=new ./.travis-run-tests.sh
-  - ls ~/.cache/common-lisp/
-  - rm -rf ~/.cache/common-lisp/
-  - LIB_LOAD_MODE=old ./.travis-run-tests.sh
+  - |
+    if [ "$LISP" != "abcl" ]
+    then
+      ls ~/.cache/common-lisp/
+      rm -rf ~/.cache/common-lisp/
+      LIB_LOAD_MODE=old ./.travis-run-tests.sh
+    fi
