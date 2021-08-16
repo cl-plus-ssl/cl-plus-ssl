@@ -13,8 +13,6 @@
 (defpackage :cl+ssl
   (:use :common-lisp :trivial-gray-streams)
   (:export #:*default-cipher-list*
-           #:define-libssl-path
-           #:define-libcrypto-path
            #:ensure-initialized
            #:reload
            #:stream-fd
@@ -71,4 +69,7 @@
            #:certificate-fingerprint
 
            ;; hostname-verification
-           #:verify-hostname))
+           #:verify-hostname)
+  (:import-from :cl+ssl/config
+                #:libssl
+                #:libcrypto))

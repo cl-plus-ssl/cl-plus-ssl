@@ -1,4 +1,11 @@
-(in-package :cl+ssl)
+(in-package :cl-user)
+
+(defpackage :cl+ssl/config
+  (:use :common-lisp)
+  (:export #:define-libssl-path
+           #:define-libcrypto-path))
+
+(in-package :cl+ssl/config)
 
 (defvar *libssl-override* nil)
 (defvar *libcrypto-override* nil)

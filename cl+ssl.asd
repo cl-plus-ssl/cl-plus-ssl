@@ -26,7 +26,8 @@
   :components ((:module "src"
                 :serial t
                 :components
-                ((:file "reload")
+                ((:file "package")
+                 (:file "reload")
                  (:file "conditions")
                  (:file "ffi")
                  (:file "ffi-buffer-all")
@@ -40,8 +41,7 @@
                  (:file "verify-hostname")))))
 
 (defsystem :cl+ssl/config
-  :depends-on (:trivial-gray-streams :cffi)
+  :depends-on (:cffi)
   :components ((:module "src"
                 :serial t
-                :components ((:file "package")
-                             (:file "config")))))
+                :components ((:file "config")))))

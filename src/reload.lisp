@@ -7,9 +7,6 @@
 ;;; See LICENSE for details.
 
 ;;; We do this in an extra file so that it happens
-;;;   - after the asd file has been loaded, so that users can
-;;;     customize *libssl-pathname* between loading the asd and LOAD-OPing
-;;;     the actual sources
 ;;;   - before ssl.lisp is loaded, which needs the library at compilation
 ;;;     time on some implemenations
 ;;;   - but not every time ffi.lisp is re-loaded as would happen if we
@@ -36,7 +33,7 @@
 ;;
 ;; These are 32-bit only.
 
-(unless *libcrypto-override*
+(unless cl+ssl/config::*libcrypto-override*
   (cffi:define-foreign-library libcrypto
     (:windows (:or #+(and windows x86-64) "libcrypto-1_1-x64.dll"
                    #+(and windows x86) "libcrypto-1_1.dll"
@@ -79,7 +76,7 @@
                                     "libcrypto.so"))
     (:cygwin (:or "cygcrypto-1.1.dll" "cygcrypto-1.0.0.dll"))))
 
-(unless *libssl-override*
+(unless cl+ssl/config::*libssl-override*
   (cffi:define-foreign-library libssl
     (:windows (:or #+(and windows x86-64) "libssl-1_1-x64.dll"
                    #+(and windows x86) "libssl-1_1.dll"
