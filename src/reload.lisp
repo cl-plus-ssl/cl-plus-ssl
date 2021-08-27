@@ -91,6 +91,10 @@
                   "/usr/local/opt/openssl/lib/libssl.dylib"    ;; Homebrew
                   "/opt/homebrew/opt/openssl/lib/libssl.dylib" ;; Homebrew Arm64
                   "/usr/local/lib/libssl.dylib" ;; personalized install
+                  "/usr/lib/libssl.46.dylib"
+                  "/usr/lib/libssl.44.dylib"
+                  "/usr/lib/libssl.43.dylib"
+                  "/usr/lib/libssl.35.dylib"
                   "libssl.dylib" ;; default system libssl, which may have insufficient crypto
                   "/usr/lib/libssl.dylib"))
     (:solaris (:or "/lib/64/libssl.so"
