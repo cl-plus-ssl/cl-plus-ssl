@@ -38,6 +38,11 @@
     (:windows (:or #+(and windows x86-64) "libcrypto-1_1-x64.dll"
                    #+(and windows x86) "libcrypto-1_1.dll"
                    "libeay32.dll"))
+    ;; Unlike some other systems, OpenBSD linker,
+    ;; when passed library name without versions at the end,
+    ;; will locate the library with highest major.minor version,
+    ;; so we can just use just "libssl.so".
+    ;; More info at https://github.com/cl-plus-ssl/cl-plus-ssl/pull/2.
     (:openbsd "libcrypto.so")
     (:darwin (:or "/opt/local/lib/libcrypto.dylib"                ;; MacPorts
                   "/sw/lib/libcrypto.dylib"                       ;; Fink
@@ -45,10 +50,11 @@
                   "/opt/homebrew/opt/openssl/lib/libcrypto.dylib" ;; Homebrew Arm64
                   "/usr/local/lib/libcrypto.dylib" ;; personalized install
 
-                  ;; System-provided libraries. These must be loaded with an explicit
-                  ;; API version, or else the process will crash (that was just a warning
-                  ;; starging frmo maxOS > 10.15, and finally macOS >= 11 crashes the process
-                  ;; with a fatal error)
+                  ;; System-provided libraries. Must be loaded from files with
+                  ;; names that include version explicitly, instead of any versionless
+                  ;; symlink file. Otherwise macOS crushes the process (starting from
+                  ;; macOS > 10.15 that was just a warning, and finally macOS >= 11
+                  ;; crashes the process with a fatal error)
                   ;;
                   ;; Please note that in macOS >= 11.0, these paths may not exist in the
                   ;; file system anymore, but trying to load them via dlopen will work. This
@@ -91,17 +97,23 @@
                   "/usr/local/opt/openssl/lib/libssl.dylib"    ;; Homebrew
                   "/opt/homebrew/opt/openssl/lib/libssl.dylib" ;; Homebrew Arm64
                   "/usr/local/lib/libssl.dylib" ;; personalized install
+
+                  ;; System-provided libraries, with version in the file name.
+                  ;; See the comment for the corresponding libcryto equivalents above.
                   "/usr/lib/libssl.46.dylib"
                   "/usr/lib/libssl.44.dylib"
                   "/usr/lib/libssl.43.dylib"
                   "/usr/lib/libssl.35.dylib"
-                  "libssl.dylib" ;; default system libssl, which may have insufficient crypto
+
+                  ;; Default system libssl, versionless file name.
+                  ;; See the coment for the corresponding libcrypto.
+                  "libssl.dylib"
                   "/usr/lib/libssl.dylib"))
     (:solaris (:or "/lib/64/libssl.so"
                    "libssl.so.0.9.8" "libssl.so" "libssl.so.4"))
     ;; Unlike some other systems, OpenBSD linker,
     ;; when passed library name without versions at the end,
-    ;; will locate the library with highest macro.minor version,
+    ;; will locate the library with highest major.minor version,
     ;; so we can just use just "libssl.so".
     ;; More info at https://github.com/cl-plus-ssl/cl-plus-ssl/pull/2.
     (:openbsd "libssl.so")
