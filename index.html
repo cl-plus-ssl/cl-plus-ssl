@@ -237,8 +237,8 @@
       If <tt>auto-free-p</tt> is true the context is freed using <tt>ssl-ctx-free</tt> before exit.
     </p>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-stream-p t) verify hostname (buffer-size *default-buffer-size*) (input-buffer-size buffer-size) (output-buffer-size buffer-size))<br/><br/>
-      Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-stream-p t) (buffer-size *default-buffer-size*) (input-buffer-size buffer-size) (output-buffer-size buffer-size))</div>
+      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-stream-p *default-unwrap-stream-p*) verify hostname (buffer-size *default-buffer-size*) (input-buffer-size buffer-size) (output-buffer-size buffer-size))<br/><br/>
+      Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-stream-p *default-unwrap-stream-p*) (buffer-size *default-buffer-size*) (input-buffer-size buffer-size) (output-buffer-size buffer-size))</div>
       Return an SSL stream for the client (server)
       socket <tt>fd-or-stream</tt>.  All reads and writes to this
       stream will be pushed through the OpenSSL library.
@@ -295,6 +295,10 @@
     <p>
       <div class="def">Parameter *default-buffer-size*</div>
       The default input and output buffers size of the SSL-STREAM objects.
+    </p>
+    <p>
+      <div class="def">Variable *default-unwrap-stream-p* t</div>
+      The default value for the <tt>:unwrap-stream-p</tt> function parameter.
     </p>
     <p>
       <div class="def">Variable *make-ssl-client-stream-verify-default* :required</div>
