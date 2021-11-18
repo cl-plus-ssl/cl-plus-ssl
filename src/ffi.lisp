@@ -802,6 +802,10 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :int
   (asn1-string :pointer))
 
+(define-crypto-function ("ASN1_UTCTIME_check" asn1-utctime-check)
+    :int
+  (asn1-string :pointer))
+
 ;; X509 & ASN1 - end
 
 (define-ssl-function ("SSL_CTX_set_default_verify_paths" ssl-ctx-set-default-verify-paths)
