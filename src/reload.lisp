@@ -16,7 +16,33 @@
 
 (in-package :cl+ssl)
 
+;; The default OS-X libssl seems have had insufficient crypto algos
+;; (missing TLSv1_[1,2]_XXX methods,
+;; see https://github.com/cl-plus-ssl/cl-plus-ssl/issues/56)
+;; so first try to load possible custom installations of libssl.
+;; However, macOS can crash the process if we try to load
+;; an unexisting path, see
+;; https://github.com/cl-plus-ssl/cl-plus-ssl/issues/138
+;; and the discussion in
+;; https://github.com/cl-plus-ssl/cl-plus-ssl/issues/114.
+;; Therefore we first detect the presence of custom installations,
+;; remember them as special *features* flags, which we then use
+;; as conditions in the CFFI library definitions.
 
+#+darwin
+(defun detect-macos-custom-installations ()
+  (dolist (dir-feature '(("/opt/local/lib/" :cl+ssl-macports-found)
+                         ("/sw/lib/" :cl+ssl-fink-found)
+                         ("/usr/local/opt/openssl/lib/" :cl+ssl-homebrew-found)
+                         ("/opt/homebrew/opt/openssl/lib/" :cl+ssl-homebrew-arm64-found)
+                         ("/usr/local/lib/" :cl+ssl-personalized-install-found)))
+    (destructuring-bind (dir feature) dir-feature
+      (when (and (probe-file (concatenate 'string dir "libssl.dylib"))
+                 (probe-file (concatenate 'string dir "libcrypto.dylib")))
+        (pushnew feature *features*)))))
+
+#+darwin
+(detect-macos-custom-installations)
 
 ;; Windows builds have been naming librypto and libssl DLLs in several different ways:
 ;;
@@ -44,13 +70,13 @@
     ;; so we can just use just "libssl.so".
     ;; More info at https://github.com/cl-plus-ssl/cl-plus-ssl/pull/2.
     (:openbsd "libcrypto.so")
-    (:darwin (:or "/opt/local/lib/libcrypto.dylib"                ;; MacPorts
-                  "/sw/lib/libcrypto.dylib"                       ;; Fink
-                  "/usr/local/opt/openssl/lib/libcrypto.dylib"    ;; Homebrew
-                  "/opt/homebrew/opt/openssl/lib/libcrypto.dylib" ;; Homebrew Arm64
-                  "/usr/local/lib/libcrypto.dylib" ;; personalized install
 
-                  ;; System-provided libraries. Must be loaded from files with
+    ((:and :darwin :cl+ssl-macports-found) "/opt/local/lib/libcrypto.dylib")
+    ((:and :darwin :cl+ssl-fink-found) "/sw/lib/libcrypto.dylib")
+    ((:and :darwin :cl+ssl-homebrew-found) "/usr/local/opt/openssl/lib/libcrypto.dylib")
+    ((:and :darwin :cl+ssl-homebrew-arm64-found) "/opt/homebrew/opt/openssl/lib/libcrypto.dylib")
+    ((:and :darwin :cl+ssl-personalized-install-found) "/usr/local/lib/libcrypto.dylib")
+    (:darwin (:or ;; System-provided libraries. Must be loaded from files with
                   ;; names that include version explicitly, instead of any versionless
                   ;; symlink file. Otherwise macOS crushes the process (starting from
                   ;; macOS > 10.15 that was just a warning, and finally macOS >= 11
@@ -88,17 +114,13 @@
                    #+(and windows x86) "libssl-1_1.dll"
                    "libssl32.dll"
                    "ssleay32.dll"))
-    ;; The default OS-X libssl seems have had insufficient crypto algos
-    ;; (missing TLSv1_[1,2]_XXX methods,
-    ;; see https://github.com/cl-plus-ssl/cl-plus-ssl/issues/56)
-    ;; so first try to load possible custom installations of libssl
-    (:darwin (:or "/opt/local/lib/libssl.dylib"                ;; MacPorts
-                  "/sw/lib/libssl.dylib"                       ;; Fink
-                  "/usr/local/opt/openssl/lib/libssl.dylib"    ;; Homebrew
-                  "/opt/homebrew/opt/openssl/lib/libssl.dylib" ;; Homebrew Arm64
-                  "/usr/local/lib/libssl.dylib" ;; personalized install
 
-                  ;; System-provided libraries, with version in the file name.
+    ((:and :darwin :cl+ssl-macports-found) "/opt/local/lib/libssl.dylib")
+    ((:and :darwin :cl+ssl-fink-found) "/sw/lib/libssl.dylib")
+    ((:and :darwin :cl+ssl-homebrew-found) "/usr/local/opt/openssl/lib/libssl.dylib")
+    ((:and :darwin :cl+ssl-homebrew-arm64-found) "/opt/homebrew/opt/openssl/lib/libssl.dylib")
+    ((:and :darwin :cl+ssl-personalized-install-found) "/usr/local/lib/libssl.dylib")
+    (:darwin (:or ;; System-provided libraries, with version in the file name.
                   ;; See the comment for the corresponding libcryto equivalents above.
                   "/usr/lib/libssl.46.dylib"
                   "/usr/lib/libssl.44.dylib"
