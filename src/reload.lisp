@@ -37,9 +37,10 @@
                          ("/opt/homebrew/opt/openssl/lib/" :cl+ssl-homebrew-arm64-found)
                          ("/usr/local/lib/" :cl+ssl-personalized-install-found)))
     (destructuring-bind (dir feature) dir-feature
-      (when (and (probe-file (concatenate 'string dir "libssl.dylib"))
-                 (probe-file (concatenate 'string dir "libcrypto.dylib")))
-        (pushnew feature *features*)))))
+      (if (and (probe-file (concatenate 'string dir "libssl.dylib"))
+               (probe-file (concatenate 'string dir "libcrypto.dylib")))
+          (pushnew feature *features*)
+          (setf *features* (remove feature *features*))))))
 
 #+darwin
 (detect-macos-custom-installations)

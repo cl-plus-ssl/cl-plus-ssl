@@ -1199,6 +1199,8 @@ context and in particular the loaded certificate chain."
 (defun reload ()
   (if *ssl-global-context*
       (ssl-ctx-free *ssl-global-context*))
+  #+darwin
+  (detect-macos-custom-installations)
   (unless (member :cl+ssl-foreign-libs-already-loaded
                   *features*)
     (cffi:use-foreign-library libcrypto)
