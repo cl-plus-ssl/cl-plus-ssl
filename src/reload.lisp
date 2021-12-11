@@ -29,8 +29,7 @@
 ;; remember them as special *features* flags, which we then use
 ;; as conditions in the CFFI library definitions.
 
-#+darwin
-(defun detect-macos-custom-installations ()
+(defun detect-macos-custom-openssl-installations ()
   (dolist (dir-feature '(("/opt/local/lib/" :cl+ssl-macports-found)
                          ("/sw/lib/" :cl+ssl-fink-found)
                          ("/usr/local/opt/openssl/lib/" :cl+ssl-homebrew-found)
@@ -42,8 +41,32 @@
           (pushnew feature *features*)
           (setf *features* (remove feature *features*))))))
 
-#+darwin
-(detect-macos-custom-installations)
+(defun detect-custom-openssl-installations-if-macos ()
+  ;; Instead of a read-time conditional we use
+  ;; a run-time check, so that it works even
+  ;; for compiled code or images built on another
+  ;; platform and then reloaded on macOS.
+  (when (member :darwin *features*)
+    (detect-macos-custom-openssl-installations)))
+
+(detect-custom-openssl-installations-if-macos)
+
+#| A manual test that I used on Linux for the above
+   macOS OpenSSL custom installation detection code.
+
+sudo mkdir -p /sw/lib
+sudo touch /sw/lib/libssl.dylib /sw/lib/libcrypto.dylib
+
+sudo touch /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
+
+(detect-macos-custom-openssl-installations)
+(remove-if-not (lambda (f) (search "cl+ssl" (string-downcase f)))
+               *features*)
+
+sudo rm -rf /sw/
+sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
+
+|#
 
 ;; Windows builds have been naming librypto and libssl DLLs in several different ways:
 ;;
