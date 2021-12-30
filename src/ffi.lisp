@@ -623,7 +623,11 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :long
   (ssl ssl-pointer))
 
-(define-ssl-function ("SSL_get_peer_certificate" ssl-get-peer-certificate)
+(define-ssl-function-ex (:vanished "3.0.0") ("SSL_get_peer_certificate" ssl-get-peer-certificate)
+    :pointer
+  (ssl ssl-pointer))
+
+(define-ssl-function-ex (:since "3.0.0") ("SSL_get1_peer_certificate" ssl-get1-peer-certificate)
     :pointer
   (ssl ssl-pointer))
 

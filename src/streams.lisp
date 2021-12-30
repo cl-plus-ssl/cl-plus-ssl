@@ -347,7 +347,10 @@ MAKE-CONTEXT also allows to enab/disable verification."
   ;; HOSTNAME is either NIL or a string.
   (when verify-mode
     (let* ((handle (ssl-stream-handle ssl-stream))
-           (srv-cert (ssl-get-peer-certificate handle)))
+           (srv-cert (funcall (if (openssl-is-at-least 3 0 0)
+                                  'ssl-get1-peer-certificate
+                                  'ssl-get-peer-certificate)
+                              handle)))
       (unwind-protect
            (progn
              (when (and (eq :required verify-mode)
