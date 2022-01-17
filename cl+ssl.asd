@@ -7,21 +7,22 @@
 ;;;
 ;;; See LICENSE for details.
 
-(defpackage :cl+ssl-system
-  (:use :cl :asdf))
-
-(in-package :cl+ssl-system)
-
 (defsystem :cl+ssl
   :description "Common Lisp interface to OpenSSL."
   :license "MIT"
   :author "Eric Marsden, Jochen Schmidt, David Lichteblau"
   :depends-on (:cl+ssl/config
-               :cffi :trivial-gray-streams :flexi-streams #+sbcl :sb-posix
-               #+(and sbcl win32) :sb-bsd-sockets
-               :bordeaux-threads :trivial-garbage :uiop
+               :cffi
+               :trivial-gray-streams
+               :flexi-streams
+               :bordeaux-threads
+               :trivial-garbage
+               :uiop
                :usocket
-               :alexandria :trivial-features)
+               :alexandria
+               :trivial-features
+               (:feature :sbcl :sb-posix)
+               (:feature (:and :sbcl :win32) :sb-bsd-sockets))
   :serial t
   :components ((:module "src"
                 :serial t
@@ -31,14 +32,16 @@
                  (:file "conditions")
                  (:file "ffi")
                  (:file "ffi-buffer-all")
-                 #-clisp (:file "ffi-buffer")
-                 #+clisp (:file "ffi-buffer-clisp")
+                 (:file "ffi-buffer" :if-feature (:not :clisp))
+                 (:file "ffi-buffer-clisp" :if-feature :clisp)
                  (:file "streams")
                  (:file "bio")
                  (:file "x509")
                  (:file "random")
                  (:file "context")
-                 (:file "verify-hostname")))))
+                 (:file "verify-hostname"))))
+  :in-order-to ((test-op (load-op :cl+ssl.test)))
+  :perform (test-op (op c) (symbol-call '#:5am '#:run! :cl+ssl)))
 
 (defsystem :cl+ssl/config
   :depends-on (:cffi)
