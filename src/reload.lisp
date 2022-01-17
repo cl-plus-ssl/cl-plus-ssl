@@ -110,21 +110,20 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
                   ;; file system anymore, but trying to load them via dlopen will work. This
                   ;; is because macOS ships all system-provided libraries as a single
                   ;; dyld_shared_cache bundle.
+                  "/usr/lib/libcrypto.46.dylib"
                   "/usr/lib/libcrypto.44.dylib"
                   "/usr/lib/libcrypto.42.dylib"
                   "/usr/lib/libcrypto.41.dylib"
                   "/usr/lib/libcrypto.35.dylib"
 
-                  ;; The default old system libcrypto, versionless file name,
-                  ;; which may have insufficient crypto and can cause
-                  ;; process crash on macOS >= 11. Currently we
-                  ;; are protected from the crash by the presense of
-                  ;; the versioned paths above, but in fiew years,
-                  ;; after those exacty versioned paths are not available,
-                  ;; the crash may re-appear. So eventially we will
-                  ;; need to delete the unversioned paths.
-                  ;; Keeping them for a while for compatibility.
-                  ;; See https://github.com/cl-plus-ssl/cl-plus-ssl/pull/115
+                  ;; The default old system libcrypto, versionless file name, which may
+                  ;; have insufficient crypto and can cause process crash on macOS >= 11.
+                  ;; Currently we are protected from the crash by the presence of the
+                  ;; versioned paths above, but in a few years, when those versions are
+                  ;; not available anymore, the crash may re-appear. So eventually we will
+                  ;; need to delete the unversioned paths. Keeping them for a while for
+                  ;; compatibility. See
+                  ;; https://github.com/cl-plus-ssl/cl-plus-ssl/pull/115
                   "libcrypto.dylib"
                   "/usr/lib/libcrypto.dylib"))
     ((and :unix (not :cygwin)) (:or "libcrypto.so.1.1"
@@ -146,6 +145,7 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
     ((:and :darwin :cl+ssl-personalized-install-found) "/usr/local/lib/libssl.dylib")
     (:darwin (:or ;; System-provided libraries, with version in the file name.
                   ;; See the comment for the corresponding libcryto equivalents above.
+                  "/usr/lib/libssl.48.dylib"
                   "/usr/lib/libssl.46.dylib"
                   "/usr/lib/libssl.44.dylib"
                   "/usr/lib/libssl.43.dylib"
