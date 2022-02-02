@@ -107,9 +107,10 @@ variants if you have use cases for them.)"
 (defmacro define-ssl-function-ex ((&key since vanished) name-and-options &body body)
   `(progn
      ;; debugging
-     (pushnew  ,(car name-and-options)
-               *cl+ssl-ssl-foreign-function-names*
-               :test 'equal)
+     ,@(unless (or since vanished)
+         `((pushnew ,(car name-and-options)
+                    *cl+ssl-ssl-foreign-function-names*
+                    :test 'equal)))
      (defcfun-versioned (:since ,since :vanished ,vanished)
          ,(append name-and-options '(:library libssl))
        ,@body)))
@@ -120,9 +121,10 @@ variants if you have use cases for them.)"
 (defmacro define-crypto-function-ex ((&key since vanished) name-and-options &body body)
   `(progn
      ;; debugging
-     (pushnew ,(car name-and-options)
-              *cl+ssl-crypto-foreign-function-names*
-              :test 'equal)
+     ,@(unless (or since vanished)
+         `(( pushnew ,(car name-and-options)
+                     *cl+ssl-crypto-foreign-function-names*
+                     :test 'equal)))
      (defcfun-versioned (:since ,since :vanished ,vanished)
          ,(append name-and-options
                   #-cl+ssl-foreign-libs-already-loaded '(:library libcrypto))
