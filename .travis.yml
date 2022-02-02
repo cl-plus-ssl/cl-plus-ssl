@@ -89,9 +89,9 @@ env:
     - LISP=allegro OPENSSL=libressl-3.0.1 BITS=32
 install:
   - if [ $LISP = abcl ]; then sudo apt-get install maven; fi
-  # - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
+  - curl -L https://raw.githubusercontent.com/snmsts/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
   # Use previous release of roswell, because the current release fails to install on Travis CI, see https://github.com/roswell/roswell/issues/463
-  - curl -L https://raw.githubusercontent.com/roswell/roswell/a8fd8a3c33078d6f06e6cda9d099dcba6fbefcb7/scripts/install-for-ci.sh | sh
+  # - curl -L https://raw.githubusercontent.com/roswell/roswell/a8fd8a3c33078d6f06e6cda9d099dcba6fbefcb7/scripts/install-for-ci.sh | sh
   # Build OpenSSL libraries, if not cached yet
   - |
     if [ ! -f "test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/lib/libcrypto.so" ] || [ ! -f "test/run-on-many-lisps-and-openssls/openssl-releases/bin/$OPENSSL-${BITS}bit/lib/libssl.so" ]
