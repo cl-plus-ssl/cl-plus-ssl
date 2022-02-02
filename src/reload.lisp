@@ -51,8 +51,10 @@
 
 (detect-custom-openssl-installations-if-macos)
 
-#| A manual test that I used on Linux for the above
-   macOS OpenSSL custom installation detection code.
+#|
+
+A manual test that I used on Linux for the above
+macOS OpenSSL custom installation detection code.
 
 sudo mkdir -p /sw/lib
 sudo touch /sw/lib/libssl.dylib /sw/lib/libcrypto.dylib
@@ -68,7 +70,9 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
 
 |#
 
-;; Windows builds have been naming librypto and libssl DLLs in several different ways:
+
+;; Windows builds have been naming librypto and libssl DLLs
+;; in several different ways:
 ;;
 ;; - libeay32.dll, libssl32.dll
 ;; - libeay32.dll, ssleay32.dll
@@ -101,27 +105,28 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
     ((:and :darwin :cl+ssl-homebrew-arm64-found) "/opt/homebrew/opt/openssl/lib/libcrypto.dylib")
     ((:and :darwin :cl+ssl-personalized-install-found) "/usr/local/lib/libcrypto.dylib")
     (:darwin (:or ;; System-provided libraries. Must be loaded from files with
-                  ;; names that include version explicitly, instead of any versionless
-                  ;; symlink file. Otherwise macOS crushes the process (starting from
-                  ;; macOS > 10.15 that was just a warning, and finally macOS >= 11
-                  ;; crashes the process with a fatal error)
-                  ;;
-                  ;; Please note that in macOS >= 11.0, these paths may not exist in the
-                  ;; file system anymore, but trying to load them via dlopen will work. This
-                  ;; is because macOS ships all system-provided libraries as a single
-                  ;; dyld_shared_cache bundle.
+                  ;; names that include version explicitly, instead of any
+                  ;; versionless symlink file. Otherwise macOS crushes the
+                  ;; process (starting from macOS > 10.15 that was just a
+                  ;; warning, and finally macOS >= 11 crashes the process with a
+                  ;; fatal error) Please note that in macOS >= 11.0, these paths
+                  ;; may not exist in the file system anymore, but trying to
+                  ;; load them via dlopen will work. This is because macOS ships
+                  ;; all system-provided libraries as a single dyld_shared_cache
+                  ;; bundle.
                   "/usr/lib/libcrypto.46.dylib"
                   "/usr/lib/libcrypto.44.dylib"
                   "/usr/lib/libcrypto.42.dylib"
                   "/usr/lib/libcrypto.41.dylib"
                   "/usr/lib/libcrypto.35.dylib"
 
-                  ;; The default old system libcrypto, versionless file name, which may
-                  ;; have insufficient crypto and can cause process crash on macOS >= 11.
-                  ;; Currently we are protected from the crash by the presence of the
-                  ;; versioned paths above, but in a few years, when those versions are
-                  ;; not available anymore, the crash may re-appear. So eventually we will
-                  ;; need to delete the unversioned paths. Keeping them for a while for
+                  ;; The default old system libcrypto, versionless file name,
+                  ;; which may have insufficient crypto and can cause process
+                  ;; crash on macOS >= 11. Currently we are protected from the
+                  ;; crash by the presence of the versioned paths above, but in
+                  ;; a few years, when those versions are not available anymore,
+                  ;; the crash may re-appear. So eventually we will need to
+                  ;; delete the unversioned paths. Keeping them for a while for
                   ;; compatibility. See
                   ;; https://github.com/cl-plus-ssl/cl-plus-ssl/pull/115
                   "libcrypto.dylib"
@@ -144,7 +149,7 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
     ((:and :darwin :cl+ssl-homebrew-arm64-found) "/opt/homebrew/opt/openssl/lib/libssl.dylib")
     ((:and :darwin :cl+ssl-personalized-install-found) "/usr/local/lib/libssl.dylib")
     (:darwin (:or ;; System-provided libraries, with version in the file name.
-                  ;; See the comment for the corresponding libcryto equivalents above.
+                  ;; See the comment for the libcryto equivalents above.
                   "/usr/lib/libssl.48.dylib"
                   "/usr/lib/libssl.46.dylib"
                   "/usr/lib/libssl.44.dylib"
