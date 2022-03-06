@@ -35,6 +35,9 @@
            #:ssl-error-initialize
            #:ssl-ctx-free
 
+           #:ssl-timeout
+           #:ssl-stream-read-timeout
+
            #:with-pem-password
 
            #:+ssl-verify-none+

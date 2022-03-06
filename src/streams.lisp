@@ -43,6 +43,10 @@
     :initform nil
     :initarg :deadline
     :accessor ssl-stream-deadline)
+   (read-timeout
+    :initform nil
+    :initarg :read-timeout
+    :accessor ssl-stream-read-timeout)
    (output-buffer
     :accessor ssl-stream-output-buffer)
    (output-pointer
@@ -58,8 +62,7 @@
                                        &key
                                        (buffer-size *default-buffer-size*)
                                        (input-buffer-size buffer-size)
-                                       (output-buffer-size buffer-size)
-                                       &allow-other-keys)
+                                       (output-buffer-size buffer-size))
   (setf (ssl-stream-output-buffer stream)
         (make-buffer output-buffer-size))
   (setf (ssl-stream-input-buffer stream)
@@ -99,30 +102,56 @@
 (defmethod open-stream-p ((stream ssl-stream))
   (and (ssl-stream-handle stream) t))
 
+(define-condition ssl-timeout (error)
+  ((stream :reader ssl-error-stream :initarg :stream)))
+
+(defmacro with-timeout-handling ((stream) &body body)
+  #+sbcl
+  (alexandria:once-only (stream)
+    (let ((timeout (gensym "TIMEOUT")) (call-start (gensym "CALL-START")))
+    `(let ((,timeout (ssl-stream-read-timeout ,stream)))
+       (labels ((body ()
+                  ,@body))
+         (if ,timeout
+             (let ((,call-start (get-internal-real-time)))
+               (handler-case
+                   (sb-sys:with-deadline (:seconds ,timeout) (progn ,@body))
+                 (ssl-error-ssl (e)
+                   (if (>= (get-internal-real-time) (/ (+ ,call-start ,timeout)
+                                                       internal-time-units-per-second))
+                       (error 'ssl-timeout :stream ,stream)
+                       (error e)))
+                 (SB-SYS:DEADLINE-TIMEOUT ()
+                   (error 'ssl-timeout :stream ,stream))))
+             (body))))))
+  #-sbcl (progn ,@body))
+
 (defmethod stream-listen ((stream ssl-stream))
   (or (ssl-stream-peeked-byte stream)
-      (setf (ssl-stream-peeked-byte stream)
-            (let* ((buf (ssl-stream-input-buffer stream))
-                   (handle (ssl-stream-handle stream))
-                   (*blockp* nil) ;; for the Lisp-BIO
-                   (n (with-pointer-to-vector-data (ptr buf)
-                        (nonblocking-ssl-funcall
-                         stream handle #'ssl-read handle ptr 1))))
-              (and (> n 0) (buffer-elt buf 0))))))
+      (with-timeout-handling (stream)
+        (setf (ssl-stream-peeked-byte stream)
+              (let* ((buf (ssl-stream-input-buffer stream))
+                     (handle (ssl-stream-handle stream))
+                     (*blockp* nil) ;; for the Lisp-BIO
+                     (n (with-pointer-to-vector-data (ptr buf)
+                          (nonblocking-ssl-funcall
+                           stream handle #'ssl-read handle ptr 1))))
+                (and (> n 0) (buffer-elt buf 0)))))))
 
 (defmethod stream-read-byte ((stream ssl-stream))
   (or (prog1
           (ssl-stream-peeked-byte stream)
         (setf (ssl-stream-peeked-byte stream) nil))
-      (handler-case
-          (let ((buf (ssl-stream-input-buffer stream))
-                (handle (ssl-stream-handle stream)))
-            (with-pointer-to-vector-data (ptr buf)
-              (ensure-ssl-funcall
-               stream handle #'ssl-read handle ptr 1))
-            (buffer-elt buf 0))
-        (ssl-error-zero-return ()     ;SSL_read returns 0 on end-of-file
-          :eof))))
+      (with-timeout-handling (stream)
+        (handler-case
+            (let ((buf (ssl-stream-input-buffer stream))
+                  (handle (ssl-stream-handle stream)))
+              (with-pointer-to-vector-data (ptr buf)
+                (ensure-ssl-funcall
+                 stream handle #'ssl-read handle ptr 1))
+              (buffer-elt buf 0))
+          (ssl-error-zero-return () ;SSL_read returns 0 on end-of-file
+            :eof)))))
 
 (defmethod stream-read-sequence ((stream ssl-stream) seq start end &key)
   (when (and (< start end) (ssl-stream-peeked-byte stream))
@@ -131,19 +160,20 @@
     (incf start))
   (let ((buf (ssl-stream-input-buffer stream))
         (handle (ssl-stream-handle stream)))
-    (loop
-       for length = (min (- end start) (buffer-length buf))
-       while (plusp length)
-       do
-         (handler-case
-             (let ((read-bytes
-                    (with-pointer-to-vector-data (ptr buf)
-                      (ensure-ssl-funcall
-                       stream handle #'ssl-read handle ptr length))))
-               (s/b-replace seq buf :start1 start :end1 (+ start read-bytes))
-               (incf start read-bytes))
-           (ssl-error-zero-return ()   ;SSL_read returns 0 on end-of-file
-             (return))))
+    (with-timeout-handling (stream)
+      (loop
+        for length = (min (- end start) (buffer-length buf))
+        while (plusp length)
+        do
+           (handler-case
+               (let ((read-bytes
+                       (with-pointer-to-vector-data (ptr buf)
+                         (ensure-ssl-funcall
+                          stream handle #'ssl-read handle ptr length))))
+                 (s/b-replace seq buf :start1 start :end1 (+ start read-bytes))
+                 (incf start read-bytes))
+             (ssl-error-zero-return () ;SSL_read returns 0 on end-of-file
+               (return)))))
     ;; fixme: kein out-of-file wenn (zerop start)?
     start))
 
@@ -412,7 +442,8 @@ Change this variable if you want the previous behaviour.")
               hostname
               (buffer-size *default-buffer-size*)
               (input-buffer-size buffer-size)
-              (output-buffer-size buffer-size))
+              (output-buffer-size buffer-size)
+              (read-timeout nil))
   "Returns an SSL stream for the client socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your client. KEY is the path to the PEM-encoded key for the client, which
@@ -433,7 +464,8 @@ hostname verification if verification is enabled by VERIFY."
                                :socket socket
                                :close-callback close-callback
                                :input-buffer-size input-buffer-size
-                               :output-buffer-size output-buffer-size)))
+                               :output-buffer-size output-buffer-size
+                               :read-timeout read-timeout)))
     (with-new-ssl (handle)
       (if hostname
           (cffi:with-foreign-string (chostname hostname)
