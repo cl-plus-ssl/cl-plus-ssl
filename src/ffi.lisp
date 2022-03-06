@@ -877,13 +877,9 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
        (let ((error (ssl-get-error handle nbytes)))
          (case error
            (#.+ssl-error-want-read+
-            (input-wait stream
-                        (ssl-get-fd handle)
-                        (ssl-stream-deadline stream)))
+            (io-wait stream (ssl-get-fd handle) (ssl-stream-deadline stream) :input))
            (#.+ssl-error-want-write+
-            (output-wait stream
-                         (ssl-get-fd handle)
-                         (ssl-stream-deadline stream)))
+            (io-wait stream (ssl-get-fd handle) (ssl-stream-deadline stream) :output))
            (t
             (ssl-signal-error handle func error nbytes)))))))
 
@@ -903,7 +899,66 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
             (ssl-signal-error handle func error nbytes)))))))
 
 
-;;; Waiting for output to be possible
+;;; Waiting for io.
+
+(defun seconds-until-deadline (deadline)
+  (/ (- deadline (get-internal-real-time))
+     internal-time-units-per-second))
+
+(defun get-timeout (stream direction)
+  (ecase direction
+    (:input (ssl-stream-read-timeout stream))
+    (:output (ssl-stream-write-timeout stream))))
+
+(defun signal-if-timeout-expired (stream direction)
+  (let ((deadline (ssl-stream-deadline stream)))
+    (when (and deadline (> (get-internal-real-time) deadline))
+      (error 'ssl-timeout :stream stream :direction direction))))
+
+(defun get-timeout-from-deadline (deadline)
+  (and deadline (max 0 (seconds-until-deadline deadline))))
+
+#+sbcl
+(defun io-wait (stream fd deadline direction)
+  "Signals `ssl-timeout' if the underlying stream timeout is hit or ssl-stream-read-timeout
+or ssl-stream-write-timeout is specified"
+  (unless (sb-sys:wait-until-fd-usable fd direction (get-timeout-from-deadline deadline))
+    (signal-if-timeout-expired stream direction)))
+
+#+allegro
+(eval-when (:compile-top-level :load-top-level :execute)
+  (require :process))
+
+#+allegro
+(defun io-wait (stream fd deadline direction)
+  "Signals `ssl-timeout' if the underlying stream timeout is hit or ssl-stream-read-timeout
+or ssl-stream-write-timeout is specified"
+  (unless
+      (ecase direction
+        (:input
+         (mp:wait-for-input-available fd
+                                      :timeout (get-timeout-from-deadline deadline)
+                                      :whostate "cl+ssl waiting for input"))
+        (:output
+         (mp:process-wait-with-timeout "cl+ssl waiting for output"
+                                       (get-timeout-from-deadline deadline)
+                                       'excl:write-no-hang-p
+                                       fd)))
+    (signal-if-timeout-expired stream direction)))
+
+#+lispworks ;; If wait-for-input-streams throws an error
+(defun io-wait (stream fd deadline direction)
+  "Signals `ssl-timeout' if the underlying stream timeout is hit or ssl-stream-read-timeout
+or ssl-stream-write-timeout is specified."
+  (declare (ignore fd))
+  (unless
+      (system:wait-for-input-streams (list (ssl-stream-socket stream))
+                                     :timeout (or (get-timeout stream direction)
+                                                  (get-timeout-from-deadline deadline))
+                                     :wait-reason (if (eq direction :input)
+                                                      "cl+ssl waiting for input"
+                                                      "cl+ssl waiting for output"))
+    (signal-if-timeout-expired stream direction)))
 
 #+clozure-common-lisp
 (defun milliseconds-until-deadline (deadline stream)
@@ -914,111 +969,29 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
          (round (- deadline now) (/ internal-time-units-per-second 1000))))))
 
 #+clozure-common-lisp
-(defun output-wait (stream fd deadline)
-  (unless deadline
-    (setf deadline (stream-deadline (ssl-stream-socket stream))))
-  (let* ((timeout
-          (if deadline
-              (milliseconds-until-deadline deadline stream)
-              nil)))
-    (multiple-value-bind (win timedout error)
-        (ccl::process-output-wait fd timeout)
-      (unless win
-        (if timedout
-            (error 'ccl::communication-deadline-expired :stream stream)
-            (ccl::stream-io-error stream (- error) "write"))))))
-
-(defun seconds-until-deadline (deadline)
-  (/ (- deadline (get-internal-real-time))
-     internal-time-units-per-second))
-
-#+sbcl
-(defun output-wait (stream fd deadline)
-  (declare (ignore stream))
-  (let ((timeout
-         ;; *deadline* is handled by wait-until-fd-usable automatically,
-         ;; but we need to turn a user-specified deadline into a timeout
-         (when deadline
-           (seconds-until-deadline deadline))))
-    (sb-sys:wait-until-fd-usable fd :output timeout)))
-
-#+allegro
-(eval-when (:compile-top-level :load-top-level :execute)
-  (require :process))
-
-#+allegro
-(defun output-wait (stream fd deadline)
-  (declare (ignore stream))
-  (let ((timeout
-         (when deadline
-           (seconds-until-deadline deadline))))
-    (mp:process-wait-with-timeout "cl+ssl waiting for output"
-                                  timeout
-                                  'excl:write-no-hang-p
-                                  fd)))
-
-#-(or clozure-common-lisp sbcl allegro)
-(defun output-wait (stream fd deadline)
-  (declare (ignore stream fd deadline))
-  ;; This situation means that the lisp set our fd to non-blocking mode,
-  ;; and streams.lisp didn't know how to undo that.
-  (warn "cl+ssl::output-wait is not implemented for this lisp, but a non-blocking stream is encountered"))
-
-
-;;; Waiting for input to be possible
-
-#+clozure-common-lisp
-(defun input-wait (stream fd deadline)
-  (unless deadline
-    (setf deadline (stream-deadline (ssl-stream-socket stream))))
-  (let* ((timeout
-          (if deadline
-              (milliseconds-until-deadline deadline stream)
-              nil)))
-    (multiple-value-bind (win timedout error)
-        (ccl::process-input-wait fd timeout)
-      (unless win
-        (if timedout
-            (error 'ccl::communication-deadline-expired :stream stream)
-            (ccl::stream-io-error stream (- error) "read"))))))
-
-#+sbcl
-(defun input-wait (stream fd deadline)
-  (declare (ignore stream))
-  (let ((timeout
-         ;; *deadline* is handled by wait-until-fd-usable automatically,
-         ;; but we need to turn a user-specified deadline into a timeout
-         (when deadline
-           (seconds-until-deadline deadline))))
-    (sb-sys:wait-until-fd-usable fd :input timeout)))
-
-#+allegro
-(defun input-wait (stream fd deadline)
-  (declare (ignore stream))
-  (let ((timeout
-         (when deadline
-           (max 0 (seconds-until-deadline deadline)))))
-    (mp:wait-for-input-available fd
-                                 :timeout timeout
-                                 :whostate "cl+ssl waiting for input")))
-
-#+lispworks
-(defun input-wait (stream fd deadline)
-  (declare (ignore fd))
-
-  (let* ((timeout
-           (when deadline
-             (max 0 (seconds-until-deadline deadline)))))
-    (system:wait-for-input-streams (list (ssl-stream-socket stream))
-                                   :timeout timeout
-                                   :wait-reason "cl+ssl waiting for input")))
+(defun io-wait (stream fd deadline direction)
+  "Supports old behavior that throws `ccl::communication-deadline-expired. if the underlying stream
+   is the source of the deadline.  New behavior invoked by ssl-stream-read-timeout or write-timeout
+   throws `ssl-timeout'"
+  (multiple-value-bind (win timedout error)
+      (ecase direction
+        (:input (ccl::process-input-wait fd (millisecond-until-deadline deadline stream)))
+        (:output (ccl::process-output-wait fd (millisecond-until-deadline deadline stream))))
+    (unless win
+      (cond
+        ((and timedout (get-timeout stream direction))
+         (signal-if-timeout-expired stream direction))
+        (timedout
+         (error 'ccl::communication-deadline-expired :stream stream))
+        (t
+         (ccl::stream-io-error stream (- error) (if (eq direction :input) "read" "write")))))))
 
 #-(or clozure-common-lisp sbcl allegro lispworks)
-(defun input-wait (stream fd deadline)
+(defun io-wait (stream fd deadline direction)
   (declare (ignore stream fd deadline))
   ;; This situation means that the lisp set our fd to non-blocking mode,
   ;; and streams.lisp didn't know how to undo that.
-  (warn "cl+ssl::input-wait is not implemented for this lisp, but a non-blocking stream is encountered"))
+  (warn "cl+ssl::io-wait is not implemented for this lisp, but a non-blocking stream is encountered"))
 
 
 ;;; Encrypted PEM files support
