@@ -881,7 +881,10 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
            (#.+ssl-error-want-write+
             (io-wait stream (ssl-get-fd handle) (ssl-stream-deadline stream) :output))
            (t
-            (ssl-signal-error handle func error nbytes)))))))
+            (if (and (ssl-stream-deadline stream)
+                     (>= (get-internal-real-time) (ssl-stream-deadline stream)))
+                (error 'ssl-timeout :direction :unknown :stream stream)
+                (ssl-signal-error handle func error nbytes))))))))
 
 (declaim (inline nonblocking-ssl-funcall))
 (defun nonblocking-ssl-funcall (stream handle func &rest args)
