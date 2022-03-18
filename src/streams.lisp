@@ -493,6 +493,13 @@ may be associated with the passphrase PASSWORD."
       (ensure-ssl-funcall stream handle #'ssl-accept handle)
       (handle-external-format stream external-format))))
 
+(defun get-selected-alpn-protocol (ssl)
+  "Alpn protocol agreed with the server (or nil)"
+  (cffi:with-foreign-objects ((ptr :pointer) (len :pointer))
+    (ssl-get0-alpn-selected (ssl-stream-handle ssl) ptr len)
+    (cffi:foreign-string-to-lisp (cffi:mem-ref ptr :pointer)
+                                 :count (cffi:mem-ref len :int))))
+
 #+openmcl
 (defmethod stream-deadline ((stream ccl::basic-stream))
   (ccl::ioblock-deadline (ccl::stream-ioblock stream t)))

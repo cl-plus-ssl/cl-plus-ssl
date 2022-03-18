@@ -404,6 +404,11 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (SSL :pointer)
   (text :string)
   (len :int))
+(define-ssl-function-ex (:since "1.0") ("SSL_get0_alpn_selected" ssl-get0-alpn-selected)
+    :void
+  (SSL :pointer)
+  (text (:pointer :string))
+  (len (:pointer :int)))
 (define-crypto-function ("BIO_ctrl" bio-set-fd)
     :long
   (bio :pointer)
