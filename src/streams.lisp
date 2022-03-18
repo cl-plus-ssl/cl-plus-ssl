@@ -401,6 +401,14 @@ MAKE-SSL-CLIENT-STREAM - previously it worked as if :VERIFY NIL
 but then :VERIFY :REQUIRED became the default on non-Windows platforms.
 Change this variable if you want the previous behaviour.")
 
+(defun make-alpn-proto-string (protocols)
+  "Convert list of protocol names to the wire-format byte string."
+  (with-output-to-string (s)
+    (dolist (proto protocols)
+      (check-type proto string)
+      (write-char (code-char (length proto)) s)
+      (write-string proto s))))
+
 ;; fixme: free the context when errors happen in this function
 (defun make-ssl-client-stream
     (socket &key certificate key password method external-format
@@ -412,7 +420,8 @@ Change this variable if you want the previous behaviour.")
               hostname
               (buffer-size *default-buffer-size*)
               (input-buffer-size buffer-size)
-              (output-buffer-size buffer-size))
+              (output-buffer-size buffer-size)
+              alpn-protocols)
   "Returns an SSL stream for the client socket descriptor SOCKET.
 CERTIFICATE is the path to a file containing the PEM-encoded certificate for
  your client. KEY is the path to the PEM-encoded key for the client, which
@@ -427,7 +436,10 @@ HOSTNAME if specified, will be sent by client during TLS negotiation,
 according to the Server Name Indication (SNI) extension to the TLS.
 When server handles several domain names, this extension enables the server
 to choose certificate for right domain. Also the HOSTNAME is used for
-hostname verification if verification is enabled by VERIFY."
+hostname verification if verification is enabled by VERIFY.
+
+ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names such as
+\"h2\" that would be offered to the server."
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-stream
                                :socket socket
@@ -438,6 +450,9 @@ hostname verification if verification is enabled by VERIFY."
       (if hostname
           (cffi:with-foreign-string (chostname hostname)
             (ssl-set-tlsext-host-name handle chostname)))
+      (if alpn-protocols
+          (cffi:with-foreign-string ((string len) (make-alpn-proto-string alpn-protocols))
+            (ssl-set-alpn-protos handle string (1- len))))
       (setf socket (install-handle-and-bio stream handle socket unwrap-stream-p))
       (ssl-set-connect-state handle)
       (when (zerop (ssl-set-cipher-list handle cipher-list))
@@ -477,6 +492,13 @@ may be associated with the passphrase PASSWORD."
         (install-key-and-cert handle key certificate))
       (ensure-ssl-funcall stream handle #'ssl-accept handle)
       (handle-external-format stream external-format))))
+
+(defun get-selected-alpn-protocol (ssl)
+  "Alpn protocol agreed with the server (or nil)"
+  (cffi:with-foreign-objects ((ptr :pointer) (len :pointer))
+    (ssl-get0-alpn-selected (ssl-stream-handle ssl) ptr len)
+    (cffi:foreign-string-to-lisp (cffi:mem-ref ptr :pointer)
+                                 :count (cffi:mem-ref len :int))))
 
 #+openmcl
 (defmethod stream-deadline ((stream ccl::basic-stream))

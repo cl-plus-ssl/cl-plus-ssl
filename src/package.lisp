@@ -19,6 +19,7 @@
            #:*default-buffer-size*
            #:make-ssl-client-stream
            #:*make-ssl-client-stream-verify-default*
+           #:get-selected-alpn-protocol
            #:make-ssl-server-stream
            #:*default-unwrap-stream-p*
            #:use-certificate-chain-file
