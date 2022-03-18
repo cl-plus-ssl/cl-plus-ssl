@@ -399,6 +399,11 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (define-ssl-function ("SSL_CTX_free" ssl-ctx-free)
     :void
   (ctx ssl-ctx))
+(define-ssl-function-ex (:since "1.0")  ("SSL_set_alpn_protos" ssl-set-alpn-protos)
+    :int
+  (SSL :pointer)
+  (text :string)
+  (len :int))
 (define-crypto-function ("BIO_ctrl" bio-set-fd)
     :long
   (bio :pointer)
