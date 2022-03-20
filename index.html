@@ -313,6 +313,10 @@
       Change this variable if you want the previous behaviour.
     </p>
     <p>
+      <div class="def">Function CL+SSL:GET-SELECTED-ALPN-PROTOCOL (ssl)</div>
+      Return ALPN protocol selected by server, or NIL if none was selected. SSL is the client ssl stream returned by <tt>make-ssl-client-stream</tt>.
+    </p>
+    <p>
       <div class="def">Function CL+SSL:USE-CERTIFICATE-CHAIN-FILE (certificate-chain-file)</div>
       Loads a PEM encoded certificate chain file <tt>certificate-chain-file</tt>
       and adds the chain to global context. The certificates must be sorted 
