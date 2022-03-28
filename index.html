@@ -237,7 +237,7 @@
       If <tt>auto-free-p</tt> is true the context is freed using <tt>ssl-ctx-free</tt> before exit.
     </p>
     <p>
-      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-stream-p *default-unwrap-stream-p*) verify hostname (buffer-size *default-buffer-size*) (input-buffer-size buffer-size) (output-buffer-size buffer-size))<br/><br/>
+      <div class="def">Function CL+SSL:MAKE-SSL-CLIENT-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-stream-p *default-unwrap-stream-p*) verify hostname (buffer-size *default-buffer-size*) (input-buffer-size buffer-size) (output-buffer-size buffer-size) alpn-protocols)<br/><br/>
       Function CL+SSL:MAKE-SSL-SERVER-STREAM (fd-or-stream &amp;key external-format certificate key password close-callback (unwrap-stream-p *default-unwrap-stream-p*) (buffer-size *default-buffer-size*) (input-buffer-size buffer-size) (output-buffer-size buffer-size))</div>
       Return an SSL stream for the client (server)
       socket <tt>fd-or-stream</tt>.  All reads and writes to this
@@ -293,6 +293,11 @@
       hostname verification if verification is enabled by <tt>verify</tt>.
     </p>
     <p>
+      <tt>alpn-protocols</tt> if specified, should be a list of alpn protocol
+      names that would be offered to the server. Protocol selected by the server
+      can be retrieved by <tt>get-selected-alpn-protocol</tt>.
+    </p>
+    <p>
       <div class="def">Parameter *default-buffer-size*</div>
       The default input and output buffers size of the SSL-STREAM objects.
     </p>
@@ -306,6 +311,10 @@
       <tt>make-ssl-client-stream</tt> - previously it worked as if <tt>:verify nil</tt>
       but then <tt>:verify :required</tt> became the default on non-Windows platforms.
       Change this variable if you want the previous behaviour.
+    </p>
+    <p>
+      <div class="def">Function CL+SSL:GET-SELECTED-ALPN-PROTOCOL (ssl)</div>
+      Return ALPN protocol selected by server, or NIL if none was selected. SSL is the client ssl stream returned by <tt>make-ssl-client-stream</tt>.
     </p>
     <p>
       <div class="def">Function CL+SSL:USE-CERTIFICATE-CHAIN-FILE (certificate-chain-file)</div>
