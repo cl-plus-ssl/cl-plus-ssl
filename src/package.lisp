@@ -69,6 +69,7 @@
            #:certificate-not-before-time
            #:certificate-subject-common-names
            #:certificate-fingerprint
+           #:x509-free
 
            ;; hostname-verification
            #:verify-hostname)
