@@ -133,6 +133,7 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
                   "/usr/lib/libcrypto.dylib"))
     ((and :unix (not :cygwin)) (:or "libcrypto.so.1.1"
                                     "libcrypto.so.1.0.0"
+                                    "libcrypto.so.3"
                                     "libcrypto.so"))
     (:cygwin (:or "cygcrypto-1.1.dll" "cygcrypto-1.0.0.dll"))))
 
@@ -183,6 +184,7 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
                                     "libssl.so.0.9.8"
                                     "libssl.so.10"
                                     "libssl.so.4"
+                                    "libssl.so.3"
                                     "libssl.so"))
     (:cygwin (:or "cygssl-1.1.dll" "cygssl-1.0.0.dll"))
     (t (:default "libssl3"))))
