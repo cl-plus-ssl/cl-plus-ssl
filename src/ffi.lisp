@@ -728,7 +728,11 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :pointer
   (name :string))
 
-(define-crypto-function ("EVP_MD_size" evp-md-size)
+(define-crypto-function-ex (:vanished "3.0.0") ("EVP_MD_size" evp-md-size)
+    :int
+  (evp :pointer))
+
+(define-crypto-function-ex (:since "3.0.0") ("EVP_MD_get_size" evp-md-get-size)
     :int
   (evp :pointer))
 
