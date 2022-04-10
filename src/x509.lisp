@@ -296,7 +296,10 @@ designator for the digest algorithm to use (it defaults to SHA-1)."
       (error 'ssl-error-call
              :message (format nil "unknown digest algorithm ~A" algorithm)
              :queue (read-ssl-error-queue)))
-    (let* ((size (evp-md-size evp))
+    (let* ((size (funcall (if (openssl-is-at-least 3 0 0)
+                                  'evp-md-get-size
+                                  'evp-md-size)
+                          evp))
            (fingerprint (cffi:make-shareable-byte-vector size)))
       (cffi:with-pointer-to-vector-data (buf fingerprint)
         (unless (= 1 (x509-digest certificate evp buf (cffi:null-pointer)))

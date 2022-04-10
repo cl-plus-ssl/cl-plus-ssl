@@ -400,9 +400,9 @@ MAKE-CONTEXT also allows to enab/disable verification."
                         ;; but also signals error for many verification failures.
                         ;; TODO: refactor verify-hostname to simplify this protocol.
                         (not (verify-hostname srv-cert hostname)))
-               (error 'ssl-unable-to-match-host-name :hostname hostname))))
-      (unless (cffi:null-pointer-p srv-cert)
-        (x509-free srv-cert)))))
+               (error 'ssl-unable-to-match-host-name :hostname hostname)))
+        (unless (cffi:null-pointer-p srv-cert)
+          (x509-free srv-cert))))))
 
 (defun handle-external-format (stream ef)
   (if ef

@@ -27,4 +27,5 @@
                  (:file "fingerprint")
                  (:file "verify-hostname")
                  (:file "badssl-com")
-                 (:file "bio")))))
+                 (:file "bio")
+                 (:file "alpn")))))
