@@ -41,15 +41,12 @@
     :accessor ssl-stream-handle)
    (deadline
     :initform nil
-    :initarg :deadline
     :accessor ssl-stream-deadline
-    :documentation "Internal use only.  In internal-time-units-per-second.")
-   (honor-underlying-stream-timeout
-    :initform nil
-    :initarg :honor-underlying-stream-timeout
-    :accessor ssl-stream-honor-underlying-stream-timeout
-    :documentation "If t, then we query the SSL-STREAM-SOCKET for its timeout if READ-TIMEOUT or WRITE-TIMEOUT
-is not specified")
+    :documentation "Internal use only.  This is used for CCL+MCL backwards compatibility to support underlying stream deadlines")
+   (operation-started
+    :initform :not-in-progress
+    :accessor ssl-stream-operation-started
+    :documentation "Internal use only.  In internal-time-units-per-second.  Notes when any ssl operation starts")
    (read-timeout
     :initform nil
     :initarg :read-timeout
@@ -119,15 +116,11 @@ is not specified")
   ((stream :reader ssl-error-stream :initarg :stream)
    (direction :reader ssl-error-direction :initarg :direction)))
 
-(defun set-deadline-from-timeout (stream direction)
-  (let ((timeout (ecase direction
-                    (:input (ssl-stream-read-timeout stream))
-                    (:output (ssl-stream-write-timeout stream))))
-        (deadline (when (ssl-stream-honor-underlying-stream-timeout stream) (stream-deadline (ssl-stream-socket stream)))))
-    (if timeout
-      (setf (ssl-stream-deadline stream)
-            (+ (get-internal-real-time) (* internal-time-units-per-second timeout)))
-      (setf (ssl-stream-deadline stream) deadline))))
+;; For historical reasons we honor underlying stream deadlines on CCL and MCL
+;; Doing this for all implementations is not in scope for cl+ssl.
+#+(or openmcl clozure-common-lisp)
+(defun ccl-stream-deadline (stream)
+  (ccl::ioblock-deadline (ccl::stream-ioblock stream t)))
 
 (defmethod stream-listen ((stream ssl-stream))
   (or (ssl-stream-peeked-byte stream)
@@ -147,7 +140,6 @@ is not specified")
       (handler-case
           (let ((buf (ssl-stream-input-buffer stream))
                 (handle (ssl-stream-handle stream)))
-            (set-deadline-from-timeout stream :input)
             (with-pointer-to-vector-data (ptr buf)
               (ensure-ssl-funcall
                stream handle #'ssl-read handle ptr 1))
@@ -162,20 +154,21 @@ is not specified")
     (incf start))
   (let ((buf (ssl-stream-input-buffer stream))
         (handle (ssl-stream-handle stream)))
-    (set-deadline-from-timeout stream :input)
-    (loop
-       for length = (min (- end start) (buffer-length buf))
-       while (plusp length)
-       do
-         (handler-case
-             (let ((read-bytes
-                    (with-pointer-to-vector-data (ptr buf)
-                      (ensure-ssl-funcall
-                       stream handle #'ssl-read handle ptr length))))
-               (s/b-replace seq buf :start1 start :end1 (+ start read-bytes))
-               (incf start read-bytes))
-           (ssl-error-zero-return ()   ;SSL_read returns 0 on end-of-file
-             (return))))
+    ;; timeout applies for the whole operation
+    (with-timeout (stream read-deadline nil)
+      (loop
+        for length = (min (- end start) (buffer-length buf))
+        while (plusp length)
+        do
+           (handler-case
+               (let ((read-bytes
+                       (with-pointer-to-vector-data (ptr buf)
+                         (ensure-ssl-funcall
+                          stream handle #'ssl-read handle ptr length))))
+                 (s/b-replace seq buf :start1 start :end1 (+ start read-bytes))
+                 (incf start read-bytes))
+             (ssl-error-zero-return ()   ;SSL_read returns 0 on end-of-file
+               (return)))))
     ;; fixme: kein out-of-file wenn (zerop start)?
     start))
 
@@ -189,15 +182,16 @@ is not specified")
 
 (defmethod stream-write-sequence ((stream ssl-stream) seq start end &key)
   (let ((buf (ssl-stream-output-buffer stream)))
-    (when (> (+ (- end start) (ssl-stream-output-pointer stream)) (buffer-length buf))
-      ;; not enough space left?  flush buffer.
-      (force-output stream)
-      ;; still doesn't fit?
-      (while (> (- end start) (buffer-length buf))
-        (b/s-replace buf seq :start2 start)
-        (incf start (buffer-length buf))
-        (setf (ssl-stream-output-pointer stream) (buffer-length buf))
-        (force-output stream)))
+    (with-timeout (stream nil write-deadline) ; timeout applies for whole operation
+      (when (> (+ (- end start) (ssl-stream-output-pointer stream)) (buffer-length buf))
+        ;; not enough space left?  flush buffer.
+        (force-output stream)
+        ;; still doesn't fit?
+        (while (> (- end start) (buffer-length buf))
+          (b/s-replace buf seq :start2 start)
+          (incf start (buffer-length buf))
+          (setf (ssl-stream-output-pointer stream) (buffer-length buf))
+          (force-output stream))))
     (b/s-replace buf seq
                  :start1 (ssl-stream-output-pointer stream)
                  :start2 start
@@ -215,7 +209,6 @@ is not specified")
     (when (plusp fill-ptr)
       (unless handle
         (error "output operation on closed SSL stream"))
-      (set-deadline-from-timeout stream :output)
       (with-pointer-to-vector-data (ptr buf)
         (ensure-ssl-funcall stream handle #'ssl-write handle ptr fill-ptr))
       (setf (ssl-stream-output-pointer stream) 0))))
@@ -454,7 +447,6 @@ Change this variable if you want the previous behaviour.")
               (buffer-size *default-buffer-size*)
               (input-buffer-size buffer-size)
               (output-buffer-size buffer-size)
-              (honor-underlying-stream-timeout #+clozure-common-lisp t nil)
               (read-timeout nil) (write-timeout nil) alpn-protocols)
 
   "Returns an SSL stream for the client socket descriptor SOCKET.
@@ -474,11 +466,9 @@ to choose certificate for right domain. Also the HOSTNAME is used for
 hostname verification if verification is enabled by VERIFY.
 
 READ-TIMEOUT and WRITE-TIMEOUT specify a timeout in seconds before
-which to signal an SSL-TIMEOUT error.  If these are not specified and
-HONOR-UNDERLYING-STREAM-TIMEOUT is true, then the underlying SOCKET
-timeout, if set, will be honored and an SSL-TIMEOUT error will be
-thrown except on CCL where an implementation specific error is thrown
-for backwards compatibility
+which to signal an SSL-TIMEOUT error.  After the timeout we throw an
+SSL-TIMEOUT error.  On CCL or MCL, though, we also honor the
+underlying stream timeout and throw a CCL specific error (CHECK).
 
 ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names such as
 \"h2\" that would be offered to the server."
@@ -489,7 +479,6 @@ ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names such as
                                :close-callback close-callback
                                :input-buffer-size input-buffer-size
                                :output-buffer-size output-buffer-size
-                               :honor-underlying-stream-timeout honor-underlying-stream-timeout
                                :read-timeout read-timeout
                                :write-timeout write-timeout)))
     (with-new-ssl (handle)
@@ -517,7 +506,6 @@ ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names such as
                  (buffer-size *default-buffer-size*)
                  (input-buffer-size buffer-size)
                  (output-buffer-size buffer-size)
-                 (honor-underlying-stream-timeout #+clozure-common-lisp t nil)
                  (read-timeout nil)
                  (write-timeout nil))
   "Returns an SSL stream for the server socket descriptor SOCKET.
@@ -526,11 +514,9 @@ CERTIFICATE is the path to a file containing the PEM-encoded certificate for
 may be associated with the passphrase PASSWORD.
 
 READ-TIMEOUT and WRITE-TIMEOUT specify a timeout in seconds before
-which to signal an SSL-TIMEOUT error.  If these are not specified and
-HONOR-UNDERLYING-STREAM-TIMEOUT is true, then the underlying SOCKET
-timeout, if set, will be honored and an SSL-TIMEOUT error will be
-thrown except on CCL where an implementation specific error is thrown
-for backwards compatibility"
+which to signal an SSL-TIMEOUT error.  On CCL and MCL we honor the
+underlying socket timeout settings and throw an implementation specific
+error for backwards compatibility reasons."
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-server-stream
                                :socket socket
@@ -539,7 +525,6 @@ for backwards compatibility"
                                :key key
                                :input-buffer-size input-buffer-size
                                :output-buffer-size output-buffer-size
-                               :honor-underlying-stream-timeout honor-underlying-stream-timeout
                                :read-timeout read-timeout
                                :write-timeout write-timeout)))
     (with-new-ssl (handle)
@@ -558,22 +543,6 @@ for backwards compatibility"
     (ssl-get0-alpn-selected (ssl-stream-handle ssl) ptr len)
     (cffi:foreign-string-to-lisp (cffi:mem-ref ptr :pointer)
                                  :count (cffi:mem-ref len :int))))
-
-#+(or openmcl clozure-common-lisp)
-(defmethod stream-deadline ((stream ccl::basic-stream))
-  (ccl::ioblock-deadline (ccl::stream-ioblock stream t)))
-
-(defmethod stream-deadline ((stream usocket:stream-usocket))
-  (+ (get-internal-real-time)
-     (* internal-time-units-per-second (usocket:socket-option stream :receive-timeout))))
-
-#+sbcl
-(defmethod stream-deadline ((stream sb-sys:fd-stream))
-  (+ (get-internal-real-time)
-     (* internal-time-units-per-second (sb-impl::fd-stream-timeout stream))))
-
-(defmethod stream-deadline ((stream t))
-  nil)
 
 (defgeneric stream-fd (stream))
 (defmethod stream-fd (stream) stream)

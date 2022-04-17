@@ -880,25 +880,55 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 ;;;
 (defvar *socket*)
 
-(declaim (inline ensure-ssl-funcall))
+(defmacro with-timeout ((stream read-deadline write-deadline) &body body)
+  "Handle read-timeout and write-timeout requests within the body.  If
+   no other operation is in progress, updates
+   ssl-stream-operation-started to be the current time and then
+   executes body.  Binds READ-DEADLINE and WRITE-DEADLINE to a
+   deadline in internal time units which should be obeyed (if either
+   is nil then that timeout type is ignored).  On error, resets
+   operation started if it had been set by this call."
+  (alexandria:with-gensyms (operation-was-already-in-progress timeout-active started read-timeout write-timeout)
+    (alexandria:once-only (stream)
+      `(let* ((,operation-was-already-in-progress t)
+              (,started (ssl-stream-operation-started ,stream))
+              ,@(when read-deadline `((,read-timeout (ssl-stream-read-timeout ,stream))))
+              ,@(when write-deadline `((,write-timeout (ssl-stream-write-timeout ,stream))))
+              (,timeout-active (or ,(when read-deadline read-timeout) ,(when write-deadline write-timeout))))
+         (when (and ,timeout-active (eq ,started :not-in-progress))
+           (setf ,started (setf (ssl-stream-operation-started ,stream) (get-internal-real-time)))
+           (setf ,operation-was-already-in-progress nil))
+         (unwind-protect
+              (let (,@(when read-deadline `((,read-deadline (when ,read-timeout (+ ,started (* internal-time-units-per-second ,read-timeout))))))
+                    ,@(when write-deadline `((,write-deadline (when ,write-timeout (+ ,started (* internal-time-units-per-second ,write-timeout)))))))
+                (declare (ignorable ,@(when read-deadline `(,read-deadline)) ,@(when write-deadline `(,write-deadline))))
+                ,@body)
+           (unless ,operation-was-already-in-progress
+             (setf (ssl-stream-operation-started stream) :not-in-progress)))))))
+
+(declaim (notinline ensure-ssl-funcall))
 (defun ensure-ssl-funcall (stream handle func &rest args)
-  (loop
-     (let ((nbytes
-            (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
-              (apply func args))))
-       (when (plusp nbytes)
-         (return nbytes))
-       (let ((error (ssl-get-error handle nbytes)))
-         (case error
-           (#.+ssl-error-want-read+
-            (io-wait stream (ssl-get-fd handle) (ssl-stream-deadline stream) :input))
-           (#.+ssl-error-want-write+
-            (io-wait stream (ssl-get-fd handle) (ssl-stream-deadline stream) :output))
-           (t
-            (if (and (ssl-stream-deadline stream)
-                     (>= (get-internal-real-time) (ssl-stream-deadline stream)))
-                (error 'ssl-timeout :direction :unknown :stream stream)
-                (ssl-signal-error handle func error nbytes))))))))
+  "Call FUNC with ARGS with the socket associated with the stream appropriately bound and handle errors and IO timeouts."
+  (with-timeout (stream read-deadline write-deadline)
+    (loop
+      (let ((nbytes
+              (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
+                (apply func args))))
+        (when (plusp nbytes)
+          (return nbytes))
+        (let ((error (ssl-get-error handle nbytes)))
+          (case error
+            (#.+ssl-error-want-read+
+             (io-wait stream (ssl-get-fd handle) read-deadline :input))
+            (#.+ssl-error-want-write+
+             (io-wait stream (ssl-get-fd handle) write-deadline :output))
+            (t
+             (let* ((deadline-value (and (or read-deadline write-deadline)
+                                         (max (or read-deadline write-deadline)
+                                              (or write-deadline read-deadline)))))
+               (if (and deadline-value (>= (get-internal-real-time) deadline-value))
+                   (error 'ssl-timeout :direction :unknown :stream stream)
+                   (ssl-signal-error handle func error nbytes))))))))))
 
 (declaim (inline nonblocking-ssl-funcall))
 (defun nonblocking-ssl-funcall (stream handle func &rest args)
@@ -927,10 +957,9 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     (:input (ssl-stream-read-timeout stream))
     (:output (ssl-stream-write-timeout stream))))
 
-(defun signal-if-timeout-expired (stream direction)
-  (let ((deadline (ssl-stream-deadline stream)))
-    (when (and deadline (> (get-internal-real-time) deadline))
-      (error 'ssl-timeout :stream stream :direction direction))))
+(defun signal-if-timeout-expired (deadline stream direction)
+  (when (and deadline (> (get-internal-real-time) deadline))
+    (error 'ssl-timeout :stream stream :direction direction)))
 
 (defun get-timeout-from-deadline (deadline)
   (and deadline (max 0 (seconds-until-deadline deadline))))
@@ -940,7 +969,7 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   "Signals `ssl-timeout' if the underlying stream timeout is hit or ssl-stream-read-timeout
 or ssl-stream-write-timeout is specified"
   (unless (sb-sys:wait-until-fd-usable fd direction (get-timeout-from-deadline deadline))
-    (signal-if-timeout-expired stream direction)))
+    (signal-if-timeout-expired deadline stream direction)))
 
 #+allegro
 (eval-when (:compile-top-level :load-top-level :execute)
@@ -961,12 +990,11 @@ or ssl-stream-write-timeout is specified"
                                        (get-timeout-from-deadline deadline)
                                        'excl:write-no-hang-p
                                        fd)))
-    (signal-if-timeout-expired stream direction)))
+    (signal-if-timeout-expired deadline stream direction)))
 
 #+lispworks ;; If wait-for-input-streams throws an error
 (defun io-wait (stream fd deadline direction)
-  "Signals `ssl-timeout' if the underlying stream timeout is hit or ssl-stream-read-timeout
-or ssl-stream-write-timeout is specified."
+  "Signals `ssl-timeout' if the deadline is hit if ssl-stream-read-timeout or ssl-stream-write-timeout is specified."
   (declare (ignore fd))
   (unless
       (system:wait-for-input-streams (list (ssl-stream-socket stream))
@@ -975,7 +1003,7 @@ or ssl-stream-write-timeout is specified."
                                      :wait-reason (if (eq direction :input)
                                                       "cl+ssl waiting for input"
                                                       "cl+ssl waiting for output"))
-    (signal-if-timeout-expired stream direction)))
+    (signal-if-timeout-expired deadline stream direction)))
 
 #+clozure-common-lisp
 (defun milliseconds-until-deadline (deadline stream)
@@ -992,12 +1020,12 @@ or ssl-stream-write-timeout is specified."
    throws `ssl-timeout'"
   (multiple-value-bind (win timedout error)
       (ecase direction
-        (:input (ccl::process-input-wait fd (millisecond-until-deadline deadline stream)))
-        (:output (ccl::process-output-wait fd (millisecond-until-deadline deadline stream))))
+        (:input (ccl::process-input-wait fd (milliseconds-until-deadline deadline stream)))
+        (:output (ccl::process-output-wait fd (milliseconds-until-deadline deadline stream))))
     (unless win
       (cond
         ((and timedout (get-timeout stream direction))
-         (signal-if-timeout-expired stream direction))
+         (signal-if-timeout-expired deadline stream direction))
         (timedout
          (error 'ccl::communication-deadline-expired :stream stream))
         (t
