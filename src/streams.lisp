@@ -460,9 +460,12 @@ to choose certificate for right domain. Also the HOSTNAME is used for
 hostname verification if verification is enabled by VERIFY.
 
 READ-TIMEOUT and WRITE-TIMEOUT specify a timeout in seconds before
-which to signal an SSL-TIMEOUT error.  After the timeout we throw an
-SSL-TIMEOUT error.  On CCL or MCL, though, we also honor the
-underlying stream timeout and throw a CCL specific error.
+which to signal an SSL-TIMEOUT error.  On CCL or MCL, for backwards
+compatibility, we also honor the underlying stream timeout if it is a
+ccl::basic-stream and throw a CCL specific error.  These timeouts are
+only applicable if unwrap-stream-p is true.  In the unwrap-stream-p
+case, though, any implementation dependent stream timeout features are
+applicable (for example usocket timeouts, etc).
 
 ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names such as
 \"h2\" that would be offered to the server."
@@ -508,9 +511,12 @@ CERTIFICATE is the path to a file containing the PEM-encoded certificate for
 may be associated with the passphrase PASSWORD.
 
 READ-TIMEOUT and WRITE-TIMEOUT specify a timeout in seconds before
-which to signal an SSL-TIMEOUT error.  On CCL and MCL we honor the
-underlying socket timeout settings and throw an implementation specific
-error for backwards compatibility reasons."
+which to signal an SSL-TIMEOUT error.  On CCL or MCL, for backwards
+compatibility, we also honor the underlying stream timeout if it is a
+ccl::basic-stream and throw a CCL specific error.  These timeouts are
+only applicable if unwrap-stream-p is true.  In the unwrap-stream-p
+case, though, any implementation dependent stream timeout features are
+applicable (for example usocket timeouts, etc)."
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-server-stream
                                :socket socket
