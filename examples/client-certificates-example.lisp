@@ -29,8 +29,8 @@
 
 (ql:quickload "trivial-sockets")
 
-(cffi:defcallback no-verify :int ((ok :int) (ctx :pointer))
-  (declare (ignore ok ctx))
+(cffi:defcallback no-verify :int ((preverify-ok :int) (x509-store-ctx :pointer))
+  (declare (ignore preverify-ok x509-store-ctx))
   1)
 
 (defun hash-array->string (array)
