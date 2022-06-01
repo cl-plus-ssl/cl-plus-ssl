@@ -23,11 +23,11 @@
 ;; - pass  certificate and key when  generating the stream as  you did
 ;; for the server
 
-(asdf:make "cl+ssl")
+(ql:quickload "cl+ssl")
 
-(asdf:make "bordeaux-threads")
+(ql:quickload "bordeaux-threads")
 
-(asdf:make "trivial-sockets")
+(ql:quickload "trivial-sockets")
 
 (cffi:defcallback no-verify :int ((ok :int) (ctx :pointer))
   (declare (ignore ok ctx))
