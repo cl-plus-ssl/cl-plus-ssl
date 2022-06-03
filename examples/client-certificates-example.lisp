@@ -12,6 +12,11 @@
 ;;;; recalled  the  other  times  with a  mechanism  similar  to  HTTP
 ;;;; cookies.
 
+;; To generate both the keys and certificates, a command line like the
+;; one below could be used:
+
+;; openssl req -new -nodes -x509 -days 365 -subj / -keyout private-key -outform PEM -out certificate
+
 ;; The key points here are:
 
 ;; For the server
