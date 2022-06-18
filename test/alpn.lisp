@@ -8,7 +8,8 @@
 (test alpn-client
   (when (cl+ssl::openssl-is-at-least 1 0 2)
     (flet ((test-alpn-result (target proposed expected)
-             (usocket:with-client-socket (socket stream target 443)
+             (usocket:with-client-socket (socket stream target 443
+                                                 :element-type '(unsigned-byte 8))
                (is
                 (equal expected
                        (cl+ssl:get-selected-alpn-protocol
