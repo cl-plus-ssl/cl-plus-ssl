@@ -32,4 +32,4 @@ jobs:
       - run: |
           docker run -i --mount type=bind,source=${{ github.workspace }},target=/home/cl/cl-plus-ssl/ avodonosov/cl-plus-ssl:latest ls /home/cl/cl-plus-ssl
       - run: |
-          docker run -e "OPENSSL_RELEASES_BIN_DIR=/home/cl/openssl-releases/bin" -e "LIB_LOAD_MODE=new" -e "OPENSSL=openssl-1.1.1f" -e "BITS=64" -i --mount type=bind,source=${{ github.workspace }},target=/home/cl/cl-plus-ssl/ avodonosov/cl-plus-ssl:latest ls /home/cl/cl-plus-ssl/test/run-for-ci.sh
+          docker run -e "OPENSSL_RELEASES_BIN_DIR=/home/cl/openssl-releases/bin" -e "LIB_LOAD_MODE=new" -e "OPENSSL=openssl-1.1.1f" -e "BITS=64" -i --mount type=bind,source=${{ github.workspace }},target=/home/cl/cl-plus-ssl/ avodonosov/cl-plus-ssl:latest /home/cl/cl-plus-ssl/test/run-for-ci.sh
