@@ -28,3 +28,4 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
+      - run docker run -a stdin -a stdout -i -t --mount type=bind,source=${{ github.workspace }},target=/home/cl/cl-plus-ssl/ avodonosov/cl-plus-ssl:latest ls /home/cl/
