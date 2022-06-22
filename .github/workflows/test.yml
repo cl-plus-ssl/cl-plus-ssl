@@ -25,9 +25,11 @@ jobs:
       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
       - name: List files in the repository
         run: |
+          pwd
           ls ${{ github.workspace }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
       - run: |
+          pwd
           docker run -i --mount type=bind,source=${{ github.workspace }},target=/home/cl/cl-plus-ssl/ avodonosov/cl-plus-ssl:latest ls /home/cl/
       - run: |
           docker run -i --mount type=bind,source=${{ github.workspace }},target=/home/cl/cl-plus-ssl/ avodonosov/cl-plus-ssl:latest ls /home/cl/cl-plus-ssl
