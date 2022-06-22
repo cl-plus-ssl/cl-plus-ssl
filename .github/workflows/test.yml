@@ -15,7 +15,6 @@ concurrency:
 jobs:
   test-cl-plus-ssl:
     runs-on: ubuntu-latest
-    container: avodonosov/cl-plus-ssl:latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
