@@ -10,15 +10,16 @@ cd "`dirname $0`"
 
 if [ ! -v OPENSSL_RELEASES_BIN_DIR ]
 then
-    # assume it's not a container, but the dev machine and the openssl binaries
-    # are built right in this subdirectory
+    # assume the openssl binaries are where the build scripts place them
     export OPENSSL_RELEASES_BIN_DIR=run-on-many-lisps-and-openssls/openssl-releases/bin
 fi
+
+MAIN='(handler-case (load "run-for-ci.lisp") (serious-condition (c) (format t "~A: ~A~%" (type-of c) c) (uiop:quit 1)))'
 
 #~/unpacked/ccl-1.11/lx86cl64 --load run-for-ci.lisp
 case $LISP in
     clisp)
-        $LISP -i run-for-ci.lisp;;
+        $LISP -i ~/quicklisp/setup.lisp -x "$MAIN";;
     *)
-        $LISP --load run-for-ci.lisp;;
+        $LISP --eval "$MAIN";;
 esac
