@@ -6,12 +6,6 @@
 ;;;; matching  the   certificate  fingerprint   with  a   database  of
 ;;;; certificates stored on disk, for example.
 
-;;;; Also,   if  the   certificates   are  used   just  for   univocal
-;;;; identification of the client, the  hash of the certificate can be
-;;;; saved  by  the server  the  first  time  the client  connect  and
-;;;; recalled  the  other  times  with a  mechanism  similar  to  HTTP
-;;;; cookies.
-
 ;; To generate both the keys and certificates, a command line like the
 ;; one below could be used:
 
@@ -24,10 +18,15 @@
 
 ;; Optional only if you plan to use self signed client certificates
 
-;; - write  a CFFI callback that  always return 1 (one)  to bypass the
-;; certificate authentication against  a certification authority; pass
-;; the  symbol  of  this  callback   to  key  parameter  :verify  when
-;; generating the context
+;; - save all the trusted client's  certificates in a directory of the
+;;   server's filesystem (for example: "/certs/trusted-clients/") ;
+;; - generate symbolic links to such certificates using this command
+
+;;   # cd /certs/trusted-clients && c_rehash .
+
+;; the step above is needed by libssl to match the certificate sent by
+;; the client  with one  of those  saved on  the filesystem,  idf this
+;; matching fails the connection is rejected.
 
 ;; For the client
 
@@ -40,10 +39,6 @@
 
 (ql:quickload "trivial-sockets")
 
-(cffi:defcallback no-verify :int ((preverify-ok :int) (x509-store-ctx :pointer))
-  (declare (ignore preverify-ok x509-store-ctx))
-  1)
-
 (defun hash-array->string (array)
   (let ((res ""))
     (loop for i across array do
@@ -53,10 +48,18 @@
                          (format nil "~2,'0x" i))))
     res))
 
-(defun start-trivial-server (port certificate key)
-  "Start a  trivial server listening  on `PORT' using  the certificate
-and  key   stored  in  the   file  pointed  by  the   filesystem  path
-`CERTIFICATE' and `KEY' respectively"
+(defun start-trivial-server (port certificate key
+                             &optional (client-certificates-directory :default))
+ "Start a trivial server listening on `PORT' using the certificate
+and key stored in the file pointed by the filesystem path
+`CERTIFICATE' and `KEY' respectively. The argument
+`CLIENT-CERTIFICATES-DIRECTORY' could be either a filesystem directory
+containing the list of trusted client certificates or any legal value
+for `CL+SSL:MAKE-CONTEXT'.
+
+If the client certificates are self signed the aforementioned
+directory must be passed as value for argument
+`CLIENT-CERTIFICATES-DIRECTORY'."
   (format t "~&SSL server listening on port ~d~%" port)
   (bt:make-thread
    (lambda ()
@@ -64,8 +67,7 @@ and  key   stored  in  the   file  pointed  by  the   filesystem  path
        (let* ((socket (trivial-sockets:accept-connection server
                                                          :element-type '(unsigned-byte 8)))
               (ctx (cl+ssl:make-context :verify-mode cl+ssl:+ssl-verify-peer+
-                                        :verify-callback 'no-verify)))
-
+                                        :verify-location client-certificates-directory)))
          (cl+ssl:with-global-context (ctx :auto-free-p t)
            (let* ((client-stream (cl+ssl:make-ssl-server-stream socket
                                                                 :external-format nil
