@@ -20,7 +20,8 @@ jobs:
       - run: mkdir ${{ github.workspace }}/docker-home
       - name: Check out repository code
         uses: actions/checkout@v3
-        path: ${{ github.workspace }}/docker-home/cl-plus-ssl
+        with:
+          path: ${{ github.workspace }}/docker-home/cl-plus-ssl
       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
       - name: List files in the repository
         run: |
