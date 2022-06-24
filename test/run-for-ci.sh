@@ -16,4 +16,9 @@ then
 fi
 
 #~/unpacked/ccl-1.11/lx86cl64 --load run-for-ci.lisp
-ccl --load run-for-ci.lisp
+case $LISP in
+    clisp)
+        $LISP -i run-for-ci.lisp;;
+    *)
+        $LISP --load run-for-ci.lisp;;
+esac
