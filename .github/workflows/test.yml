@@ -27,7 +27,7 @@ jobs:
           pwd
           ls ${{ github.workspace }}/docker-home/cl-plus-ssl
       - run: echo "🍏 This job's status is ${{ job.status }}."
-      - name: "Fetching OpenSSL (and LibreSSL) release binaries:
+      - name: Fetching OpenSSL (and LibreSSL) release binaries
         run: |
           cd ${{ github.workspace }}/docker-home/cl-plus-ssl/test/run-on-many-lisps-and-openssls/openssl-releases/
           ./bin-fetch.sh
