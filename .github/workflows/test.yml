@@ -41,9 +41,10 @@ jobs:
       - if: always()
         run: |
           docker run -e "LISP=sbcl" -e "LIB_LOAD_MODE=new" -e "OPENSSL=openssl-1.1.1f" -e "BITS=64" -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 /home/cl/cl-plus-ssl/test/run-for-ci.sh
-      - if: always()
-        run: |
-          docker run -e "LISP=clisp" -e "LIB_LOAD_MODE=new" -e "OPENSSL=openssl-1.1.1f" -e "BITS=64" -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 /home/cl/cl-plus-ssl/test/run-for-ci.sh
+# https://github.com/cl-plus-ssl/cl-plus-ssl/issues/163
+#      - if: always()
+#        run: |
+#          docker run -e "LISP=clisp" -e "LIB_LOAD_MODE=new" -e "OPENSSL=openssl-1.1.1f" -e "BITS=64" -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 /home/cl/cl-plus-ssl/test/run-for-ci.sh
       - if: always()
         run: |
           docker run -e "LISP=abcl" -e "LIB_LOAD_MODE=new" -e "OPENSSL=openssl-1.1.1f" -e "BITS=64" -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 /home/cl/cl-plus-ssl/test/run-for-ci.sh
