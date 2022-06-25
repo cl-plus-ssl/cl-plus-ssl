@@ -43,6 +43,7 @@ do
                 cflags="-m32"
                 target="i686-linux-gnu"
             else
+                cflags=""
                 target="x86_64-linux-gnu"
             fi
             make distclean || true
