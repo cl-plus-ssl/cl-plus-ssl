@@ -34,10 +34,10 @@ jobs:
           ./bin-fetch.sh
       - run: |
           docker run -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 unpack-default-home-dir
+#      - run: |
+#          docker run -e "LISP=ccl" -e "LIB_LOAD_MODE=new" -e "OPENSSL=openssl-1.1.1f" -e "BITS=64" -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 /home/cl/cl-plus-ssl/test/run-for-ci.sh
       - run: |
-          docker run -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 ls /home/cl/cl-plus-ssl/test/run-on-many-lisps-and-openssls/openssl-releases/
-      - run: |
-          docker run -e "LISP=ccl" -e "LIB_LOAD_MODE=new" -e "OPENSSL=openssl-1.1.1f" -e "BITS=64" -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 /home/cl/cl-plus-ssl/test/run-for-ci.sh
+           LISP=ccl LIB_LOAD_MODE=new OPENSSL=openssl-1.1.1f BITS=64 docker-home/cl-plus-ssl/.github/workflows/test.sh
       - if: always()
         run: |
           docker run -e "LISP=sbcl" -e "LIB_LOAD_MODE=new" -e "OPENSSL=openssl-1.1.1f" -e "BITS=64" -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 /home/cl/cl-plus-ssl/test/run-for-ci.sh
