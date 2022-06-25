@@ -14,6 +14,9 @@ then
     export OPENSSL_RELEASES_BIN_DIR=run-on-many-lisps-and-openssls/openssl-releases/bin
 fi
 
+echo M2_HOME=$M2_HOME
+ls $M2_HOME
+
 MAIN='(handler-case (load "run-for-ci.lisp") (serious-condition (c) (format t "~A: ~A~%" (type-of c) c) (uiop:quit 1)))'
 
 #~/unpacked/ccl-1.11/lx86cl64 --load run-for-ci.lisp
