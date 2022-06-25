@@ -32,11 +32,16 @@ jobs:
         run: |
           cd ${{ github.workspace }}/docker-home/cl-plus-ssl/test/run-on-many-lisps-and-openssls/openssl-releases/
           ./bin-fetch.sh
+      - name: Fetching Apache Maven for ABCL
+        run: |
+          cd ${{ github.workspace }}/docker-home/
+          curl https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz --output apache-maven-3.8.6-bin.tar.gz
+          tar -xzf apache-maven-3.8.6-bin.tar.gz
+          rm apache-maven-3.8.6-bin.tar.gz
       - run: |
           docker run -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 unpack-default-home-dir
-#      - run: |
-#          docker run -e "LISP=ccl" -e "LIB_LOAD_MODE=new" -e "OPENSSL=openssl-1.1.1f" -e "BITS=64" -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 /home/cl/cl-plus-ssl/test/run-for-ci.sh
-      - run: |
+      - if: always()
+        run: |
            LISP=ccl LIB_LOAD_MODE=new OPENSSL=openssl-1.1.1f BITS=64 docker-home/cl-plus-ssl/.github/workflows/test.sh
       - if: always()
         run: |

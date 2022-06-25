@@ -20,6 +20,8 @@ MAIN='(handler-case (load "run-for-ci.lisp") (serious-condition (c) (format t "~
 case $LISP in
     clisp)
         $LISP -i ~/quicklisp/setup.lisp -x "$MAIN";;
+    abcl)
+        $LISP --eval '(require :abcl-contrib)' --eval "$MAIN";;
     *)
         $LISP --eval "$MAIN";;
 esac
