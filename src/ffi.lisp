@@ -278,45 +278,47 @@ session-resume requests) would normally be copied into the local cache before pr
 
 |#
 
-(defparameter +openssl-version-statuses+
+(defparameter +openssl-version-status-strings+
   '("dev"
     "beta 1" "beta 2" "beta 3" "beta 4" "beta 5" "beta 6" "beta 7"
     "beta 8" "beta 9" "beta 10" "beta 11" "beta 12" "beta 13" "beta 14"
     "release"))
 
-(defun openssl-version-status-p (status)
-  (member status +openssl-version-statuses+ :test #'string=))
+(defparameter +openssl-version-patch-characters+
+  '(#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z))
 
-(defun encode-openssl-version-impl (major minor &optional (fix 0) patch (status "release"))
+(deftype openssl-version-patch ()
+  `(or (integer 0 #xff)
+       (member ,@+openssl-version-patch-characters+)))
+
+(defun openssl-version-status-p (status)
+  (or (typep status '(integer 0 #xf))
+      (member status +openssl-version-statuses+ :test #'string=)))
+
+(deftype openssl-version-status ()
+  '(satisfies openssl-version-status-p))
+
+(defun encode-openssl-version-impl (major minor &optional (fix 0) (patch 0) (status "release"))
   (check-type major (integer 0 3))
-  (check-type minor (integer 0 10))
-  (check-type fix (integer 0 20))
-  (check-type patch (or (integer 0 255)
-                        (member nil #\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z)))
-  (check-type status (satisfies openssl-version-status-p))
+  (check-type minor (integer 0 #xff))
+  (check-type fix (integer 0 #xff))
+  (check-type patch openssl-version-patch)
+  (check-type status openssl-version-status)
   (let ((patch-int (if (integerp patch)
                        patch
-                       (position patch '(nil #\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z))))
-        (status-int (position status +openssl-version-statuses+ :test #'string=)))
+                       ;; a = 1, b = 2, and so on:
+                       (1+ (position patch +openssl-version-patch-characters+))))
+        (status-int (if (integerp status)
+                        status
+                        ;; dev = 0, beta 1 = 1, beta 2 = 2, ..., beta 14 = 14, release = 15
+                        (position status +openssl-version-statuses+ :test #'string=))))
     (logior (ash major 28)
             (ash minor 20)
             (ash fix 12)
             (ash patch-int 4)
             status-int)))
 
-#|
-  (declare (type (integer 0 3) major)
-           (type (integer 0 10) minor)
-           (type (integer 0 20) patch))
-
-
-  (logior (ash major 28)
-          (ash minor 20)
-          (ash patch 4)
-          (if prerelease #xf #x0))
-|#
-
-(assert (= (encode-openssl-version-impl 0 9 6 nil "dev")
+(assert (= (encode-openssl-version-impl 0 9 6 0 "dev")
            #x00906000))
 (assert (= (encode-openssl-version-impl 0 9 6 #\b "beta 3")
            #x00906023))
@@ -328,7 +330,25 @@ session-resume requests) would normally be copied into the local cache before pr
            #x1000013f))
 
 (defun encode-openssl-version (major minor &optional (patch-or-fix 0))
-  "Builds a version number to compare OpenSSL against.
+  "Builds a version number to compare with the version returned by OpenSSL.
+
+The integer representation of OpenSSL version has bit fields
+for major, minor, fix, patch and status varlues.
+
+Versions before OpenSSL 3 have user readable representations
+for all those fields. For example, 0.9.6b beta 3. Here
+0 - major, 9 - minor, 6 - fix, b - patch, beta 3 - status.
+https://www.openssl.org/docs/man1.1.1/man3/OPENSSL_VERSION_NUMBER.html
+
+Since OpenSSL 3, the third number in user readable repersentation
+is patch. The fix and status are not used and have 0 in the corresponding
+bit fields.
+https://www.openssl.org/docs/man3.0/man3/OPENSSL_VERSION_NUMBER.html
+https://www.openssl.org/policies/general/versioning-policy.html
+
+As usually with OpenSSL docs, if the above links disappear becuase
+those OpenSSL versions are out of maintenance, use the Wayback Machine.
+
 Note: the _really_ old formats (<= 0.9.4) are not supported."
   (if (>= major 3)
       (encode-openssl-version-impl major minor 0 patch-or-fix)
