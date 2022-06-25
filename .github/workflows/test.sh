@@ -11,6 +11,7 @@ find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl+ssl' | xargs rm -rf
 
 docker run -e LISP -e LIB_LOAD_MODE -e OPENSSL -e BITS \
        -e "M2_HOME=/home/cl/apache-maven-3.8.6" \
+       -e "FIXUID_FLAGS=-q" \
        -u "$(id -u):$(id -g)" \
        -i \
        --mount type=bind,source="$DOCKER_HOME",target=/home/cl/ \
