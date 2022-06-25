@@ -2,10 +2,16 @@
 #
 # Just a tiny script to avoid repeating so many parameters in many `run` sections of the test.yml
 
+# safe mode
+set -euo pipefail
+
+# verbose
+set -v
+
 DOCKER_HOME=$(realpath "$(dirname $0)/../../..")
 
 # remove the compiled .fasl files so that cl+ssl is recompiled every time
-find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl+ssl' | xargs rm -rf
+find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl+ssl' | xargs rm -rf || true
 
 # Note, the M2_HOME below is for ABCL, see https://gitlab.common-lisp.net/cl-docker-images/cl-devel/-/issues/1
 

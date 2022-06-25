@@ -15,7 +15,6 @@ then
 fi
 
 echo M2_HOME=$M2_HOME
-ls $M2_HOME
 
 MAIN='(handler-case (load "run-for-ci.lisp") (serious-condition (c) (format t "~A: ~A~%" (type-of c) c) (uiop:quit 1)))'
 
