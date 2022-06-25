@@ -264,24 +264,83 @@ session-resume requests) would normally be copied into the local cache before pr
       (ignore-errors (ssl-eay))
       (error "No OpenSSL version number could be determined, both SSLeay and OpenSSL_version_num failed.")))
 
-(defun encode-openssl-version (major minor &optional (patch 0) (prerelease))
-  "Builds a version number to compare OpenSSL against.
-Note: the _really_ old formats (<= 0.9.4) are not supported."
+#|
+(list
+ (cl+ssl::encode-openssl-version 1 0 2)
+ (cl+ssl::encode-openssl-version 1 0 0)
+ (cl+ssl::encode-openssl-version 1 0 0 t)
+ (cl+ssl::compat-openssl-version))
+
+(- (char-code #\s)
+   (char-code #\a))
+
+(position #\s "abcdefghijklmnopqrstuvwxyz")
+
+|#
+
+(defparameter +openssl-version-statuses+
+  '("dev"
+    "beta 1" "beta 2" "beta 3" "beta 4" "beta 5" "beta 6" "beta 7"
+    "beta 8" "beta 9" "beta 10" "beta 11" "beta 12" "beta 13" "beta 14"
+    "release"))
+
+(defun openssl-version-status-p (status)
+  (member status +openssl-version-statuses+ :test #'string=))
+
+(defun encode-openssl-version-impl (major minor &optional (fix 0) patch (status "release"))
+  (check-type major (integer 0 3))
+  (check-type minor (integer 0 10))
+  (check-type fix (integer 0 20))
+  (check-type patch (or (integer 0 255)
+                        (member nil #\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z)))
+  (check-type status (satisfies openssl-version-status-p))
+  (let ((patch-int (if (integerp patch)
+                       patch
+                       (position patch '(nil #\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z))))
+        (status-int (position status +openssl-version-statuses+ :test #'string=)))
+    (logior (ash major 28)
+            (ash minor 20)
+            (ash fix 12)
+            (ash patch-int 4)
+            status-int)))
+
+#|
   (declare (type (integer 0 3) major)
            (type (integer 0 10) minor)
            (type (integer 0 20) patch))
+
+
   (logior (ash major 28)
           (ash minor 20)
           (ash patch 4)
-          (if prerelease #xf #x0)))
+          (if prerelease #xf #x0))
+|#
 
-(defun openssl-is-at-least (major minor &optional (patch 0) (prerelease))
+(assert (= (encode-openssl-version-impl 0 9 6 nil "dev")
+           #x00906000))
+(assert (= (encode-openssl-version-impl 0 9 6 #\b "beta 3")
+           #x00906023))
+(assert (= (encode-openssl-version-impl 0 9 6 #\e "release")
+           #x0090605f))
+(assert (= (encode-openssl-version-impl 0 9 6 #\e)
+           #x0090605f))
+(assert (= (encode-openssl-version-impl 1 0 0 #\s)
+           #x1000013f))
+
+(defun encode-openssl-version (major minor &optional (patch-or-fix 0))
+  "Builds a version number to compare OpenSSL against.
+Note: the _really_ old formats (<= 0.9.4) are not supported."
+  (if (>= major 3)
+      (encode-openssl-version-impl major minor 0 patch-or-fix)
+      (encode-openssl-version-impl major minor patch-or-fix)))
+
+(defun openssl-is-at-least (major minor &optional (patch-or-fix 0))
   (>= (compat-openssl-version)
-      (encode-openssl-version major minor patch prerelease)))
+      (encode-openssl-version major minor patch-or-fix)))
 
-(defun openssl-is-not-even (major minor &optional (patch 0) (prerelease))
+(defun openssl-is-not-even (major minor &optional (patch-or-fix 0))
   (< (compat-openssl-version)
-     (encode-openssl-version major minor patch prerelease)))
+     (encode-openssl-version major minor patch-or-fix)))
 
 (defun libresslp ()
   ;; LibreSSL can be distinguished by
