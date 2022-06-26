@@ -53,34 +53,31 @@
 
 (ql:quickload :cl+ssl/config)
 (format t "cl+ssl/config loaded.~%")
+
+
+(let* ((openssl (uiop:getenv "OPENSSL"))
+       (bits (uiop:getenv "BITS"))
+       (openssl-releases-bin-dir (uiop:getenv "OPENSSL_RELEASES_BIN_DIR"))
+       (lib-dir (format nil
+                        "~A/~A-~Abit/lib~A"
+                        openssl-releases-bin-dir
+                        openssl
+                        bits
+                        (if (and (string= "64" bits)
+                                 (search "openssl-3." openssl))
+                            "64"
+                            ""))))
+  (defparameter *libcrypto.so* (concatenate 'string  lib-dir "/libcrypto.so"))
+  (defparameter *libssl.so* (concatenate 'string lib-dir "/libssl.so")))
+
 (let ((lib-load-mode (uiop:getenvp "LIB_LOAD_MODE")))
   (cond ((string= "new" lib-load-mode)
-         (cl+ssl/config:define-libcrypto-path
-             #.(format nil
-                       "~A/~A-~Abit/lib/libcrypto.so"
-                       (uiop:getenv "OPENSSL_RELEASES_BIN_DIR")
-                       (uiop:getenv "OPENSSL")
-                       (uiop:getenv "BITS")))
-         (cl+ssl/config:define-libssl-path
-             #.(format nil
-                       "~A/~A-~Abit/lib/libssl.so"
-                       (uiop:getenv "OPENSSL_RELEASES_BIN_DIR")
-                       (uiop:getenv "OPENSSL")
-                       (uiop:getenv "BITS"))))
+         (cl+ssl/config:define-libcrypto-path #.*libcrypto.so*)
+         (cl+ssl/config:define-libssl-path #.*libssl.so*))
         ((string= "old" lib-load-mode)
-         (cffi:load-foreign-library
-          (format nil
-                  "~A/~A-~Abit/lib/libcrypto.so"
-                  (uiop:getenv "OPENSSL_RELEASES_BIN_DIR")
-                  (uiop:getenv "OPENSSL")
-                  (uiop:getenv "BITS")))
+         (cffi:load-foreign-library *libcrypto.so*)
          (format t "libcrypto.so loaded.~%")
-         (cffi:load-foreign-library
-          (format nil
-                  "~A/~A-~Abit/lib/libssl.so"
-                  (uiop:getenv "OPENSSL_RELEASES_BIN_DIR")
-                  (uiop:getenv "OPENSSL")
-                  (uiop:getenv "BITS")))
+         (cffi:load-foreign-library *libssl.so*)
          (format t "libssl.so loaded.~%")
          (pushnew :cl+ssl-foreign-libs-already-loaded *features*))
         (t
