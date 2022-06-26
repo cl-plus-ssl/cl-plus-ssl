@@ -264,20 +264,6 @@ session-resume requests) would normally be copied into the local cache before pr
       (ignore-errors (ssl-eay))
       (error "No OpenSSL version number could be determined, both SSLeay and OpenSSL_version_num failed.")))
 
-#|
-(list
- (cl+ssl::encode-openssl-version 1 0 2)
- (cl+ssl::encode-openssl-version 1 0 0)
- (cl+ssl::encode-openssl-version 1 0 0 t)
- (cl+ssl::compat-openssl-version))
-
-(- (char-code #\s)
-   (char-code #\a))
-
-(position #\s "abcdefghijklmnopqrstuvwxyz")
-
-|#
-
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter +openssl-version-status-strings+
     '("dev"
