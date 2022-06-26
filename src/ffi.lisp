@@ -278,22 +278,25 @@ session-resume requests) would normally be copied into the local cache before pr
 
 |#
 
-(defparameter +openssl-version-status-strings+
-  '("dev"
-    "beta 1" "beta 2" "beta 3" "beta 4" "beta 5" "beta 6" "beta 7"
-    "beta 8" "beta 9" "beta 10" "beta 11" "beta 12" "beta 13" "beta 14"
-    "release"))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter +openssl-version-status-strings+
+    '("dev"
+      "beta 1" "beta 2" "beta 3" "beta 4" "beta 5" "beta 6" "beta 7"
+      "beta 8" "beta 9" "beta 10" "beta 11" "beta 12" "beta 13" "beta 14"
+      "release")))
 
-(defparameter +openssl-version-patch-characters+
-  '(#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter +openssl-version-patch-characters+
+    '(#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z)))
 
 (deftype openssl-version-patch ()
   `(or (integer 0 #xff)
        (member ,@+openssl-version-patch-characters+)))
 
-(defun openssl-version-status-p (status)
-  (or (typep status '(integer 0 #xf))
-      (member status +openssl-version-status-strings+ :test #'string=)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun openssl-version-status-p (status)
+    (or (typep status '(integer 0 #xf))
+        (member status +openssl-version-status-strings+ :test #'string=))))
 
 (deftype openssl-version-status ()
   '(satisfies openssl-version-status-p))
