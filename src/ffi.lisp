@@ -293,7 +293,7 @@ session-resume requests) would normally be copied into the local cache before pr
 
 (defun openssl-version-status-p (status)
   (or (typep status '(integer 0 #xf))
-      (member status +openssl-version-statuses+ :test #'string=)))
+      (member status +openssl-version-status-strings+ :test #'string=)))
 
 (deftype openssl-version-status ()
   '(satisfies openssl-version-status-p))
@@ -311,7 +311,7 @@ session-resume requests) would normally be copied into the local cache before pr
         (status-int (if (integerp status)
                         status
                         ;; dev = 0, beta 1 = 1, beta 2 = 2, ..., beta 14 = 14, release = 15
-                        (position status +openssl-version-statuses+ :test #'string=))))
+                        (position status +openssl-version-status-strings+ :test #'string=))))
     (logior (ash major 28)
             (ash minor 20)
             (ash fix 12)
