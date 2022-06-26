@@ -1,13 +1,17 @@
-#!/bin/sh
+#!/bin/bash
+
+# safe mode
+set -euo pipefail
+
 cd "$(dirname "$0")"
 
-mkdir src
+mkdir src || true
 cd src
 
 VERSIONS="$1"
 if [ -z "$VERSIONS" ]
 then
-  VERSIONS="openssl-0.9.8zh openssl-1.0.0s openssl-1.0.2q openssl-1.1.0j openssl-1.1.1a openssl-1.1.1f openssl-1.1.1o libressl-2.2.7 libressl-2.5.5 libressl-2.6.5 libressl-2.8.3 libressl-3.0.1"
+  VERSIONS="openssl-0.9.8zh openssl-1.0.0s openssl-1.0.2q openssl-1.1.0j openssl-1.1.1a openssl-1.1.1f openssl-1.1.1o openssl-1.1.1p openssl-3.0.4 libressl-2.2.7 libressl-2.5.5 libressl-2.6.5 libressl-2.8.3 libressl-3.0.1 libressl-3.5.3"
 fi
 
 downloadUrl() {
@@ -15,7 +19,7 @@ downloadUrl() {
   case $version in
       libressl*)
           echo "https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/${version}.tar.gz";;
-      openssl-1.0.2q|openssl-1.1.0j|openssl-1.1.1*)
+      openssl-1.0.2q|openssl-1.1.0j|openssl-1.1.1*|openssl-3*)
           echo "https://www.openssl.org/source/${version}.tar.gz";;
       openssl-1.0.0s)
           echo "https://www.openssl.org/source/old/1.0.0/openssl-1.0.0s.tar.gz";;
