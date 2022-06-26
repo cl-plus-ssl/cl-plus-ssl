@@ -10,7 +10,7 @@ cd ../src
 VERSIONS="$1"
 if [ -z "$VERSIONS" ]
 then
-  VERSIONS="openssl-0.9.8zh openssl-1.0.0s openssl-1.0.2q openssl-1.1.0j openssl-1.1.1a openssl-1.1.1f openssl-1.1.1o openssl-1.1.1p openssl-3.0.4 libressl-2.2.7 libressl-2.5.5 libressl-2.6.5 libressl-2.8.3 libressl-3.0.1 libressl-3.5.3"
+  VERSIONS="openssl-0.9.8zh openssl-1.0.0s openssl-1.0.2q openssl-1.1.0j openssl-1.1.1p openssl-3.0.4 libressl-2.2.7 libressl-2.5.5 libressl-2.6.5 libressl-2.8.3 libressl-3.0.1 libressl-3.5.3"
 fi
 
 BITNESSES="$2"
