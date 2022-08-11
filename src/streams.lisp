@@ -287,7 +287,10 @@ If true (the default), give OpenSSL the file descriptor of the stream, instead o
   (ssl-stream-handle (flexi-streams:flexi-stream-stream stream)))
 
 (defun ssl-stream-x509-certificate (ssl-stream)
-  (ssl-get-peer-certificate (ssl-stream-handle ssl-stream)))
+  (funcall (if (openssl-is-at-least 3 0 0)
+               'ssl-get1-peer-certificate
+               'ssl-get-peer-certificate)
+           (ssl-stream-handle ssl-stream)))
 
 (defun ssl-load-global-verify-locations (&rest pathnames)
   "PATHNAMES is a list of pathnames to PEM files containing server and CA certificates.
