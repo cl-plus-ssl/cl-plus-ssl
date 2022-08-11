@@ -287,10 +287,7 @@ If true (the default), give OpenSSL the file descriptor of the stream, instead o
   (ssl-stream-handle (flexi-streams:flexi-stream-stream stream)))
 
 (defun ssl-stream-x509-certificate (ssl-stream)
-  (funcall (if (openssl-is-at-least 3 0 0)
-               'ssl-get1-peer-certificate
-               'ssl-get-peer-certificate)
-           (ssl-stream-handle ssl-stream)))
+  (compat-ssl-get1-peer-certificate (ssl-stream-handle ssl-stream)))
 
 (defun ssl-load-global-verify-locations (&rest pathnames)
   "PATHNAMES is a list of pathnames to PEM files containing server and CA certificates.
@@ -350,10 +347,7 @@ MAKE-CONTEXT also allows to enab/disable verification."
   ;; HOSTNAME is either NIL or a string.
   (when verify-mode
     (let* ((handle (ssl-stream-handle ssl-stream))
-           (srv-cert (funcall (if (openssl-is-at-least 3 0 0)
-                                  'ssl-get1-peer-certificate
-                                  'ssl-get-peer-certificate)
-                              handle)))
+           (srv-cert (compat-ssl-get1-peer-certificate handle)))
       (unwind-protect
            (progn
              (when (and (eq :required verify-mode)

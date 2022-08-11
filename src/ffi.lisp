@@ -711,6 +711,12 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :pointer
   (ssl ssl-pointer))
 
+(defun compat-ssl-get1-peer-certificate (handle)
+  (funcall (if (openssl-is-at-least 3 0 0)
+               'ssl-get1-peer-certificate
+               'ssl-get-peer-certificate)
+           handle))
+
 ;;; X509 & ASN1
 (define-crypto-function ("X509_free" x509-free)
     :void
