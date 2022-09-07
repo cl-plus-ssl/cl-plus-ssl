@@ -16,6 +16,10 @@
 (defconstant +bio-type-socket+ (logior 5
                                        +BIO_TYPE_SOURCE_SINK+
                                        +BIO_TYPE_DESCRIPTOR+))
+
+(defconstant +BIO_CTRL_EOF+ 2)
+(defconstant +BIO_CTRL_FLUSH+ 11)
+
 (defconstant +BIO_FLAGS_READ+ 1)
 (defconstant +BIO_FLAGS_WRITE+ 2)
 (defconstant +BIO_FLAGS_IO_SPECIAL+ 4)
@@ -23,7 +27,7 @@
                                      +BIO_FLAGS_WRITE+
                                      +BIO_FLAGS_IO_SPECIAL+))
 (defconstant +BIO_FLAGS_SHOULD_RETRY+ 8)
-(defconstant +BIO_CTRL_FLUSH+ 11)
+(defconstant +BIO_FLAGS_IN_EOF+ #x800)
 
 (cffi:defcstruct bio-method
   (type :int)
@@ -105,37 +109,45 @@
                (cl+ssl::err-error-string (cl+ssl::err-get-error) (cffi:null-pointer)))
         new)))
 
-(defun clear-retry-flags-slots (bio)
-  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-        (logandc2 (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-                  (logior +BIO_FLAGS_RWS+
-                          +BIO_FLAGS_SHOULD_RETRY+))))
-
-(defun clear-retry-flags-opaque (bio)
-  (bio-clear-flags bio
-                   (logior +BIO_FLAGS_RWS+
-                           +BIO_FLAGS_SHOULD_RETRY+)))
-
-(defun clear-retry-flags (bio)
-  (if *bio-is-opaque*
-      (clear-retry-flags-opaque bio)
-      (clear-retry-flags-slots bio)))
-
-(defun set-retry-read-opaque (bio)
+(defun bio-set-flags-slots (bio &rest flags)
   (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
         (logior (cffi:foreign-slot-value bio '(:struct bio) 'flags)
-                +BIO_FLAGS_READ+
-                +BIO_FLAGS_SHOULD_RETRY+)))
+                (apply #'logior flags))))
 
-(defun set-retry-read-slots (bio)
-  (bio-set-flags bio
-                 (logior +BIO_FLAGS_READ+
-                         +BIO_FLAGS_SHOULD_RETRY+)))
+(defun compat-bio-set-flags (bio &rest flags)
+    (if *bio-is-opaque*
+        (bio-set-flags bio (apply #'logior flags)) ;; FFI function since OpenSSL 1.1.0
+        (apply #'bio-set-flags-slots bio flags)))
+
+(defun bio-clear-flags-slots (bio &rest flags)
+  (setf (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+        (logandc2 (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+                  (apply #'logior flags))))
+
+(defun compat-bio-clear-flags (bio &rest flags)
+  (if *bio-is-opaque*
+      (bio-clear-flags bio (apply #'logior flags)) ;; FFI function since OpenSSL 1.1.0
+      (apply #'bio-clear-flags-slots bio flags)))
+
+(defun bio-test-flags-slots (bio &rest flags)
+  (logand (cffi:foreign-slot-value bio '(:struct bio) 'flags)
+          (apply #'logior flags)))
+
+(defun compat-bio-test-flags (bio &rest flags)
+  (if *bio-is-opaque*
+      (bio-test-flags bio (apply #'logior flags)) ;; FFI function since OpenSSL 1.1.0
+      (apply #'bio-test-flags-slots bio flags)))
+
+(defun clear-retry-flags (bio)
+  (compat-bio-clear-flags bio
+                          +BIO_FLAGS_RWS+
+                          +BIO_FLAGS_SHOULD_RETRY+))
 
 (defun set-retry-read (bio)
-  (if *bio-is-opaque*
-      (set-retry-read-opaque bio)
-      (set-retry-read-slots bio)))
+  (compat-bio-set-flags bio
+                        +BIO_FLAGS_READ+
+                        +BIO_FLAGS_SHOULD_RETRY+))
+
 
 ;;; Error handling for all the defcallback's:
 ;;;
@@ -217,7 +229,8 @@
                    (incf i))
               (when (zerop i) (set-retry-read bio)))
           (end-of-file ()
-            ;; do nothing,  will just return the number of bytes read so far
+            (compat-bio-set-flags bio +BIO_FLAGS_IN_EOF+)
+            ;; now just return the number of bytes read so far
             ))
         i)
     (serious-condition (c)
@@ -247,8 +260,7 @@
                    (setf (cffi:mem-ref buf :unsigned-char i) char)
                    (incf i)))
           (end-of-file ()
-            ;; do nothing - this just aborts the lookp
-            ))
+            (compat-bio-set-flags bio +BIO_FLAGS_IN_EOF+)))
         (setf (cffi:mem-ref buf :unsigned-char i) 0)
         i)
     (serious-condition (c)
@@ -269,8 +281,12 @@
 
 (cffi:defcallback lisp-ctrl :int
     ((bio :pointer) (cmd :int) (larg :long) (parg :pointer))
-  (declare (ignore bio larg parg))
+  (declare (ignore larg parg))
   (cond
+    ((eql cmd +BIO_CTRL_EOF+)
+     (if (zerop (compat-bio-test-flags bio +BIO_FLAGS_IN_EOF+))
+         0
+         1))
     ((eql cmd +BIO_CTRL_FLUSH+) 1)
     (t
      ;; (warn "lisp-ctrl(~A,~A,~A)" cmd larg parg)

@@ -212,6 +212,8 @@ session-resume requests) would normally be copied into the local cache before pr
 
 (defconstant +SSL-OP-ALL+ #x80000BFF)
 
+(defconstant +SSL-OP-IGNORE-UNEXPECTED-EOF+ #b10000000)
+
 (defconstant +SSL-OP-NO-SSLv2+   #x01000000)
 (defconstant +SSL-OP-NO-SSLv3+   #x02000000)
 (defconstant +SSL-OP-NO-TLSv1+   #x04000000)
@@ -540,6 +542,11 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   :int
   (meth :pointer)
   (value :int))
+(define-crypto-function-ex (:since "1.1.0") ("BIO_test_flags" bio-test-flags)
+  :int
+  (meth :pointer)
+  (value :int))
+
 (define-crypto-function ("ERR_get_error" err-get-error)
     :unsigned-long)
 (define-crypto-function ("ERR_error_string" err-error-string)
@@ -1270,7 +1277,7 @@ On many platforms, including Linux and Windows, it may be leaved NIL (default),
 because OpenSSL initializes the random number generator from OS specific service.
 But for example on Solaris it may be necessary to supply this value.
 The minimum length required by OpenSSL is 128 bits.
-See ttp://www.openssl.org/support/faq.html#USER1 for details.
+See http://www.openssl.org/support/faq.html#USER1 for details.
 
 Hint: do not use Common Lisp RANDOM function to generate the RAND-SEED,
 because the function usually returns predictable values."
