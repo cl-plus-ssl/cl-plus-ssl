@@ -24,6 +24,8 @@ case $LISP in
         $LISP -i ~/quicklisp/setup.lisp -x "$MAIN";;
     abcl)
         $LISP --eval '(require :abcl-contrib)' --eval "$MAIN";;
+    ccl)
+        $LISP --heap-reserve 200M --eval "$MAIN";;
     *)
         $LISP --eval "$MAIN";;
 esac
