@@ -8,6 +8,9 @@ set -euo pipefail
 # verbose
 set -v
 
+# investigate CCL failures
+dmesg --human --nopager --ctime --decode
+
 DOCKER_HOME=$(realpath "$(dirname $0)/../../..")
 
 # remove the compiled .fasl files so that cl+ssl is recompiled every time
