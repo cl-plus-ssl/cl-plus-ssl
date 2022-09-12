@@ -22,3 +22,7 @@ docker run -e LISP -e LIB_LOAD_MODE -e OPENSSL -e BITS \
        --mount type=bind,source="$DOCKER_HOME",target=/home/cl/ \
        clfoundation/cl-devel:2022-02-09 \
        -q /home/cl/cl-plus-ssl/test/run-for-ci.sh
+STATUS=$?
+echo host syslog
+cat /var/log/syslog || true
+exit $STATUS

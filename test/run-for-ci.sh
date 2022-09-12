@@ -29,3 +29,7 @@ case $LISP in
     *)
         $LISP --eval "$MAIN";;
 esac
+STATUS=$?
+echo container syslog
+cat /var/log/syslog || true
+exit $STATUS
