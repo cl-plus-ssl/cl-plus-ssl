@@ -248,6 +248,45 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
 (defun ssl-signal-error (handle syscall error-code original-error)
   (let ((printed-queue (err-print-errors-to-string))
         (queue (read-ssl-error-queue)))
+    ;; BAD: The IF below is responsible to represent the "Unexpected EOF"
+    ;; situation, which is when the remote peer closes
+    ;; TCP connection without sending TLS close_notify alert,
+    ;; as a situation of normal close_notify alert received.
+    ;;
+    ;; OpenSSL before version 3.0 signals the Unexpected EOF
+    ;; as error-code = SSL_ERROR_SYSCALL and original-error = 0.
+    ;; Normal termination is signalled by error-code = SSL_ERROR_ZERO_RETURN.
+    ;;
+    ;; As you see below, the IF turns the former into the latter.
+    ;;
+    ;; We should not suppress the Unexpected EOF error, because
+    ;; some protocols on top of TLS may be attacked with TLS truncation
+    ;; attack. For example HTTP 0.9, where response size is not specified
+    ;; by the server but instead signaled by transport connection termination.
+    ;; A malicious middle-man can insert an unencrypted TCP FIN packet,
+    ;; thus giving the client a partial response. OpenSSL treats
+    ;; this as an Unexpected EOR error, but cl+ssl turns it into
+    ;; the ssl-error-zero-return condition, which is then internally
+    ;; converted simply to an end of ssl-stream. Thus the user will treat
+    ;; the truncated response as authoritative and complete.
+    ;;
+    ;; Since OpenSSL 3.0 the suppression does not happen
+    ;; and cl+ssl user receives an error condition, because
+    ;; the Unexpected EOF is reported as error-code = SSL_ERROR_SSL.
+    ;;
+    ;; The only reason we keep this not fixed for older OpenSSL
+    ;; is potential backwards compatibility problems with existing
+    ;; Common Lisp libraries and applications and the fact
+    ;; that the protocols where message sizes are explicitly
+    ;; announced (like HTTP 1.0 which uses Content-Length or
+    ;; chunked encoding) the truncation attacks are not possible
+    ;; and thus some servers close TCP connections without
+    ;; sending TLS close_notify alert. Some libraries or
+    ;; applications may be relying on the end of stream
+    ;; even though they have response size available.
+    ;;
+    ;; See discussion and links in
+    ;; https://github.com/cl-plus-ssl/cl-plus-ssl/issues/166
     (if (and (eql error-code #.+ssl-error-syscall+)
              (not (zerop original-error)))
         (error 'ssl-error-syscall
