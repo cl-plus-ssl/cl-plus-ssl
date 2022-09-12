@@ -6,9 +6,6 @@ set -euo pipefail
 # verbose
 set -v
 
-# investigate CCL failures
-dmesg --human --nopager --ctime --decode
-
 cd "`dirname $0`"
 
 if [ ! -v OPENSSL_RELEASES_BIN_DIR ]
