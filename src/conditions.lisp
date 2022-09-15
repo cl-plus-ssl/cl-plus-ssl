@@ -262,10 +262,12 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     ;; We should not suppress the Unexpected EOF error, because
     ;; some protocols on top of TLS may be attacked with TLS truncation
     ;; attack. For example HTTP 0.9, where response size is not specified
-    ;; by the server but instead signaled by transport connection termination.
-    ;; A malicious middle-man can insert an unencrypted TCP FIN packet,
-    ;; thus giving the client a partial response. OpenSSL treats
-    ;; this as an Unexpected EOR error, but cl+ssl turns it into
+    ;; by the server but instead end of message is indicated by server closing
+    ;; the connection.
+    ;;
+    ;; In such protocols a malicious middle-man can insert an unencrypted
+    ;; TCP FIN packet, thus giving the client a partial response. OpenSSL treats
+    ;; this as an Unexpected EOF error, but cl+ssl turns it into
     ;; the ssl-error-zero-return condition, which is then internally
     ;; converted simply to an end of ssl-stream. Thus the user will treat
     ;; the truncated response as authoritative and complete.
@@ -274,18 +276,19 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     ;; and cl+ssl user receives an error condition, because
     ;; the Unexpected EOF is reported as error-code = SSL_ERROR_SSL.
     ;;
-    ;; The only reason we keep this not fixed for older OpenSSL
+    ;; The only reason we currently keep this not fixed for older OpenSSL
     ;; is potential backwards compatibility problems with existing
     ;; Common Lisp libraries and applications and the fact
-    ;; that the protocols where message sizes are explicitly
-    ;; announced (like HTTP 1.0 which uses Content-Length or
-    ;; chunked encoding) the truncation attacks are not possible
-    ;; and thus some servers close TCP connections without
-    ;; sending TLS close_notify alert. Some libraries or
-    ;; applications may be relying on the end of stream
-    ;; even though they have response size available.
+    ;; that protocols where message sizes are usually
+    ;; explicitly indicated (like HTTP 1.1 where Content-Length or
+    ;; chunked encoding are used) truncation can be detected
+    ;; without relying to TLS and thus some servers close TCP
+    ;; connections without sending TLS close_notify alert.
+    ;; Some libraries or applications may be relying onto
+    ;; silent end of stream after full message is received
+    ;; according to the size indicated by the protocol.
     ;;
-    ;; See discussion and links in
+    ;; See one example of this, discussion and links in
     ;; https://github.com/cl-plus-ssl/cl-plus-ssl/issues/166
     (if (and (eql error-code #.+ssl-error-syscall+)
              (not (zerop original-error)))
