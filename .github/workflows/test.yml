@@ -44,7 +44,11 @@ jobs:
 #
 ###############################################################################
       - if: always()
-        run: |
+        uses: nick-fields/retry@v2.8.1
+        timeout_minutes: 2
+        max_attempts: 3
+        retry_on: error
+        command: |
            LISP=ccl OPENSSL=openssl-0.9.8zh BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
       - if: always()
         run: |
