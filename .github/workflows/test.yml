@@ -42,6 +42,17 @@ jobs:
 #
 # The combinations below are generated with test-gen-matrix.lisp
 #
+# Because we don't want to run every test in a separate job,
+# as that would be much more computationally expensive -
+# download docker image, fetch cl+ssl with dependencies
+# from Quicklisp and building them every time.
+# (Maybe in the future we could run every lisp
+# implementation as a separate job).
+#
+# Also it's more convenient to user familiar language for
+# the test matrix specification rather than studying
+# the Github Actions possibilities for that.
+#
 ###############################################################################
       - if: always()
         run: |
