@@ -7,9 +7,13 @@ A Common Lisp interface to OpenSSL.
 
 ## About
 
-This library is a fork of [SSL-CMUCL](http://www.cliki.net/SSL-CMUCL). The original SSL-CMUCL source code was written by Eric Marsden and includes contributions by Jochen Schmidt. Development into CL+SSL was done by David Lichteblau. License: MIT-style.
+Distinguishing features: CL+SSL is portable code based on CFFI and gray
+streams. It defines its own libssl BIO_METHOD, so that TLS I/O can be
+written over portable Lisp streams instead of bypassing the streams and
+giving OpenSSL a Unix file descriptors to send data over. (But the file
+descriptor approach is still used if possible.)
 
-Distinguishing features: CL+SSL is portable code based on CFFI and gray streams. It defines its own libssl BIO method, so that SSL I/O can be written over portable Lisp streams instead of bypassing the streams and sending data over Unix file descriptors directly. (But the traditional approach is still used if possible.)
+License: MIT-style.
 
 
 ## Download
@@ -53,7 +57,22 @@ CL Test Grid results: <https://common-lisp.net/project/cl-test-grid/library/cl+s
 - The FFI code for all platforms except clisp needs to be rewritten. (update 2017-07-05: does it? why?)
 
 
-## News
+## History
+
+This library is a fork of [SSL-CMUCL](http://www.cliki.net/SSL-CMUCL).
+The original SSL-CMUCL source code was written by Eric Marsden and
+includes contributions by Jochen Schmidt.
+
+Jochen Schmidt also has his own portable CL-SSL bindings (Gray streams
+based), [available]( https://sourceforge.net/p/portableaserve/git/ci/master/tree/acl-compat/)
+as a part of the acl-compat portability layer of his
+[http://portableaserve.sourceforge.net/](http://portableaserve.sourceforge.net/).
+
+Development into CL+SSL was done by David Lichteblau. After that many
+peeple contributed patches, as can be seenn in the git history.
+
+
+## News (Old, not really maintained now)
 
 2017-07-03
 
