@@ -49,7 +49,7 @@ jobs:
 # (Maybe in the future we could run every lisp
 # implementation as a separate job).
 #
-# Also it's more convenient to user familiar language for
+# Also it's more convenient to use familiar language for
 # the test matrix specification rather than studying
 # the Github Actions possibilities for that.
 #
