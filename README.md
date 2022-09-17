@@ -2,7 +2,7 @@
 
 # CL+SSL
 
-A Common Lisp interface to OpenSSL.
+A Common Lisp interface to OpenSSL / LibreSSL.
 
 
 ## About
@@ -22,15 +22,18 @@ The library is available via [Quicklisp](http://www.quicklisp.org/).
 
 The Git repository: <http://common-lisp.net/project/cl-plus-ssl/>.
 
-Send bug reports to [cl-plus-ssl-devel@common-lisp.net](mailto:cl-plus-ssl-devel@common-lisp.net)
+Send bug reports to the GitHub issue trakcer. The old mailing list
+[cl-plus-ssl-devel@common-lisp.net](mailto:cl-plus-ssl-devel@common-lisp.net)
+is also still available
 ([list information](http://common-lisp.net/cgi-bin/mailman/listinfo/cl-plus-ssl-devel)). 
 
 
-## OpenSSL Installation Hints
+## OpenSSL / LibreSSL Installation Hints
 
-### Debian
+### Unix-like
 
-You need the libssl-dev package on Debian to load this cl+ssl without manual configuration.
+Usually OpenSSL / LibreSSL shared libraries are provided by your package manager
+and very likely are already installed.
 
 ### Windows
 
