@@ -51,6 +51,7 @@
          (socket (ccl:make-socket :address-family :internet
                                   :connect :active
                                   :type :stream
+                                  :format :bivalent
                                   :remote-host host
                                   :remote-port port
                                   ;; :local-host (resolve-hostname local-host)
@@ -62,7 +63,7 @@
               socket
               :unwrap-stream-p t
               :hostname host
-              :external-format '(:iso-8859-1 :eol-style :lf)))))
+              :external-format '(:utf-8 :eol-style :lf)))))
     (unwind-protect
          (progn
            (format https "HEAD / HTTP/1.0~%Host: ~a~%~%" host)
@@ -85,13 +86,13 @@
 
 ;; Start a simple HTTPS server.
 ;;
-;; Simple self-signed key and certificate can be generated with
+;; Simple self-signed certificate and private key can be generated with
 ;;
 ;;    openssl req -new -nodes -x509 -days 365 -subj / -keyout private-key.pem -outform PEM -out certificate.pem
 ;;
 ;; For "real" certificates, you can use, for exammple, https://letsencrypt.org,
 ;; or see the mod_ssl documentation at <URL:http://www.modssl.org/>
-;; (E.g. http://www.modssl.org/docs/2.8/ssl_faq.html)
+;; (like http://www.modssl.org/docs/2.8/ssl_faq.html)
 ;;
 ;; Query the server:
 ;;
@@ -103,7 +104,7 @@
 ;;
 ;; (the --insecure is for self-signed certificate)
 ;;
-;; If you query this server with a self-signed certificate
+;; If you query this server started with a self-signed certificate
 ;; from browser, first time the browser will show a "Security Risk"
 ;; error page and the server will break with "bad certificate alert"
 ;; error. Then you can add a browser security exception
