@@ -6,44 +6,52 @@
 
 #|
 (load "example.lisp")
-(ssl-test::test-https-client "www.google.com")
-(ssl-test::test-https-server)
+(tls-example::test-https-client "www.google.com")
+(tls-example::test-https-server)
+(tls-example::test-nntp-client)
 |#
 
-(defpackage :ssl-test
+(defpackage :tls-example
   (:use :cl))
-(in-package :ssl-test)
+(in-package :tls-example)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (ql:quickload '("cl+ssl" "trivial-sockets")))
 
-(defun read-line-crlf (stream &optional eof-error-p)
-  (let ((s (make-string-output-stream)))
-    (loop
-      for empty = t then nil
-      for c = (read-char stream eof-error-p nil)
-      while (and c (not (eql c #\return)))
-      do
-         (unless (eql c #\newline)
-           (write-char c s))
-      finally
-         (return
-           (if empty nil (get-output-stream-string s))))))
-
-(defun test-nntps-client (&optional (host "snews.gmane.org") (port 563))
+;; Connect to a NNTP server, upgrade connection to TLS
+;; using the STARTTLS command, then execute the HELP
+;; command. Log the server responses.
+(defun test-nntps-client (&optional (host "news.gmane.io") (port 119))
+  ;; Gmane does not seem to support a dedicated TLS port,
+  ;; so we connect to the plain NNTP port 119
+  ;; and use the STARTTLS command to upgrade
+  ;; to encrypted connection.
   (let* ((sock (trivial-sockets:open-stream host port
                                             :element-type '(unsigned-byte 8)))
-         (nntps (cl+ssl:make-ssl-client-stream sock
-                                               :external-format '(:iso-8859-1 :eol-style :lf))))
-    (format t "NNTPS> ~A~%" (read-line-crlf nntps))
-    (write-line "HELP" nntps)
-    (force-output nntps)
-    (loop :for line = (read-line-crlf nntps nil)
-          :until (string-equal "." line)
-          :do (format t "NNTPS> ~A~%" line))))
+         (plain-text (flex:make-flexi-stream
+                      sock
+                      :external-format '(:utf-8 :eol-style :crlf))))
+    (format t "NNTPS> ~A~%" (read-line plain-text))
+    (format sock "STARTTLS~%")
+    (force-output sock)
+    ;; In this example we don't look at the server
+    ;; respone line to the STARTLS command,
+    ;; assuming it is successfull (status code 382);
+    ;; just log it and start TLS session.
+    (format t "NNTPS> ~A~%" (read-line plain-text))
+    (let ((nntps (cl+ssl:make-ssl-client-stream
+                  sock
+                  :hostname host
+                  :external-format '(:utf-8 :eol-style :crlf))))
+      (write-line "HELP" nntps)
+      (force-output nntps)
+      (loop :for line = (read-line nntps nil)
+            :while line
+            :do (format t "NNTPS> ~A~%" line)
+            :until (string-equal "." line)))))
 
 
-;; open an HTTPS connection to a secure web server and make a
+;; Open an HTTPS connection to a secure web server and make a
 ;; HEAD request
 (defun test-https-client (host &optional (port 443))
   (let* ((deadline (+ (get-internal-real-time)
@@ -61,14 +69,13 @@
            (progn
              (cl+ssl:make-ssl-client-stream
               socket
-              :unwrap-stream-p t
               :hostname host
-              :external-format '(:utf-8 :eol-style :lf)))))
+              :external-format '(:utf-8 :eol-style :crlf)))))
     (unwind-protect
          (progn
            (format https "HEAD / HTTP/1.0~%Host: ~a~%~%" host)
            (force-output https)
-           (loop :for line = (read-line-crlf https nil)
+           (loop :for line = (read-line https nil)
                  :while line
                  :do (format t "HTTPS> ~a~%" line)
                  :while (plusp (length line))
@@ -121,17 +128,20 @@
                       :element-type '(unsigned-byte 8)))
              (client (cl+ssl:make-ssl-server-stream
                       socket
-                      :external-format '(:iso-8859-1 :eol-style :lf)
+                      :external-format '(:utf-8 :eol-style :crlf)
                       :certificate cert
                       :key key))
              (quit nil))
         (unwind-protect
              (progn
-               (loop :for line = (read-line-crlf client nil)
-                     :while (> (length line) 1)
+               ;; Read and log the request with its headers
+               (loop :for line = (read-line client nil)
+                     :while line
                      :do (format t "HTTPS> ~a~%" line)
                          (when (search "/quit" line)
-                           (setf quit t)))
+                           (setf quit t))
+                     :while (plusp (length line)))
+               ;; Write a response
                (format client "HTTP/1.0 200 OK~%")
                (format client "Server: cl+ssl/examples/example.lisp/1.1~%")
                (format client "Content-Type: text/plain~%")
@@ -144,3 +154,4 @@
                        (lisp-implementation-version))
                (when quit (return)))
           (close client))))))
+
