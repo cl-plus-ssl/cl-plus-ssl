@@ -43,12 +43,12 @@ If you chose to install the DLLs into the OpenSSL installation's "bin" directory
 
 ## Usage
 
-Basically, after creating a TCP connection, we wrap the TCP socket stream
-into an TLS encrypted stream using `cl+ssl:make-ssl-client-stream`,
+Basically, after TCP connection is created, we wrap the TCP socket stream
+into a TLS encrypted stream using `cl+ssl:make-ssl-client-stream`,
 or `cl+ssl:make-ssl-server-stream`. See how it's done in the
-<examples/example.lisp> one. That is a self-contained file,
-you can copy-paste it into your slime session and try the examples
-as suggested in the comments at the top of the file.
+[examples/example.lisp](examples/example.lisp) one. That's a
+self-contained file, you can copy-paste it into your Slime session
+and try the examples as suggested in the comments at the top of the file.
 
 ## API
 
