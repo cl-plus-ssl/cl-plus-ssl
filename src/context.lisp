@@ -96,7 +96,11 @@
                           (verify-mode +ssl-verify-peer+)
                           (verify-callback nil verify-callback-supplied-p)
                           (cipher-list +default-cipher-list+)
-                          (pem-password-callback 'pem-password-callback))
+                          (pem-password-callback 'pem-password-callback)
+                          certificate-chain-file
+                          private-key-file
+                          private-key-password
+                          (private-key-file-type +ssl-filetype-pem+))
   (ensure-initialized)
   (let ((ctx (ssl-ctx-new (if method-supplied-p
                               method
@@ -135,6 +139,11 @@
                                                       (cffi:null-pointer)))))
       (ssl-ctx-set-cipher-list ctx cipher-list)
       (ssl-ctx-set-default-passwd-cb ctx (cffi:get-callback pem-password-callback))
+      (when certificate-chain-file
+        (ssl-ctx-use-certificate-chain-file ctx certificate-chain-file))
+      (when private-key-file
+        (with-pem-password (private-key-password)
+          (ssl-ctx-use-privatekey-file ctx private-key-file private-key-file-type)))
       ctx)))
 
 (defun call-with-global-context (context auto-free-p body-fn)
@@ -144,4 +153,6 @@
         (ssl-ctx-free context)))))
 
 (defmacro with-global-context ((context &key auto-free-p) &body body)
+  "Executes the BODY with *SSL-GLOBAL-CONTEXT* bound to the CONTEXT.
+If AUTO-FREE-P is true the context is freed using SSL-CTX-FREE before exit. "
   `(call-with-global-context ,context ,auto-free-p (lambda () ,@body)))

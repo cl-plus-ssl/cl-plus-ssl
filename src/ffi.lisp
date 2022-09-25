@@ -603,6 +603,7 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     ("SSL_CTX_use_PrivateKey_file" ssl-ctx-use-privatekey-file)
   :int
   (ctx ssl-ctx)
+  (file :string)
   (type :int))
 (define-ssl-function ("SSL_use_certificate_file" ssl-use-certificate-file)
     :int
