@@ -5,9 +5,17 @@
 ;;; See LICENSE for details.
 
 #|
+;; Assuming Quicklisp is installed.
 (load "example.lisp")
+
 (tls-example::test-https-client "www.google.com")
-(tls-example::test-https-server)
+
+;; generate key and cert as explained in the test-https-server comments
+(tls-example::test-https-server :key "/path/to/private-key.pem"
+                                :cert "/path/to/certificate.pem"
+                                :passphrase "1234")
+;; test the server with curl or web browser as explained in the comments
+
 (tls-example::test-nntp-client)
 |#
 
@@ -93,9 +101,10 @@
 
 ;; Start a simple HTTPS server.
 ;;
-;; Simple self-signed certificate and private key can be generated with
+;; Simple self-signed certificate and private key encrypted with
+;; passphrase "1234" can be generated with
 ;;
-;;     openssl req -new -nodes -x509 -days 365 -subj / -keyout private-key.pem -outform PEM -out certificate.pem
+;;     openssl req -new -x509 -days 365 -subj / -keyout private-key.pem -passout pass:1234 -out certificate.pem -outform PEM
 ;;
 ;; For "real" certificates, you can use, for exammple, https://letsencrypt.org,
 ;; or see the mod_ssl documentation at <URL:http://www.modssl.org/>
@@ -116,10 +125,11 @@
 ;; error page and the server will break with "bad certificate alert"
 ;; error. Then you can add a browser security exception
 ;; from the "Security Risk" page, start the server again and re-open the URL.
-(defun test-https-server
-    (&key (port 8080)
-       (cert "/home/anton/prj/cl+ssl/cl-plus-ssl/examples/certificate.pem")
-       (key "/home/anton/prj/cl+ssl/cl-plus-ssl/examples/private-key.pem"))
+(defun test-https-server (&key
+                            (port 8080)
+                            (cert "certificate.pem")
+                            (key "private-key.pem")
+                            (passphrase "1234"))
   (format t "~&SSL server listening on port ~d~%" port)
   (trivial-sockets:with-server (server (:port port))
     (loop
@@ -130,7 +140,8 @@
                       socket
                       :external-format '(:utf-8 :eol-style :crlf)
                       :certificate cert
-                      :key key))
+                      :key key
+                      :password passphrase))
              (quit nil))
         (unwind-protect
              (progn
@@ -143,7 +154,7 @@
                      :while (plusp (length line)))
                ;; Write a response
                (format client "HTTP/1.0 200 OK~%")
-               (format client "Server: cl+ssl/examples/example.lisp/1.1~%")
+               (format client "Server: cl+ssl/examples/example.lisp~%")
                (format client "Content-Type: text/plain~%")
                (terpri client)
                (format client "~:[G'day~;Bye~] at ~A!~%"
@@ -154,3 +165,4 @@
                        (lisp-implementation-version))
                (when quit (return)))
           (close client))))))
+
