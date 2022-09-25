@@ -41,14 +41,23 @@ and very likely are already installed.
 
 If you chose to install the DLLs into the OpenSSL installation's "bin" directory (recommended), then be sure to add the bin directory to your PATH environment variable and restart your session. e.g. "C:\Program Files\OpenSSL-Win64\bin"
 
+
 ## Usage
 
 Basically, after TCP connection is created, we wrap the TCP socket stream
 into a TLS encrypted stream using `cl+ssl:make-ssl-client-stream`,
 or `cl+ssl:make-ssl-server-stream`. See how it's done in the
-[examples/example.lisp](examples/example.lisp) one. That's a
-self-contained file, you can copy-paste it into your Slime session
-and try the examples as suggested in the comments at the top of the file.
+[examples/example.lisp](examples/example.lisp). That's a
+self-contained file, you can load it or copy-paste into your
+Slime session and try the examples as suggested in the comments at the
+top of the file.
+
+For more comfortable use learn some of OpenSSL API. In particular
+that SSL object represents a TLS session, CTX object is a
+context multiple SSL objects can derive from thush sharing
+commong parameters. BIO is a stream-like input/ouput abstraction
+OpenSSL uses for actual data transfer.
+
 
 ## API
 
