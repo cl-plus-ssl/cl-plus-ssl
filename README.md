@@ -131,8 +131,9 @@ TODO
 
 ### Saved Lisp Image
 
-If you save your application as Lisp image, call `(cl+ssl:reload)`
-after loading that image.
+If you save your application as a Lisp image, call `(cl+ssl:reload)`
+when that image is loaded to make sure necessary re-initialization
+is performed.
 
 This should work fine if the location and version
 of the OpenSSL shared libraries have *not* changed.
