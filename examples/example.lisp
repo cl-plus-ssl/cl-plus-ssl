@@ -26,38 +26,6 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (ql:quickload '("cl+ssl" "trivial-sockets")))
 
-;; Connect to an NNTP server, upgrade connection to TLS
-;; using the STARTTLS command, then execute the HELP
-;; command. Log the server responses.
-;;
-;; (We use STARTTLS instead of connecting to a dedicated
-;; TLS port, becuase Gmane does not seem to have a dedicated
-;; TLS port).
-(defun test-nntps-client (&optional (host "news.gmane.io") (port 119))
-  (let* ((sock (trivial-sockets:open-stream host port
-                                            :element-type '(unsigned-byte 8)))
-         (plain-text (flex:make-flexi-stream
-                      sock
-                      :external-format '(:utf-8 :eol-style :crlf))))
-    (format t "NNTPS> ~A~%" (read-line plain-text))
-    (format sock "STARTTLS~%")
-    (force-output sock)
-    ;; In this example we don't look at the server
-    ;; respone line to the STARTLS command,
-    ;; assuming it is successfull (status code 382);
-    ;; just log it and start TLS session.
-    (format t "NNTPS> ~A~%" (read-line plain-text))
-    (let ((nntps (cl+ssl:make-ssl-client-stream
-                  sock
-                  :hostname host
-                  :external-format '(:utf-8 :eol-style :crlf))))
-      (write-line "HELP" nntps)
-      (force-output nntps)
-      (loop :for line = (read-line nntps nil)
-            :while line
-            :do (format t "NNTPS> ~A~%" line)
-            :until (string-equal "." line)))))
-
 
 ;; Open an HTTPS connection to a secure web server and make a
 ;; HEAD request
@@ -166,3 +134,35 @@
                (when quit (return)))
           (close client))))))
 
+
+;; Connect to an NNTP server, upgrade connection to TLS
+;; using the STARTTLS command, then execute the HELP
+;; command. Log the server responses.
+;;
+;; (We use STARTTLS instead of connecting to a dedicated
+;; TLS port, becuase Gmane does not seem to have a dedicated
+;; TLS port).
+(defun test-nntps-client (&optional (host "news.gmane.io") (port 119))
+  (let* ((sock (trivial-sockets:open-stream host port
+                                            :element-type '(unsigned-byte 8)))
+         (plain-text (flex:make-flexi-stream
+                      sock
+                      :external-format '(:utf-8 :eol-style :crlf))))
+    (format t "NNTPS> ~A~%" (read-line plain-text))
+    (format sock "STARTTLS~%")
+    (force-output sock)
+    ;; In this example we don't look at the server
+    ;; respone line to the STARTLS command,
+    ;; assuming it is successfull (status code 382);
+    ;; just log it and start TLS session.
+    (format t "NNTPS> ~A~%" (read-line plain-text))
+    (let ((nntps (cl+ssl:make-ssl-client-stream
+                  sock
+                  :hostname host
+                  :external-format '(:utf-8 :eol-style :crlf))))
+      (write-line "HELP" nntps)
+      (force-output nntps)
+      (loop :for line = (read-line nntps nil)
+            :while line
+            :do (format t "NNTPS> ~A~%" line)
+            :until (string-equal "." line)))))
