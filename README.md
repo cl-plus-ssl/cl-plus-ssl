@@ -22,7 +22,7 @@ The library is available via [Quicklisp](http://www.quicklisp.org/).
 
 The Git repository: <http://common-lisp.net/project/cl-plus-ssl/>.
 
-Send bug reports to the GitHub issue trakcer. The old mailing list
+Send bug reports to the GitHub issue tracker. The old mailing list
 [cl-plus-ssl-devel@common-lisp.net](mailto:cl-plus-ssl-devel@common-lisp.net)
 is also still available
 ([list information](http://common-lisp.net/cgi-bin/mailman/listinfo/cl-plus-ssl-devel)). 
@@ -58,34 +58,38 @@ context multiple SSL objects can derive from thus sharing
 common parameters. BIO is a stream-like input/ouput abstraction
 OpenSSL uses for actual data transfer.
 
+Knowing OpenSSL will also allow for more flexibility and control,
+as cl+ssl high-level functions do not cover all possible approaches.
+
 ### Lisp BIO or Socket BIO.
 
-OpenSSl comes with several BIO types predefined, like file BIO,
+OpenSSL comes with several BIO types predefined, like file BIO,
 socket BIO, memory BIO, etc. Also OpenSSL API allows user to
-create a custom BIO objects, by providing a number of callbacks.
+create custom BIO methods by providing a number of callbacks.
 
 cl+ssl uses either socket BIO, or a custom BIO that implements
 all input / output with Lisp functions like `cl:write-byte`,
 `cl:read-byte`.
 
-When a Lisp stream is passed to `cl+ssl:make-ssl-client-stream`,
-or `cl+ssl:make-ssl-server-stream` the choice of BIO is made
+When a Lisp stream is passed to `cl+ssl:make-ssl-client-stream`
+or `cl+ssl:make-ssl-server-stream`, the choice of BIO is made
 based on the `:unwrap-stream-p` parameter.
 
 If `:unwrap-stream-p` is true, a socket file descriptor is extracted
 from the Lisp stream and passed to OpenSSL using the `SSL_set_fd`
-function.
+OpenSSL function.
 
 If `:unwrap-stream-p` is false, a Lisp BIO is created and
-passed to OpenSSL with the `SSL_set_bio` funcion.
+passed to OpenSSL with the `SSL_set_bio` OpenSSL funcion.
 
 The default value of `:unwrap-stream-p` is special variable
-`cl+ssl:*default-unwrap-stream-p*` which is initialized to `t`.
+`cl+ssl:*default-unwrap-stream-p*` which is initialized to `t`,
+meaning socket BIO is used by default.
 
 This allows to dynamically change the mode of operation of the
 code that omits the `:unwrap-stream-p` parameter.
 
-For the function from the example.lisp:
+For the `test-https-client` function from the example.lisp:
 
 ```common-lisp
 
@@ -103,11 +107,27 @@ If `cl+ssl:make-ssl-*-stream` functions receive
 a file descriptor instead of a Lisp stream,
 they unconditionally use socket BIO.
 
+### Customize Shared Libraries Location
+
+TODO
+
+### Timeouts and Deadlines
+
+TODO
+
+### Saved Lisp Image
+
+TODO
+
 
 ## API
 
-See the API section at the old project homepage: <http://common-lisp.net/project/cl-plus-ssl/>
+See the API section at the old project homepage:
+<http://common-lisp.net/project/cl-plus-ssl/>
 
+Note, the docstrings are sometimes incomplete - if a function was not
+initially documented, and contributor introduces new parameter,
+he would often document only that new parameter.
 
 ## Portability
 
