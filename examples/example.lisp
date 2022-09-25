@@ -18,14 +18,14 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (ql:quickload '("cl+ssl" "trivial-sockets")))
 
-;; Connect to a NNTP server, upgrade connection to TLS
+;; Connect to an NNTP server, upgrade connection to TLS
 ;; using the STARTTLS command, then execute the HELP
 ;; command. Log the server responses.
+;;
+;; (We use STARTTLS instead of connecting to a dedicated
+;; TLS port, becuase Gmane does not seem to have a dedicated
+;; TLS port).
 (defun test-nntps-client (&optional (host "news.gmane.io") (port 119))
-  ;; Gmane does not seem to support a dedicated TLS port,
-  ;; so we connect to the plain NNTP port 119
-  ;; and use the STARTTLS command to upgrade
-  ;; to encrypted connection.
   (let* ((sock (trivial-sockets:open-stream host port
                                             :element-type '(unsigned-byte 8)))
          (plain-text (flex:make-flexi-stream
@@ -95,7 +95,7 @@
 ;;
 ;; Simple self-signed certificate and private key can be generated with
 ;;
-;;    openssl req -new -nodes -x509 -days 365 -subj / -keyout private-key.pem -outform PEM -out certificate.pem
+;;     openssl req -new -nodes -x509 -days 365 -subj / -keyout private-key.pem -outform PEM -out certificate.pem
 ;;
 ;; For "real" certificates, you can use, for exammple, https://letsencrypt.org,
 ;; or see the mod_ssl documentation at <URL:http://www.modssl.org/>
@@ -103,11 +103,11 @@
 ;;
 ;; Query the server:
 ;;
-;;   curl --insecure https://localhost:8080/foobar
+;;     curl --insecure https://localhost:8080/foobar
 ;;
 ;; Stop the server:
 ;;
-;;   curl --insecure https://localhost:8080/quit
+;;     curl --insecure https://localhost:8080/quit
 ;;
 ;; (the --insecure is for self-signed certificate)
 ;;
@@ -154,4 +154,3 @@
                        (lisp-implementation-version))
                (when quit (return)))
           (close client))))))
-
