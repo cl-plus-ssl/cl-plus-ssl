@@ -109,7 +109,20 @@ they unconditionally use socket BIO.
 
 ### Customize Shared Libraries Location
 
-TODO
+By default cl+ssl searches for OpenSSL shared libraries
+in platform-dependent default locations.
+
+To explicitly specify what to load use cl+ssl/config
+module before loading cl+ssl:
+
+```common-lisp
+(ql:quickload :cl+ssl/config)
+(cl+ssl/config:define-libssl-path "/opt/local/lib/libssl.dylib")
+(cl+ssl/config:define-libcrypto-path "/opt/local/lib/libcrypto.dylib")
+(ql:quickload :cl+ssl)
+
+```
+Note, the `path` parameter of those two macros is not evaluated.
 
 ### Timeouts and Deadlines
 
@@ -117,7 +130,13 @@ TODO
 
 ### Saved Lisp Image
 
-TODO
+If you save your application as Lisp image, call `(cl+ssl:reload)`
+after loading that image.
+
+This should work fine if the location and version
+of the OpenSSL shared libraries have *not* changed.
+If they have changed, you may get errors anyway,
+as users report: https://github.com/cl-plus-ssl/cl-plus-ssl/issues/167
 
 
 ## API
@@ -138,7 +157,7 @@ CL Test Grid results: <https://common-lisp.net/project/cl-test-grid/library/cl+s
 
 ## TODO
 
-- session caching
+- session caching (what about it?)
 - The FFI code for all platforms except clisp needs to be rewritten. (update 2017-07-05: does it? why?)
 
 
