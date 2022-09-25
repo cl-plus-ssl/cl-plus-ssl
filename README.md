@@ -77,7 +77,8 @@ based on the `:unwrap-stream-p` parameter.
 
 If `:unwrap-stream-p` is true, a socket file descriptor is extracted
 from the Lisp stream and passed to OpenSSL using the `SSL_set_fd`
-OpenSSL function.
+OpenSSL function, which results in socket BIO created for
+that SSL session.
 
 If `:unwrap-stream-p` is false, a Lisp BIO is created and
 passed to OpenSSL with the `SSL_set_bio` OpenSSL funcion.
