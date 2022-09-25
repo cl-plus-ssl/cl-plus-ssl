@@ -41,6 +41,14 @@ and very likely are already installed.
 
 If you chose to install the DLLs into the OpenSSL installation's "bin" directory (recommended), then be sure to add the bin directory to your PATH environment variable and restart your session. e.g. "C:\Program Files\OpenSSL-Win64\bin"
 
+## Usage
+
+Basically, after creating a TCP connection, we wrap the TCP socket stream
+into an TLS encrypted stream using `cl+ssl:make-ssl-client-stream`,
+or `cl+ssl:make-ssl-server-stream`. See how it's done in the
+<examples/example.lisp> one. That is a self-contained file,
+you can copy-paste it into your slime session and try the examples
+as suggested in the comments at the top of the file.
 
 ## API
 
