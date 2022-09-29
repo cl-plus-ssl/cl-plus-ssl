@@ -63,7 +63,7 @@ as cl+ssl high-level functions do not cover all possible approaches.
 
 ### Lisp BIO or Socket BIO.
 
-OpenSSL comes with several BIO types predefined, like file BIO,
+OpenSSL comes with several BIO implementations, like file BIO,
 socket BIO, memory BIO, etc. Also OpenSSL API allows user to
 create custom BIO methods by providing a number of callbacks.
 
@@ -124,6 +124,7 @@ module before loading cl+ssl:
 
 ```
 Note, the `path` parameter of those two macros is not evaluated.
+You can only use literal values. This is dictated by CFFI.
 
 ### Timeouts and Deadlines
 
@@ -137,7 +138,7 @@ is performed.
 
 This should work fine if the location and version
 of the OpenSSL shared libraries have *not* changed.
-If they have changed, you may get errors anyway,
+If they have changed, you may get errors,
 as users report: https://github.com/cl-plus-ssl/cl-plus-ssl/issues/167
 
 
