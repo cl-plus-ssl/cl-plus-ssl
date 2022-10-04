@@ -10,12 +10,26 @@
 (in-package :ssl-test)
 
 (defvar *port* 8080)
-(defvar *cert* "/home/david/newcert.pem")
-(defvar *key* "/home/david/newkey.pem")
+(defparameter *cert* "/home/anton/my/prj/cl+ssl/cl-plus-ssl/test.lisp.certs/certificate.pem")
+(defparameter *key* "/home/anton/my/prj/cl+ssl/cl-plus-ssl/test.lisp.certs/private-key.pem")
+
+(pushnew "/home/anton/prj/cl+ssl/cl-plus-ssl/" asdf:*central-registry* :test #'equal)
+
+(ql:quickload :cl+ssl/config)
+
+(let ((ver (uiop:getenv "OPENSSL_VER")))
+  (format t "~%~%**************************************************************************~%")
+  (format t "Running for OpenSSL ~A~%" ver)
+  (cond ((equal "1.1.0j" ver)
+         (cl+ssl/config:define-libcrypto-path "/home/anton/my/prj/cl+ssl/cl-plus-ssl/test/run-on-many-lisps-and-openssls/openssl-releases/bin/openssl-1.1.0j-64bit/lib/libcrypto.so")
+         (cl+ssl/config:define-libssl-path "/home/anton/my/prj/cl+ssl/cl-plus-ssl/test/run-on-many-lisps-and-openssls/openssl-releases/bin/openssl-1.1.0j-64bit/lib/libssl.so"))
+        ((equal "3.0.4" ver)
+         (cl+ssl/config:define-libcrypto-path "/home/anton/prj/cl+ssl/cl-plus-ssl/test/run-on-many-lisps-and-openssls/openssl-releases/bin/openssl-3.0.4-64bit/lib64/libcrypto.so")
+         (cl+ssl/config:define-libssl-path "/home/anton/prj/cl+ssl/cl-plus-ssl/test/run-on-many-lisps-and-openssls/openssl-releases/bin/openssl-3.0.4-64bit/lib64/libssl.so"))
+        (t (error "unknown value of OPENSSL_VER: ~A" ver))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (asdf:operate 'asdf:load-op :trivial-sockets)
-  (asdf:operate 'asdf:load-op :bordeaux-threads))
+  (ql:quickload '("cl+ssl" "trivial-sockets" "bordeaux-threads")))
 
 (defparameter *tests* '())
 
