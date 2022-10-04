@@ -568,11 +568,39 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (defconstant +err_r_fatal+ 64)
 (defconstant +err_r_internal_error+ (logior 4 +err_r_fatal+))
 
+(define-crypto-function-ex (:since "3.0.0") ("ERR_new" err-new)
+  :void)
+
+(define-crypto-function-ex (:since "3.0.0") ("ERR_set_debug" err-set-debug)
+  :void
+  (file :string)
+  (line :int)
+  (func :string))
+
+#-cffi-sys::no-foreign-funcall ; vararg functions require foreign-funcall
+(define-crypto-function-ex (:since "3.0.0") ("ERR_set_error" err-set-error)
+  :void
+  (lib :int)
+  (reason :int)
+  (fmt :string)
+  &rest)
+
+;; Is that a new function in 1.0.2 or existed forever?
+(define-crypto-function-ex (:since "1.0.2")
+    ("ERR_get_next_error_library" err-get-next-error-library)
+  :int)
+
 #-cffi-sys::no-foreign-funcall ; vararg functions require foreign-funcall
 (define-crypto-function ("ERR_add_error_data" err-add-error-data)
   :void
   (num :int)
   &rest)
+
+;; Is that a new function in 3.0.0 or existed before?
+(define-crypto-function-ex (:since "3.0.0") ("ERR_add_error_txt" err-add-error-txt)
+  :void
+  (sep :string)
+  (txt :string))
 
 (define-crypto-function ("ERR_print_errors" err-print-errors)
   :void

@@ -186,20 +186,41 @@
 
 (defparameter *file-name* (cffi:foreign-string-alloc "cl+ssl/src/bio.lisp"))
 
+(defparameter *lib-num-for-errors*
+  (if (openssl-is-at-least 1 0 2)
+      (err-get-next-error-library)
+      +err_lib_none+))
+
 (defun put-to-openssl-error-queue (condition)
-  (ignore-errors
-
-    ;; TODO: starting from OpenSSL 3.0.0 use ERR_raise_data instead
-    ;; of the ERR_put_error / ERR_add_error_data combination.
-
-
-    (err-put-error +err_lib_none+ 0 +err_r_internal_error+ *file-name* 0)
-
-    #-cffi-sys::no-foreign-funcall ; because err-add-error-data is a vararg function
-    (let ((err-msg (format nil
-                           "Unexpected SERIOUS-CONDITION in the Lisp BIO: ~A"
-                           condition)))
-      (err-add-error-data 1 :string err-msg))))
+  (handler-case
+      (let ((err-msg (format nil
+                             "Unexpected serious-condition ~A in the Lisp BIO: ~A"
+                             (type-of condition)
+                             condition)))
+        (if (openssl-is-at-least 3 0)
+            (progn
+              (err-new)
+              (err-set-debug *file-name* 0 (cffi:null-pointer))
+              #-cffi-sys::no-foreign-funcall ; because err-set-error
+                                        ; is a vararg function
+              (err-set-error *lib-num-for-errors*
+                             +err_r_internal_error+
+                             "%s"
+                             :string err-msg))
+            (progn
+              (err-put-error *lib-num-for-errors*
+                             0
+                             +err_r_internal_error+
+                             *file-name*
+                             0)
+              #-cffi-sys::no-foreign-funcall ; because err-add-error-data
+                                        ; is a vararg function
+              (err-add-error-data 1
+                                  :string
+                                  err-msg))))
+    (serious-condition (c)
+      (warn "~A when saving Lisp BIO error to OpenSSL error queue: ~A"
+            (type-of c) c))))
 
 (cffi:defcallback lisp-write :int ((bio :pointer) (buf :pointer) (n :int))
   (handler-case
