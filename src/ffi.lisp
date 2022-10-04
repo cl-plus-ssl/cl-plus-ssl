@@ -993,12 +993,12 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (declaim (inline ensure-ssl-funcall))
 (defun ensure-ssl-funcall (stream success-test func handle &rest other-args)
   (loop
-     (let ((nbytes
+     (let ((ret
             (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
               (apply func handle other-args))))
-       (when (funcall success-test nbytes)
-         (return nbytes))
-       (let ((error (ssl-get-error handle nbytes)))
+       (when (funcall success-test ret)
+         (return ret))
+       (let ((error (ssl-get-error handle ret)))
          (case error
            (#.+ssl-error-want-read+
             (input-wait stream
@@ -1009,22 +1009,22 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
                          (ssl-get-fd handle)
                          (ssl-stream-deadline stream)))
            (t
-            (ssl-signal-error handle func error nbytes)))))))
+            (ssl-signal-error handle func error ret)))))))
 
 (declaim (inline nonblocking-ssl-funcall))
 (defun nonblocking-ssl-funcall (stream success-test func handle &rest other-args)
   (loop
-     (let ((nbytes
+     (let ((ret
             (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
               (apply func handle other-args))))
-       (when (funcall success-test nbytes)
-         (return nbytes))
-       (let ((error (ssl-get-error handle nbytes)))
+       (when (funcall success-test ret)
+         (return ret))
+       (let ((error (ssl-get-error handle ret)))
          (case error
            ((#.+ssl-error-want-read+ #.+ssl-error-want-write+)
-            (return nbytes))
+            (return ret))
            (t
-            (ssl-signal-error handle func error nbytes)))))))
+            (ssl-signal-error handle func error ret)))))))
 
 
 ;;; Waiting for output to be possible
