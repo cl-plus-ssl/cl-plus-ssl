@@ -71,11 +71,11 @@
          (error (c)
            (when (typep c 'trivial-sockets:socket-error)
              (setf c (trivial-sockets:socket-nested-error c)))
-           (format t "~%===== [FAIL] ~A: ~A~%" ',name c)
+           (format t "~%===== [FAIL] ~A: ~S ~A~%" ',name (type-of c) c)
            (handler-case
                (check-sockets)
              (error (c)
-               (format t "muffling follow-up error ~A~%" c)))
+               (format t "muffling follow-up error: ~S: ~A~%" (type-of c) c)))
            nil)))
      (push ',name *tests*)))
 
