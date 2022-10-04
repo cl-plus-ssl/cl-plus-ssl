@@ -61,22 +61,23 @@
 (defmacro deftest (name &body body)
   `(progn
      (defun ,name ()
-       (format t "~%----- ~A ----------------------------~%" ',name)
-       (handler-case
-           (progn
-             ,@body
-             (check-sockets)
-             (format t "===== [OK] ~A ====================~%" ',name)
-             t)
-         (error (c)
-           (when (typep c 'trivial-sockets:socket-error)
-             (setf c (trivial-sockets:socket-nested-error c)))
-           (format t "~%===== [FAIL] ~A: ~S ~A~%" ',name (type-of c) c)
-           (handler-case
+       (let ((cl+ssl:*make-ssl-client-stream-verify-default* nil))
+         (format t "~%----- ~A ----------------------------~%" ',name)
+         (handler-case
+             (progn
+               ,@body
                (check-sockets)
-             (error (c)
-               (format t "muffling follow-up error: ~S: ~A~%" (type-of c) c)))
-           nil)))
+               (format t "===== [OK] ~A ====================~%" ',name)
+               t)
+           (error (c)
+             (when (typep c 'trivial-sockets:socket-error)
+               (setf c (trivial-sockets:socket-nested-error c)))
+             (format t "~%===== [FAIL] ~A: ~S ~A~%" ',name (type-of c) c)
+             (handler-case
+                 (check-sockets)
+               (error (c)
+                 (format t "muffling follow-up error: ~S: ~A~%" (type-of c) c)))
+             nil))))
      (push ',name *tests*)))
 
 (defun run-all-tests ()
