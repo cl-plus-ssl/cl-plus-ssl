@@ -239,14 +239,12 @@
         (handler-case
             (progn
               (clear-retry-flags bio)
-              (when (or *blockp* (listen *socket*))
-                (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
-                (incf i))
               (loop
-                 while (and (< i n)
-                            (or #|(null *partial-read-p*)|# *blockp*  (listen *socket*)))
-                 do
-                   (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
+                while (and (< i n)
+                           (or *blockp* (listen *socket*)))
+                do
+                   (setf (cffi:mem-ref buf :unsigned-char i)
+                         (read-byte *socket*))
                    (incf i))
               (when (zerop i) (set-retry-read bio)))
           (end-of-file ()
@@ -273,21 +271,17 @@
             (max-chars (1- n)))
         (clear-retry-flags bio)
         (handler-case
-            (when (> max-chars 0)
-              (when (or *blockp* (listen *socket*))
-                (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
-                (incf i))
-              (loop
-                 with char
-                 and exit = nil
-                 while (and (< i max-chars)
-                            (null exit)
-                            (or (null *partial-read-p*) (listen *socket*)))
-                 do
-                   (setf char (read-byte *socket*)
-                         exit (= char 10))
-                   (setf (cffi:mem-ref buf :unsigned-char i) char)
-                   (incf i)))
+            (loop
+              with char
+              and exit = nil
+              while (and (< i max-chars)
+                         (null exit)
+                         (or *blockp* (listen *socket*)))
+              do
+                 (setf char (read-byte *socket*)
+                       exit (= char 10))
+                 (setf (cffi:mem-ref buf :unsigned-char i) char)
+                 (incf i))
           (end-of-file ()
             (compat-bio-set-flags bio +BIO_FLAGS_IN_EOF+)))
         (setf (cffi:mem-ref buf :unsigned-char i) 0)

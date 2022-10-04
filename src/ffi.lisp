@@ -146,7 +146,6 @@ variants if you have use cases for them.)"
 (defvar *bio-lisp-method* nil)
 
 (defparameter *blockp* t)
-(defparameter *partial-read-p* nil)
 
 (defun ssl-initialized-p ()
   (and *ssl-global-context* *ssl-global-method*))
