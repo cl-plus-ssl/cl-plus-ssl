@@ -84,12 +84,15 @@
   (cond
     ((ssl-stream-handle stream)
      (unless abort
-       (force-output stream))
-     (ssl-shutdown (ssl-stream-handle stream))
+       (force-output stream)
+       (ensure-ssl-funcall stream
+                           (complement #'minusp)
+                           #'ssl-shutdown
+                           (ssl-stream-handle stream)))
      (ssl-free (ssl-stream-handle stream))
      (setf (ssl-stream-handle stream) nil)
      (when (streamp (ssl-stream-socket stream))
-       (close (ssl-stream-socket stream)))
+       (close (ssl-stream-socket stream) :abort abort))
      (when (ssl-close-callback stream)
        (funcall (ssl-close-callback stream)))
      t)
@@ -107,7 +110,7 @@
                    (*blockp* nil) ;; for the Lisp-BIO
                    (n (with-pointer-to-vector-data (ptr buf)
                         (nonblocking-ssl-funcall
-                         stream handle #'ssl-read handle ptr 1))))
+                         stream #'plusp #'ssl-read handle ptr 1))))
               (and (> n 0) (buffer-elt buf 0))))))
 
 (defmethod stream-read-byte ((stream ssl-stream))
@@ -119,7 +122,7 @@
                 (handle (ssl-stream-handle stream)))
             (with-pointer-to-vector-data (ptr buf)
               (ensure-ssl-funcall
-               stream handle #'ssl-read handle ptr 1))
+               stream #'plusp #'ssl-read handle ptr 1))
             (buffer-elt buf 0))
         (ssl-error-zero-return ()     ;SSL_read returns 0 on end-of-file
           :eof))))
@@ -139,7 +142,7 @@
              (let ((read-bytes
                     (with-pointer-to-vector-data (ptr buf)
                       (ensure-ssl-funcall
-                       stream handle #'ssl-read handle ptr length))))
+                       stream #'plusp #'ssl-read handle ptr length))))
                (s/b-replace seq buf :start1 start :end1 (+ start read-bytes))
                (incf start read-bytes))
            (ssl-error-zero-return ()   ;SSL_read returns 0 on end-of-file
@@ -184,7 +187,7 @@
       (unless handle
         (error "output operation on closed SSL stream"))
       (with-pointer-to-vector-data (ptr buf)
-        (ensure-ssl-funcall stream handle #'ssl-write handle ptr fill-ptr))
+        (ensure-ssl-funcall stream #'plusp #'ssl-write handle ptr fill-ptr))
       (setf (ssl-stream-output-pointer stream) 0))))
 
 #+(and clozure-common-lisp (not windows))
@@ -456,7 +459,7 @@ ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names such as
         (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
       (with-pem-password (password)
         (install-key-and-cert handle key certificate))
-      (ensure-ssl-funcall stream handle #'ssl-connect handle)
+      (ensure-ssl-funcall stream #'plusp #'ssl-connect handle)
       (maybe-verify-client-stream stream verify hostname)
       (handle-external-format stream external-format))))
 
@@ -487,7 +490,7 @@ may be associated with the passphrase PASSWORD."
         (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
       (with-pem-password (password)
         (install-key-and-cert handle key certificate))
-      (ensure-ssl-funcall stream handle #'ssl-accept handle)
+      (ensure-ssl-funcall stream #'plusp #'ssl-accept handle)
       (handle-external-format stream external-format))))
 
 (defun get-selected-alpn-protocol (ssl)

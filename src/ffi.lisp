@@ -991,12 +991,12 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (defvar *socket*)
 
 (declaim (inline ensure-ssl-funcall))
-(defun ensure-ssl-funcall (stream handle func &rest args)
+(defun ensure-ssl-funcall (stream success-test func handle &rest other-args)
   (loop
      (let ((nbytes
             (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
-              (apply func args))))
-       (when (plusp nbytes)
+              (apply func handle other-args))))
+       (when (funcall success-test nbytes)
          (return nbytes))
        (let ((error (ssl-get-error handle nbytes)))
          (case error
@@ -1012,12 +1012,12 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
             (ssl-signal-error handle func error nbytes)))))))
 
 (declaim (inline nonblocking-ssl-funcall))
-(defun nonblocking-ssl-funcall (stream handle func &rest args)
+(defun nonblocking-ssl-funcall (stream success-test func handle &rest other-args)
   (loop
      (let ((nbytes
             (let ((*socket* (ssl-stream-socket stream))) ;for Lisp-BIO callbacks
-              (apply func args))))
-       (when (plusp nbytes)
+              (apply func handle other-args))))
+       (when (funcall success-test nbytes)
          (return nbytes))
        (let ((error (ssl-get-error handle nbytes)))
          (case error
