@@ -244,7 +244,7 @@
                 (incf i))
               (loop
                  while (and (< i n)
-                            (or (null *partial-read-p*) (listen *socket*)))
+                            (or #|(null *partial-read-p*)|# *blockp*  (listen *socket*)))
                  do
                    (setf (cffi:mem-ref buf :unsigned-char i) (read-byte *socket*))
                    (incf i))
@@ -253,7 +253,15 @@
             (compat-bio-set-flags bio +BIO_FLAGS_IN_EOF+)
             ;; now just return the number of bytes read so far
             ))
-        i)
+        ;; Old OpenSSL treats zero as EOF and signals an error:
+        ;; "The TLS/SSL connection on handle #<A Foreign Pointer #x7F42DC082880> has been closed (return code: 5)"
+        ;; despite our implementation of (BIO_ctrl ... +BIO_CTRL_EOF+)
+        ;; returns false.
+        ;; (This was observed on openssl-1.1.0j. And
+        ;; on OpenSSL 3 it does not happen).
+        ;; Since both 0 and -1 are allowed by the docs,
+        ;; let's return -1 instead of 0.
+        (if (= 0 i) -1 i))
     (serious-condition (c)
       (clear-retry-flags bio)
       (put-to-openssl-error-queue c)
