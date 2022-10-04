@@ -271,6 +271,41 @@
       (force-output socket)
       (assert (equal (read-line socket) "(echo test3)")))))
 
+
+(defparameter *impl-specific-deadline-condition*
+  #+clozure-common-lisp
+  'ccl:communication-deadline-expired
+  #+sbcl
+  'sb-sys:deadline-timeout)
+
+(defun mentions-deadline-p (condition)
+  (format t "mentions-deadline-p: ~A: ~A~%" (type-of condition) condition)
+  (search (symbol-name *impl-specific-deadline-condition*)
+          (format nil "~A" condition)))
+
+;; TODO: that's a bit fragile, becasue missing-deadline-p
+;;       expects the text of the deadline condition captured by
+;;       Lisp BIO to be copied through OpenSSL error queue to the
+;;       condition signalled by ensure-ssl-funcall.
+;;       But passing the text to OpenSSL error queue from Lisp BIO
+;;       uses vararg functions and will not work on Lips where CFFI
+;;       does not support vararg functions. So if we extend deadline
+;;       testing to such lisps this approach will not work.
+;;       (Note also, if BIO failed to pupulate error queue,
+;;       we will have ssl-error-syscall instead of ssl-error-ssl).
+(deftype deadline-condition ()
+  `(or ,*impl-specific-deadline-condition*
+       (and cl+ssl::ssl-error-ssl
+            (satisfies mentions-deadline-p))))
+
+#+clozure-common-lisp
+(defun ccl-clear-deadline (ssl-flexi-stream)
+  (let ((socket-stream (cl+ssl::ssl-stream-socket
+                        (flex:flexi-stream-stream ssl-flexi-stream))))
+    (assert (ccl:stream-deadline socket-stream))
+    (setf (ccl:stream-deadline socket-stream) nil)))
+
+
 ;;; Run tests with different BIO setup strategies:
 ;;;   - :UNWRAP-STREAMS T
 ;;;     In this case, CL+SSL will convert the socket to a file descriptor.
@@ -310,11 +345,16 @@
         (write-line "test" socket)
         (force-output socket)
         (assert (equal (read-line socket) "(echo test)"))
-        (handler-case
-            (progn
-              (read-char socket)
-              (error "unexpected data"))
-          (ccl::communication-deadline-expired ())))))
+        (unwind-protect
+             (handler-case
+                 (progn
+                   (read-char socket)
+                   (error "unexpected data"))
+               (deadline-condition ()))
+          ;; Prevent the expired deadline
+          ;; breaking the socket closure by
+          ;; with-open-stream
+          (ccl-clear-deadline socket)))))
 
   #+sbcl
   (deftests read-deadline (usp nil t :caller)
@@ -330,7 +370,7 @@
               (progn
                 (read-char socket)
                 (error "unexpected data"))
-            (sb-sys:deadline-timeout ()))))))
+            (deadline-condition ()))))))
 
   #+clozure-common-lisp
   (deftests write-deadline (usp nil t)
@@ -354,15 +394,28 @@
                      (loop
                        (write-line "deadbeef" socket)
                        (incf n))
-                   (ccl::communication-deadline-expired ()))
+                   (deadline-condition ()))
                  ;; should have written a couple of lines before the deadline:
                  (assert (> n 100))))
           (handler-case
-              (close-socket socket :abort t)
-            (ccl::communication-deadline-expired ()))))))
+              (close-socket socket
+                            ;; abort, becasue otherwise
+                            ;; we would be blocked when close
+                            ;; calls SSL_shutdown, which
+                            ;; would be unable to send the "close notify"
+                            ;; alert to the frozen server
+                            :abort t)
+            (deadline-condition ()))))))
 
   #+sbcl
-  (deftests write-deadline (usp nil t)
+  (deftests write-deadline (usp t
+                                ;; nil is not used currently, because
+                                ;; SBCL's with-deadline does not work
+                                ;; for writing to socket streams (see
+                                ;; https://groups.google.com/g/sbcl-devel/c/-eLw-Wv3Prc )
+                                ;; So if the Lisp BIO hangs blocked during writing,
+                                ;; it remains hanging, deadline does not interrupt it.
+                                )
     (with-thread ("echo server for deadline test"
                   (lambda () (init-server :unwrap-stream-p usp))
                   #'test-server)
@@ -379,12 +432,12 @@
                      (loop
                        (write-line "deadbeef" socket)
                        (incf n))
-                   (sb-sys:deadline-timeout ()))
+                   (deadline-condition ()))
                  ;; should have written a couple of lines before the deadline:
                  (assert (> n 100))))
           (handler-case
               (close-socket socket :abort t)
-            (sb-sys:deadline-timeout ()))))))
+            (deadline-condition ()))))))
 
   #+clozure-common-lisp
   (deftests read-char-no-hang/test (usp nil t :caller)
@@ -401,7 +454,7 @@
         (handler-case
             (when (read-char-no-hang socket)
               (error "unexpected data"))
-          (ccl::communication-deadline-expired ()
+          (deadline-condition ()
             (error "read-char-no-hang hangs"))))))
 
   #+sbcl
@@ -417,8 +470,8 @@
           (handler-case
               (when (read-char-no-hang socket)
                 (error "unexpected data"))
-            (sb-sys:deadline-timeout ()
+            (deadline-condition ()
               (error "read-char-no-hang hangs"))))))))
 
-#+(or)
+;#+(or)
 (run-all-tests)
