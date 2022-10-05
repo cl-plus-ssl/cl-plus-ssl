@@ -578,8 +578,15 @@ may be associated with the passphrase PASSWORD."
                 (saving-error (get-java-fields input-stream
                                                '("in" "this$0" "sc" "fd" "fd")))
                 ;; This seen to work for the following Java:
-                ;; Java 1.8.0_292 Azul Systems, Inc.
-                ;; OpenJDK 64-Bit Server VM
+                ;; - On my local Linux machine
+                ;;   $ java -version
+                ;;   openjdk version "1.8.0_292"
+                ;;   OpenJDK Runtime Environment (Zulu 8.54.0.21-CA-linux64) (build 1.8.0_292-b10)
+                ;;   OpenJDK 64-Bit Server VM (Zulu 8.54.0.21-CA-linux64) (build 25.292-b10, mixed mode)
+                ;; - Java 11.0.14 Debian
+                ;;   OpenJDK 64-Bit Server VM
+                ;;   (Printed by ABCL startup in GitHub Actions Linux VM
+                ;;   running Docker image clfoundation/cl-devel:2022-02-09)
                 (saving-error (get-java-fields input-stream
                                                '("in" "impl" "fd" "fd")))
                 (saving-error (get-java-fields input-stream
