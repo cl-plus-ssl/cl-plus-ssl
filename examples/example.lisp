@@ -25,7 +25,7 @@
 (in-package :tls-example)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (ql:quickload '("cl+ssl" "trivial-sockets")))
+  (ql:quickload '("cl+ssl" "trivial-sockets" "usocket")))
 
 
 ;; Open an HTTPS connection to a secure web server and make a
@@ -33,21 +33,18 @@
 (defun test-https-client (host &optional (port 443))
   (let* ((deadline (+ (get-internal-real-time)
                       (* 3 internal-time-units-per-second)))
-         (socket (ccl:make-socket :address-family :internet
-                                  :connect :active
-                                  :type :stream
-                                  :format :bivalent
-                                  :remote-host host
-                                  :remote-port port
-                                  ;; :local-host (resolve-hostname local-host)
-                                  ;; :local-port local-port
-                                  :deadline deadline))
+         (socket (usocket:socket-connect host
+                                         port
+                                         :element-type '(unsigned-byte 8)
+                                         #+ccl :deadline #+ccl deadline))
          (https
            (progn
              (cl+ssl:make-ssl-client-stream
-              socket
+              (usocket:socket-stream socket)
               :hostname host
               :external-format '(:utf-8 :eol-style :crlf)))))
+    #-ccl
+    (declare (ignore deadline))
     (unwind-protect
          (progn
            (format https "HEAD / HTTP/1.0~%Host: ~a~%~%" host)
@@ -170,3 +167,4 @@
             :while line
             :do (format t "NNTPS> ~A~%" line)
             :until (string-equal "." line)))))
+
