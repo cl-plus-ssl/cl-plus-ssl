@@ -553,20 +553,39 @@ may be associated with the passphrase PASSWORD."
   ;;; value of the file decriptor, which is all we need to pass to
   ;;; SSL.
   (defmethod stream-fd ((stream system::socket-stream))
-    (flet ((get-java-fields (object fields) ;; Thanks to Cyrus Harmon
-             (reduce (lambda (x y)
-                       (jss:get-java-field x y t))
-                     fields
-                     :initial-value object))
-           (jvm-version ()
-             (read
-              (make-string-input-stream
-               (java:jstatic "getProperty"
-                             "java.lang.System"
-                             "java.specification.version")))))
-      (ignore-errors
-       (get-java-fields (java:jcall "getWrappedInputStream"  ;; TODO: define this as a constant
-                                    (two-way-stream-input-stream stream))
-                        (if (< (jvm-version) 14)
-                            '("in" "ch" "fdVal")
-                            '("in" "this$0" "sc" "fd" "fd")))))))
+    (let ((errors))
+      (macrolet ((saving-error (&body body)
+                   `(handler-case
+                        ,@body
+                      (serious-condition (c)
+                        (push c errors)
+                        nil))))
+        (flet ((get-java-fields (object fields) ;; Thanks to Cyrus Harmon
+                 (reduce (lambda (x y)
+                           (jss:get-java-field x y t))
+                         fields
+                         :initial-value object))
+               (jvm-version ()
+                 (read
+                  (make-string-input-stream
+                   (java:jstatic "getProperty"
+                                 "java.lang.System"
+                                 "java.specification.version")))))
+          (let ((input-stream (java:jcall "getWrappedInputStream"  ;; TODO: define this as a constant
+                                          (two-way-stream-input-stream stream))))
+            (or ;; starting from openjdk 14, according to Mark Evenson
+                ;; in https://github.com/cl-plus-ssl/cl-plus-ssl/pull/103
+                (saving-error (get-java-fields input-stream
+                                               '("in" "this$0" "sc" "fd" "fd")))
+                ;; This seen to work for the following Java:
+                ;; Java 1.8.0_292 Azul Systems, Inc.
+                ;; OpenJDK 64-Bit Server VM
+                (saving-error (get-java-fields input-stream
+                                               '("in" "impl" "fd" "fd")))
+                (saving-error (get-java-fields input-stream
+                                               '("in" "ch" "fdVal")))
+                (warn "cl+ssl:stream-fd: all approaches failed. stream: ~A, jvm-version: ~S, internal input-stream: ~A, errors:~%~{~A~^~%~}"
+                      stream
+                      (ignore-errors (jvm-version))
+                      input-stream
+                      (nreverse errors)))))))))
