@@ -1,3 +1,4 @@
+;; TODO: enable CLISP after # https://github.com/cl-plus-ssl/cl-plus-ssl/issues/163 is fixed
 (flet ((format-test-step (lisp openssl lib-load-mode)
          (format t "      - if: success() || failure()~%")
          (format t "        run: |~%")
@@ -30,7 +31,7 @@
            (format t "          retry_on: error~%")
            ;; don't hide error situations other than the known crashes
            (format t "          retry_on_exit_code: 137~%"))))
-  (dolist (lisp '("sbcl" "ccl" "abcl" "clisp"))
+  (dolist (lisp '("sbcl" "ccl" "abcl"))
     (dolist (openssl '(
                        "openssl-0.9.8zh"
                        "openssl-1.0.0s"
