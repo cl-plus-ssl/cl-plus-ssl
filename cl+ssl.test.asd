@@ -13,7 +13,8 @@
   :depends-on (:cl+ssl
                :fiveam
                :usocket
-               :trivial-sockets
+               :trivial-sockets ; for client-server.lisp
+               :bordeaux-threads ; for client-server.lisp
                (:feature (:or :sbcl :ccl) :cl-coveralls))
   :serial t
   :components ((:module "test"
