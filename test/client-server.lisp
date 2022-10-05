@@ -38,19 +38,34 @@ Includes a simple echo test and deadline tests.")
       (push socket *sockets*)))
   socket)
 
+(defun forget-socket (socket)
+  (bordeaux-threads:with-lock-held (*sockets-lock*)
+    (setf *sockets*
+          (delete socket *sockets*)))
+  socket)
+
 (defun close-socket (socket &key abort)
   (if (streamp socket)
       (close socket :abort abort)
-      (trivial-sockets:close-server socket)))
+      (trivial-sockets:close-server socket))
+  (forget-socket socket))
 
 (defun check-sockets ()
+  ;; Sockets for which close-socket were called
+  ;; will be absent in the *sockets*. This includes
+  ;; server sockets, which are not streams.
+  ;; Stream sockets which are closed by with-open-stream
+  ;; will remain in the *sockets*, but in the closed state.
+  ;; Everything else is a failure.
   (let ((failures nil))
     (bordeaux-threads:with-lock-held (*sockets-lock*)
       (dolist (socket *sockets*)
-        (when (close-socket socket :abort t)
+        (when (or (not (streamp socket))
+                  (open-stream-p socket))
           (push socket failures)))
       (setf *sockets* nil))
-    #-sbcl        ;fixme
+    (dolist (sock failures)
+      (close-socket sock :abort t))
     (when failures
       (error "failed to close sockets properly:~{  ~A~%~}" failures))))
 
