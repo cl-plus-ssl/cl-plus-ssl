@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Copyright (C) contributors as per cl+ssl git history
+#
+# See LICENSE for details.
 
 # safe mode
 set -euo pipefail

@@ -1,4 +1,8 @@
+;;;; -*- Mode: LISP; Syntax: COMMON-LISP; indent-tabs-mode: nil; coding: utf-8; show-trailing-whitespace: t -*-
+;;;
 ;;; Copyright (C) 2008  David Lichteblau
+;;; Copyright (C) contributors as per cl+ssl git history
+;;;
 ;;; See LICENSE for details.
 
 (defpackage #:cl+ssl-test-client-server

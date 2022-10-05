@@ -4,6 +4,7 @@
 ;;; Copyright (C) 2005  David Lichteblau
 ;;; Copyright (C) 2007  Pixel // pinterface
 ;;; "the conditions and ENSURE-SSL-FUNCALL are by Jochen Schmidt."
+;;; Copyright (C) contributors as per cl+ssl git history
 ;;;
 ;;; See LICENSE for details.
 
