@@ -268,12 +268,12 @@ Includes a simple echo test and deadline tests.")
       (force-output socket)
       (assert (equal (read-line socket) "(echo test3)")))))
 
-
-(defparameter *impl-specific-deadline-condition*
-  #+clozure-common-lisp
-  'ccl:communication-deadline-expired
-  #+sbcl
-  'sb-sys:deadline-timeout)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *impl-specific-deadline-condition*
+    #+clozure-common-lisp
+    'ccl:communication-deadline-expired
+    #+sbcl
+    'sb-sys:deadline-timeout))
 
 (defun mentions-deadline-p (condition)
   (format t "mentions-deadline-p: ~A: ~A~%" (type-of condition) condition)
