@@ -54,79 +54,79 @@ jobs:
 # the Github Actions possibilities for that.
 #
 ###############################################################################
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=openssl-0.9.8zh BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=openssl-0.9.8zh BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=openssl-1.0.0s BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=openssl-1.0.0s BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=openssl-1.0.2q BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=openssl-1.0.2q BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=openssl-1.1.0j BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=openssl-1.1.0j BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=openssl-1.1.1p BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=openssl-1.1.1p BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=libressl-2.2.7 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=libressl-2.2.7 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=libressl-2.5.5 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=libressl-2.5.5 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=libressl-2.6.5 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=libressl-2.6.5 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=libressl-2.8.3 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=libressl-2.8.3 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=libressl-3.0.1 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=libressl-3.0.1 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=libressl-3.5.3 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=sbcl OPENSSL=libressl-3.5.3 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=openssl-0.9.8zh BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -136,7 +136,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=openssl-0.9.8zh BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -146,7 +146,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=openssl-1.0.0s BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -156,7 +156,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=openssl-1.0.0s BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -166,7 +166,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=openssl-1.0.2q BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -176,7 +176,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=openssl-1.0.2q BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -186,7 +186,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=openssl-1.1.0j BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -196,7 +196,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=openssl-1.1.0j BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -206,7 +206,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=openssl-1.1.1p BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -216,7 +216,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=openssl-1.1.1p BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -226,7 +226,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -236,7 +236,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -246,7 +246,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=libressl-2.2.7 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -256,7 +256,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=libressl-2.2.7 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -266,7 +266,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=libressl-2.5.5 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -276,7 +276,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=libressl-2.5.5 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -286,7 +286,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=libressl-2.6.5 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -296,7 +296,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=libressl-2.6.5 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -306,7 +306,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=libressl-2.8.3 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -316,7 +316,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=libressl-2.8.3 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -326,7 +326,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=libressl-3.0.1 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -336,7 +336,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=libressl-3.0.1 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -346,7 +346,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=libressl-3.5.3 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -356,7 +356,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         uses: nick-fields/retry@v2.8.1
         name: Run with retries LISP=ccl OPENSSL=libressl-3.5.3 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -366,39 +366,39 @@ jobs:
           max_attempts: 3
           retry_on: error
           retry_on_exit_code: 137
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=abcl OPENSSL=openssl-0.9.8zh BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=abcl OPENSSL=openssl-1.0.0s BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=abcl OPENSSL=openssl-1.0.2q BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=abcl OPENSSL=openssl-1.1.0j BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=abcl OPENSSL=openssl-1.1.1p BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=abcl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=abcl OPENSSL=libressl-2.2.7 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=abcl OPENSSL=libressl-2.5.5 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=abcl OPENSSL=libressl-2.6.5 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=abcl OPENSSL=libressl-2.8.3 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=abcl OPENSSL=libressl-3.0.1 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
-      - if: always()
+      - if: success() || failure()
         run: |
            LISP=abcl OPENSSL=libressl-3.5.3 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh

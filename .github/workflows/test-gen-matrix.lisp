@@ -1,6 +1,6 @@
 ;; TODO: enable CLISP after # https://github.com/cl-plus-ssl/cl-plus-ssl/issues/163 is fixed
 (flet ((format-test-step (lisp openssl lib-load-mode)
-         (format t "      - if: always()~%")
+         (format t "      - if: success() || failure()~%")
          (format t "        run: |~%")
          (format t "           LISP=~A OPENSSL=~A BITS=64 LIB_LOAD_MODE=~A docker-home/cl-plus-ssl/.github/workflows/test.sh~%"
                  lisp openssl lib-load-mode))
@@ -16,7 +16,7 @@
          ;; Reported this as a bug: https://github.com/nick-fields/retry/issues/98
          (let ((cmd-line (format nil "LISP=~A OPENSSL=~A BITS=64 LIB_LOAD_MODE=~A docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null"
                                  lisp openssl lib-load-mode)))
-           (format t "      - if: always()~%")
+           (format t "      - if: success() || failure()~%")
            (format t "        uses: nick-fields/retry@v2.8.1~%")
            (format t "        name: Run with retries ~A~%" cmd-line)
            (format t "        with:~%")
