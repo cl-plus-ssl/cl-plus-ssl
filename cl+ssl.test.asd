@@ -13,6 +13,7 @@
   :depends-on (:cl+ssl
                :fiveam
                :usocket
+               :trivial-sockets
                (:feature (:or :sbcl :ccl) :cl-coveralls))
   :serial t
   :components ((:module "test"
