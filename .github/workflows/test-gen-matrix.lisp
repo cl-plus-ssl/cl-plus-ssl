@@ -3,7 +3,9 @@
          (format t "      - if: success() || failure()~%")
          (format t "        run: |~%")
          (format t "           LISP=~A OPENSSL=~A BITS=64 LIB_LOAD_MODE=~A docker-home/cl-plus-ssl/.github/workflows/test.sh~%"
-                 lisp openssl lib-load-mode))
+                 lisp openssl lib-load-mode)
+         ;; Is 2 mins enough?
+         (format t "        timeout-minutes: 2~%"))
        (format-retrying-test-step (lisp openssl lib-load-mode)
          ;; Note the `<  /dev/null` at the end of the cmd-line.
          ;; This is needed to prevent CCL to hang waiting
