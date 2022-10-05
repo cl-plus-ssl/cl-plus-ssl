@@ -11,6 +11,10 @@ Includes a simple echo test and deadline tests.")
 
 (5am:in-suite :cl+ssl.client-server)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (when bordeaux-threads:*supports-threads-p*
+    (push :lisp-with-threads *features*)))
+
 (defvar *port* 8080)
 
 ;; The certificate and privatre key were generated with
@@ -89,6 +93,8 @@ Includes a simple echo test and deadline tests.")
      (push ',name *tests*)))
 
 (defun run-all-tests ()
+  (when (not bordeaux-threads:*supports-threads-p*)
+    (format t "~&No thread support in this Lisp implementation~%"))
   (unless (probe-file *cert*) (error "~A not found" *cert*))
   (unless (probe-file *key*) (error "~A not found" *key*))
   (let ((n 0)
@@ -267,6 +273,7 @@ Includes a simple echo test and deadline tests.")
 
 ;;; Simple echo-server test.  Write a line and check that the result
 ;;; watches, three times in a row.
+#+lisp-with-threads
 (deftest echo
   (with-thread ("simple server" #'init-server #'test-server)
     (with-open-stream (socket (init-client))
@@ -334,6 +341,7 @@ Includes a simple echo test and deadline tests.")
                        (let ((,var ',value))
                          ,@body))))))
 
+  #+lisp-with-threads
   (deftests unwrap-strategy (usp nil t :caller)
     (with-thread ("echo server for strategy test"
                   (lambda () (init-server :unwrap-stream-p usp))
