@@ -40,8 +40,8 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
            ;; If printed-queue is present, just use it
            (when (and (typep queue-designator 'ssl-error)
                       (printed-queue queue-designator))
-             (format stream "ERR_print_errors(): ")
-             (format stream (printed-queue queue-designator))
+             (format stream "ERR_print_errors(): ~A"
+                     (printed-queue queue-designator))
              (return-from body))
 
            (let ((queue (etypecase queue-designator
