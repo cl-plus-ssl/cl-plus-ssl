@@ -1,32 +1,28 @@
 ;;; Copyright (C) 2008  David Lichteblau
 ;;; See LICENSE for details.
 
-#|
-(load "test.lisp")
-|#
+(defpackage #:cl+ssl-test-client-server
+  (:use #:cl))
+(in-package #:cl+ssl-test-client-server)
 
-(defpackage :ssl-test
-  (:use :cl))
-(in-package :ssl-test)
+(5am:def-suite :cl+ssl.client-server :in :cl+ssl
+  :description "Old tests that start a server and communicated with it.
+Includes a simple echo test and deadline tests.")
+
+(5am:in-suite :cl+ssl.client-server)
 
 (defvar *port* 8080)
-(defparameter *cert* "/home/anton/my/prj/cl+ssl/cl-plus-ssl/test.lisp.certs/certificate.pem")
-(defparameter *key* "/home/anton/my/prj/cl+ssl/cl-plus-ssl/test.lisp.certs/private-key.pem")
 
-(pushnew "/home/anton/prj/cl+ssl/cl-plus-ssl/" asdf:*central-registry* :test #'equal)
-
-(ql:quickload :cl+ssl/config)
-
-(let ((ver (uiop:getenv "OPENSSL_VER")))
-  (format t "~%~%**************************************************************************~%")
-  (format t "Running for OpenSSL ~A~%" ver)
-  (cond ((equal "1.1.0j" ver)
-         (cl+ssl/config:define-libcrypto-path "/home/anton/my/prj/cl+ssl/cl-plus-ssl/test/run-on-many-lisps-and-openssls/openssl-releases/bin/openssl-1.1.0j-64bit/lib/libcrypto.so")
-         (cl+ssl/config:define-libssl-path "/home/anton/my/prj/cl+ssl/cl-plus-ssl/test/run-on-many-lisps-and-openssls/openssl-releases/bin/openssl-1.1.0j-64bit/lib/libssl.so"))
-        ((equal "3.0.4" ver)
-         (cl+ssl/config:define-libcrypto-path "/home/anton/prj/cl+ssl/cl-plus-ssl/test/run-on-many-lisps-and-openssls/openssl-releases/bin/openssl-3.0.4-64bit/lib64/libcrypto.so")
-         (cl+ssl/config:define-libssl-path "/home/anton/prj/cl+ssl/cl-plus-ssl/test/run-on-many-lisps-and-openssls/openssl-releases/bin/openssl-3.0.4-64bit/lib64/libssl.so"))
-        (t (error "unknown value of OPENSSL_VER: ~A" ver))))
+;; The certificate and privatre key were generated with
+;;    openssl req -new -x509 -days 365000 -subj / -keyout private-key.pem -noenc -out certificate.pem -outform PEM
+(defparameter *cert*
+  (namestring
+   (asdf:system-relative-pathname "cl+ssl.test"
+                                  "test/client-server-certificate.pem")))
+(defparameter *key*
+  (namestring
+   (asdf:system-relative-pathname "cl+ssl.test"
+                                  "test/client-server-private-key.pem")))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (ql:quickload '("cl+ssl" "trivial-sockets" "bordeaux-threads")))
@@ -89,7 +85,8 @@
       (when (funcall test)
         (incf nok))
       (incf n))
-    (format t "~&passed ~D/~D tests~%" nok n)))
+    (format t "~&passed ~D/~D tests~%" nok n)
+    (values nok n)))
 
 (define-condition quit (condition)
   ())
@@ -473,5 +470,7 @@
             (deadline-condition ()
               (error "read-char-no-hang hangs"))))))))
 
-;#+(or)
-(run-all-tests)
+(5am:test all-tests
+      (multiple-value-bind (passed total)
+          (run-all-tests)
+        (5am:is (= passed total))))

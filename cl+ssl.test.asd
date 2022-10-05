@@ -28,4 +28,5 @@
                  (:file "verify-hostname")
                  (:file "badssl-com")
                  (:file "bio")
-                 (:file "alpn")))))
+                 (:file "alpn")
+                 (:file "client-server")))))
