@@ -323,7 +323,7 @@ Includes a simple echo test and deadline tests.")
 ;;; Run tests with different BIO setup strategies:
 ;;;   - :UNWRAP-STREAMS T
 ;;;     In this case, CL+SSL will convert the socket to a file descriptor.
-;;;   - :UNWRAP-STREAMS :CLIENT
+;;;   - :UNWRAP-STREAMS :CALLER
 ;;;     Convert the socket to a file descriptor manually, and give that
 ;;;     to CL+SSL.
 ;;;   - :UNWRAP-STREAMS NIL
