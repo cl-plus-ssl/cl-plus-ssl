@@ -24,9 +24,6 @@ Includes a simple echo test and deadline tests.")
    (asdf:system-relative-pathname "cl+ssl.test"
                                   "test/client-server-private-key.pem")))
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (ql:quickload '("cl+ssl" "trivial-sockets" "bordeaux-threads")))
-
 (defparameter *tests* '())
 
 (defvar *sockets* '())
