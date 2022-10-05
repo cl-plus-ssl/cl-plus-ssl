@@ -273,7 +273,9 @@ Includes a simple echo test and deadline tests.")
     #+clozure-common-lisp
     'ccl:communication-deadline-expired
     #+sbcl
-    'sb-sys:deadline-timeout))
+    'sb-sys:deadline-timeout
+    #-(or sbcl clozure-common-lisp)
+    nil))
 
 (defun mentions-deadline-p (condition)
   (format t "mentions-deadline-p: ~A: ~A~%" (type-of condition) condition)
