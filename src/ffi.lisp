@@ -1327,8 +1327,6 @@ context and in particular the loaded certificate chain."
   (ssl-ctx-use-certificate-chain-file *ssl-global-context* certificate-chain-file))
 
 (defun reload ()
-  (if *ssl-global-context*
-      (ssl-ctx-free *ssl-global-context*))
   (detect-custom-openssl-installations-if-macos)
   (unless (member :cl+ssl-foreign-libs-already-loaded
                   *features*)
