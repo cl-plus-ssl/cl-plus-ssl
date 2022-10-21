@@ -212,21 +212,21 @@ to the application code.
 
 ```
     Application
-    (cl:read-line ssl-stream) ^ error
-    ------------------------  |
-                            ->
+    (cl:read-line ssl-stream)   ^ error
+    -------------------------   |
+                             -->
     cl+ssl::ssl-stream
-                              ^  return -1
-    ------------------------  |
-                            ->
+                                ^  return -1
+    -------------------------   |
+                             -->
     OpenSSL native code
-                              ^ return -1
-    ------------------------  |
-                            ->
+                                ^ return -1
+    -------------------------   |
+                             -->
     Lisp BIO
-                              ^ ccl:deadline-timeout
-    ------------------------- |
-                            ->
+                                ^ ccl:deadline-timeout
+    --------------------------  |
+                             -->
     (cl:read-sequence socket-stream)
 
 ```
