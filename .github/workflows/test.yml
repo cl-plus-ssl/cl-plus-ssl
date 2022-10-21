@@ -3,7 +3,13 @@ name: 'Test cl+ssl'
 on:
   workflow_dispatch:
   push:
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
   pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
