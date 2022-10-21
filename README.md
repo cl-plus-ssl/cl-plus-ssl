@@ -212,7 +212,7 @@ to the application code.
 
 ```
     Application
-    (cl:read-line ssl-stream)   ^ error
+    (cl:read-line ssl-stream)   ^  error
     -------------------------   |
                              -->
     cl+ssl::ssl-stream
