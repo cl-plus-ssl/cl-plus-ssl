@@ -128,7 +128,166 @@ You can only use literal values. This is dictated by CFFI.
 
 ### Timeouts and Deadlines
 
-TODO
+In network communications it is desirable to be able to interrupt
+reading or writing if their duration exceeds some limit.
+
+For example, when making an HTTP request, if it is stuck,
+we want to interrupt it instead of leaving the thread hanging
+forever. Similarly, a server can encourage some very slow
+or stuck clients, who do not timely send their requests or
+read responses, and keep connection, and possibly a connection
+handling thread, occupied. We want to interrupt server handling
+for such clients.
+
+In the description below, by deadline we mean an absolute time,
+by which all IO operations have to be completed. And by timeout
+we mean longest duration every individual IO operation should
+resume in (or at least have some progress).
+
+For example:
+
+```common-lisp
+    (json-parser:read-object gzipped-chunked-tls-stream)
+```
+
+Such a call can internally perform many primitive IO
+operationsd like `cl:read-byte` or `cl:read-sequence`.
+If executed with IO timeouts configured, every individual
+operation can take less then the the timeout, but overall
+duration may still be unpredictable. In contrast, when
+executed with deadline configured, the overall duration
+is constrained by the deadline.
+
+Some lisp implementations have implementation-specific ways
+to set timeouts or deadlines for socket communications.
+
+For example, on SBCL:
+
+```common-lisp
+    (with-deadline (:seconds 3)
+        (write-string "something" socket-stream)
+        (read-line socket-stream)
+        ...
+        )
+```
+
+On CCL:
+
+```common-lisp
+
+    (setf (ccl:stream-deadline socket-stream)
+          (+ (get-internal-real-time)
+             (* 3 internal-time-units-per-second))
+    (write-string "something" socket-stream)
+    (read-line socket-stream)
+    ...
+    (setf (ccl:stream-deadline socket-stream) nil)
+
+;; or
+
+    (setf (ccl:stream-intput-timeout socket-stream) 3
+          (ccl:stream-output-timeout socket-stream) 3)
+    (write-string "somemthig" socket-stream)
+    (read-line socket-stream)
+    ...
+```
+
+In the examples, if time passes the current IO operation
+will be interrupted by signalling an implementation-specific
+error.
+
+When using cl+ssl with LispBIO, such implementations-specific
+features remain working. You configure timeout / deadline
+in implementation-specific way (through the stream as on CCL
+or globally as on SBCL) and LispBIO, when performing
+standard CL IO functions, receives an error.
+
+BIO captures the error, and returns error status to OpenSSL.
+Also BIO saves the error info in OpenSSL error queue (tries
+at least).
+
+OpenSSL returns error status to cl+ssl stream code,
+which signals an error (a subtype of `cl+ssl::ssl-error`)
+to the application code.
+
+```
+    Application
+    (cl:read-line ssl-stream) ^ error
+    ------------------------  |
+                            ->
+    cl+ssl::ssl-stream
+                              ^  return -1
+    ------------------------  |
+                            ->
+    OpenSSL native code
+                              ^ return -1
+    ------------------------  |
+                            ->
+    Lisp BIO
+                              ^ ccl:deadline-timeout
+    ------------------------- |
+                            ->
+    (cl:read-sequence socket-stream)
+
+
+Note, in the original design of cl+ssl the error signaled
+in the BIO code by standard Lisp IO function was not captured
+by BIO, but instead it was passed through to the application
+code, so the app saw the implementation specific condition.
+
+```
+    Application            ^  ccl:deadline-timeout
+    ---------------------  |
+    cl+ssl stream          |
+    ---------------------  |
+    OpenSSL native code    |
+    ---------------------  |
+    Lisp BIO            -->
+```
+
+But in this case, the non-local exit goes across C call stack
+of the OpenSSL native code, likely preventing proper stack
+cleanup. CFFI manual explicitly advises against that.
+
+That's why BIO handles the timeout error.
+
+For the future we consider changing the behavior to
+save the original timeout error, let the C stack to unwind
+normally through error codes, but then resignaling the
+the saved error, instead of a cl+ssl defined condition.
+That will be closer to the old cl+ssl behavior.
+Although not sure if that's really the best approach.
+
+In any case, expect an error to be signaled if your
+implementation can arrange for timeout error
+on the socket stream.
+
+Note, such implementation extensions
+do not always work reliably, for example
+<https://groups.google.com/g/sbcl-devel/c/-eLw-Wv3Prc>.
+
+In case of socket BIO, cl+ssl emulates on CCL and SBCL
+the behavior of plain socket streams on these implementations:
+it will signal `ccl::communication-deadline-expired` or
+`sb-sys:deadline-timeout`. (This is implemented by setting
+a non-block flag on the socket file descriptor so that
+SSL_Read / SSL_Write only transfer as many data as
+possible without blocking. Then cl+ssl waits
+for file descriptor to be ready for more IO,
+making sure the waiting is no longer than the implementation
+specific deadline. In case of CCL the deadline is taken from
+the stream originally passed `cl+ssl:make-client / -server-stream`
+from which the socket file descriptor was extracted. In
+case of SBCL the waiting operation used is aware of the global
+deadline).
+
+For other implementations deadlines are not currently
+supported in the socket BIO mode.
+
+There are tickets / pull requests open to implement
+deadlines or timeouts for socket BIO in all implementations:
+https://github.com/cl-plus-ssl/cl-plus-ssl/issues/146
+https://github.com/cl-plus-ssl/cl-plus-ssl/pull/69
 
 ### Saved Lisp Image
 
