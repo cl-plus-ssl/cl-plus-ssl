@@ -192,22 +192,22 @@ On CCL:
     ...
 ```
 
-In the examples, if time passes the current IO operation
+In the examples, if time runs out, the current IO operation
 will be interrupted by signalling an implementation-specific
 error.
 
-When using cl+ssl with LispBIO, such implementations-specific
+When using cl+ssl with LispBIO, such implementation-specific
 features remain working. You configure timeout / deadline
 in implementation-specific way (through the stream as on CCL
 or globally as on SBCL) and LispBIO, when performing
 standard CL IO functions, receives an error.
 
-BIO captures the error, and returns error status to OpenSSL.
-Also BIO saves the error info in OpenSSL error queue (tries
-at least).
+BIO captures the error condition, and returns and error
+status to OpenSSL. Also BIO saves the error info in OpenSSL
+error queue (tries at least).
 
-OpenSSL returns error status to cl+ssl stream code,
-which signals an error (a subtype of `cl+ssl::ssl-error`)
+OpenSSL returns an error status to cl+ssl stream code,
+which signals an error condition (a subtype of `cl+ssl::ssl-error`)
 to the application code.
 
 ```
@@ -252,14 +252,14 @@ cleanup. CFFI manual explicitly advises against that.
 That's why BIO handles the timeout error.
 
 For the future we consider changing the behavior to
-save the original timeout error, let the C stack to unwind
-normally through error codes, but then resignaling the
+save the original timeout error condition, let the C stack
+unwind normally through error codes, but then resignaling the
 the saved error, instead of a cl+ssl defined condition.
 That will be closer to the old cl+ssl behavior.
 Although not sure if that's really the best approach.
 
 In any case, expect an error to be signaled if your
-implementation can arrange for timeout error
+implementation can arrange for timeout / deadline error
 on the socket stream.
 
 Note, such implementation extensions
@@ -276,12 +276,12 @@ possible without blocking. Then cl+ssl waits
 for file descriptor to be ready for more IO,
 making sure the waiting is no longer than the implementation
 specific deadline. In case of CCL the deadline is taken from
-the stream originally passed `cl+ssl:make-client / -server-stream`
+the stream originally passed to `cl+ssl:make-client / -server-stream`,
 from which the socket file descriptor was extracted. In
 case of SBCL the waiting operation used is aware of the global
 deadline).
 
-For other implementations deadlines are not currently
+For other Lisp implementations deadlines are not currently
 supported in the socket BIO mode.
 
 There are tickets / pull requests open to implement
