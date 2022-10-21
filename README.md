@@ -229,7 +229,7 @@ to the application code.
                             ->
     (cl:read-sequence socket-stream)
 
-
+```
 Note, in the original design of cl+ssl the error signaled
 in the BIO code by standard Lisp IO function was not captured
 by BIO, but instead it was passed through to the application
@@ -299,7 +299,6 @@ This should work fine if the location and version
 of the OpenSSL shared libraries have *not* changed.
 If they have changed, you may get errors,
 as users report: https://github.com/cl-plus-ssl/cl-plus-ssl/issues/167
-
 
 ## API
 
