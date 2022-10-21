@@ -202,7 +202,7 @@ in implementation-specific way (through the stream as on CCL
 or globally as on SBCL) and LispBIO, when performing
 standard CL IO functions, receives an error.
 
-BIO captures the error condition, and returns and error
+BIO captures the error condition, and returns an error
 status to OpenSSL. Also BIO saves the error info in OpenSSL
 error queue (tries at least).
 
