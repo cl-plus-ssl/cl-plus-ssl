@@ -220,11 +220,11 @@ to the application code.
     -------------------------   |
                              -->
     OpenSSL native code
-                                ^ return -1
+                                ^  return -1
     -------------------------   |
                              -->
     Lisp BIO
-                                ^ ccl:deadline-timeout
+                                ^  ccl:deadline-timeout
     --------------------------  |
                              -->
     (cl:read-sequence socket-stream)
