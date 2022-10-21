@@ -2,6 +2,7 @@ Copyright (C) 2001, 2003  Eric Marsden
 Copyright (C) ????  Jochen Schmidt
 Copyright (C) 2005  David Lichteblau
 Copyright (C) 2007  Pixel // pinterface
+Copyright (C) contributors as per cl+ssl git history
 
 * License first changed by Eric Marsden, Jochen Schmidt, and David Lichteblau
   from plain LGPL to Lisp-LGPL in December 2005.
