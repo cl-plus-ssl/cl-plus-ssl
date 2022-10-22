@@ -94,13 +94,15 @@ For the `test-https-client` function from the example.lisp:
 
 ```common-lisp
 
-;; use socket BIO
-(let ((cl+ssl:*default-unwrap-stream-p* t))
-  (tls-example::test-https-client "www.google.com"))
+    ;; use socket BIO
 
-;; use Lisp BIO
-(let ((cl+ssl:*default-unwrap-stream-p* nil))
-  (tls-example::test-https-client "www.google.com"))
+    (let ((cl+ssl:*default-unwrap-stream-p* t))
+      (tls-example::test-https-client "www.google.com"))
+
+    ;; use Lisp BIO
+
+    (let ((cl+ssl:*default-unwrap-stream-p* nil))
+      (tls-example::test-https-client "www.google.com"))
 
 ```
 
@@ -117,12 +119,14 @@ To explicitly specify what to load use cl+ssl/config
 module before loading cl+ssl:
 
 ```common-lisp
-(ql:quickload :cl+ssl/config)
-(cl+ssl/config:define-libssl-path "/opt/local/lib/libssl.dylib")
-(cl+ssl/config:define-libcrypto-path "/opt/local/lib/libcrypto.dylib")
-(ql:quickload :cl+ssl)
+
+    (ql:quickload :cl+ssl/config)
+    (cl+ssl/config:define-libssl-path "/opt/local/lib/libssl.dylib")
+    (cl+ssl/config:define-libcrypto-path "/opt/local/lib/libcrypto.dylib")
+    (ql:quickload :cl+ssl)
 
 ```
+
 Note, the `path` parameter of those two macros is not evaluated.
 You can only use literal values. This is dictated by CFFI.
 
@@ -147,7 +151,9 @@ resume in (or at least have some progress).
 For example:
 
 ```common-lisp
+
     (json-parser:read-object gzipped-chunked-tls-stream)
+
 ```
 
 Such a call can internally perform many primitive IO
@@ -164,11 +170,13 @@ to set timeouts or deadlines for socket communications.
 For example, on SBCL:
 
 ```common-lisp
+
     (with-deadline (:seconds 3)
         (write-string "something" socket-stream)
         (read-line socket-stream)
         ...
         )
+
 ```
 
 On CCL:
@@ -190,6 +198,7 @@ On CCL:
     (write-string "somemthig" socket-stream)
     (read-line socket-stream)
     ...
+
 ```
 
 In the examples, if time runs out, the current IO operation
@@ -211,6 +220,7 @@ which signals an error condition (a subtype of `cl+ssl::ssl-error`)
 to the application code.
 
 ```
+
     Application
     (cl:read-line ssl-stream)   ^  error
     -------------------------   |
@@ -230,12 +240,14 @@ to the application code.
     (cl:read-sequence socket-stream)
 
 ```
+
 Note, in the original design of cl+ssl the error signaled
 in the BIO code by standard Lisp IO function was not captured
 by BIO, but instead it was passed through to the application
 code, so the app saw the implementation specific condition.
 
 ```
+
     Application            ^  ccl:deadline-timeout
     ---------------------  |
     cl+ssl stream          |
@@ -243,6 +255,7 @@ code, so the app saw the implementation specific condition.
     OpenSSL native code    |
     ---------------------  |
     Lisp BIO            -->
+
 ```
 
 But in this case, the non-local exit goes across C call stack
@@ -286,8 +299,8 @@ supported in the socket BIO mode.
 
 There are tickets / pull requests open to implement
 deadlines or timeouts for socket BIO in all implementations:
-https://github.com/cl-plus-ssl/cl-plus-ssl/issues/146
-https://github.com/cl-plus-ssl/cl-plus-ssl/pull/69
+[#146](https://github.com/cl-plus-ssl/cl-plus-ssl/issues/146)
+[#69](https://github.com/cl-plus-ssl/cl-plus-ssl/pull/69)
 
 ### Saved Lisp Image
 
@@ -298,7 +311,8 @@ is performed.
 This should work fine if the location and version
 of the OpenSSL shared libraries have *not* changed.
 If they have changed, you may get errors,
-as users report: https://github.com/cl-plus-ssl/cl-plus-ssl/issues/167
+as users report:
+[#167](https://github.com/cl-plus-ssl/cl-plus-ssl/issues/167)
 
 ## API
 
