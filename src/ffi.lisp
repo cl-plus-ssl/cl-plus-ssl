@@ -1302,7 +1302,7 @@ do it before calling any other functions.
 Just leave the default value for the METHOD parameter.
 
 RAND-SEED is an octet sequence to initialize OpenSSL random number generator.
-On many platforms, including Linux and Windows, it may be leaved NIL (default),
+On many platforms, including Linux and Windows, it may be left NIL (default),
 because OpenSSL initializes the random number generator from OS specific service.
 But for example on Solaris it may be necessary to supply this value.
 The minimum length required by OpenSSL is 128 bits.
