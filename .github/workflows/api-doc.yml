@@ -11,9 +11,15 @@ on:
       - 'README.md'
       - 'LICENSE'
 
-# This allows a subsequently queued workflow run to interrupt previous runs
+# This allows a subsequently queued workflow run to interrupt previous runs.
+# github.workflow is the name of the workflow.
+#   If the workflow file doesn't specify a name,
+#   the value of this property is the full path of the workflow
+#   file in the repository.
+# github.head_ref is source branch of a pull_request
+# github.ref is the pushed branch
 concurrency:
-  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  group: '${{ github.workflow }} @ ${{ github.head_ref || github.ref }}'
   cancel-in-progress: true
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
