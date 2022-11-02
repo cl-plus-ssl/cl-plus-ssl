@@ -67,7 +67,7 @@ jobs:
           docker run -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 unpack-default-home-dir
 
       - run: |    
-          docker run -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 -q ccl --load /home/cl/cl-plus-ssl/.github/workflows/api-doc.lisp
+          docker run -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 -q ccl --batch --load /home/cl/cl-plus-ssl/.github/workflows/api-doc.lisp
 
       - name: List files in the repository
         run: |
