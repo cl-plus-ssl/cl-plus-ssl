@@ -6,10 +6,12 @@ on:
     paths-ignore:
       - 'README.md'
       - 'LICENSE'
+      - '.github/workflows/api-doc.*'
   pull_request:
     paths-ignore:
       - 'README.md'
       - 'LICENSE'
+      - '.github/workflows/api-doc.*'
 
 # This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
