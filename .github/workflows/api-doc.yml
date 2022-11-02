@@ -27,6 +27,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - run: |
+          echo concurrency group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+          echo github.workflow: ${{ github.workflow }}
+          echo github.event.pull_request.head.label: ${{ github.event.pull_request.head.label }}
+          echo github.head_ref: ${{ github.head_ref }}
+          echo github.ref: ${{ github.ref }}
+
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
