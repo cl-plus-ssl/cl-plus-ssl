@@ -95,8 +95,17 @@ jobs:
       'master' == github.ref_name
           && ( 'workflow_dispatch' == github.event_name
               || 'push' == github.event_name )
+    # Additionally protected by the deployment environment.
+    # GitHub will automatically create a deployment
+    # environment with the specified name, if not
+    # exists already, and only the master branch will
+    # have access to it by default.
+    # (Can be managed in the Settings / Environments
+    # of the repo)
     environment:
       name: github-pages
+      # Display the resulting GitHub Pages URL at this
+      # job box in the visualization graph for the workflow run
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build-api-doc
