@@ -11,8 +11,6 @@
                   (asdf:system-relative-pathname "cl+ssl"
                                                  "src/package.lisp"))))
 
-(error "tesing error handling")
-
 (package-doc-dump:dump-html "cl+ssl"
                             (asdf:system-relative-pathname "cl+ssl"
                                                            "src/package.lisp")
