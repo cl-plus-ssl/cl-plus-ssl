@@ -1,11 +1,14 @@
 name: "Generate API doc and publish to GitHub Pages"
 
 on:
+  # workflow_dispatch event is a manual run
   workflow_dispatch:
+
   push:
     paths-ignore:
       - 'README.md'
       - 'LICENSE'
+
   pull_request:
     paths-ignore:
       - 'README.md'
@@ -51,7 +54,7 @@ jobs:
         with:
           path: ${{ github.workspace }}/docker-home/cl-plus-ssl
 
-      - name: Check out repository code
+      - name: Check out package-doc-dump # (since it's not in Quicklisp yet)
         uses: actions/checkout@v3
         with:
           repository: avodonosov/package-doc-dump
@@ -106,7 +109,7 @@ jobs:
       name: github-pages
       # Display the resulting GitHub Pages URL at this
       # job box in the visualization graph for the workflow run
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }}/cl-plus-ssl-api.html
     runs-on: ubuntu-latest
     needs: build-api-doc
     steps:
