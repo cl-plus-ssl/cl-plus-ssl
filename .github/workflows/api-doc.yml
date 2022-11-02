@@ -17,7 +17,8 @@ on:
 #   the value of this property is the full path of the workflow
 #   file in the repository.
 # github.head_ref is source branch of a pull_request
-# github.ref is the pushed branch
+# github.ref is the pushed branch or the branch of
+#   a manual run (the workflow_dispatch event)
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.head_ref || github.ref }}'
   cancel-in-progress: true
@@ -36,9 +37,11 @@ jobs:
       - run: |
           echo concurrency group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
           echo github.workflow: ${{ github.workflow }}
+          echo github.event_name: ${{ github.event_name }}
           echo github.event.pull_request.head.label: ${{ github.event.pull_request.head.label }}
           echo github.head_ref: ${{ github.head_ref }}
           echo github.ref: ${{ github.ref }}
+          echo github.ref_name: ${{ github.ref_name }}
 
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -75,13 +78,16 @@ jobs:
           cp ${{ github.workspace }}/docker-home/cl-plus-ssl-api.html ${{ github.workspace }}/github-pages/
 
       - name: Package and upload GitHub Pages artifact
+        # runs only for master brach push or workflow_dispatch
+        if: ${{ 'master' == github.ref_name }}
         uses: actions/upload-pages-artifact@v1
         with:
           path: ${{ github.workspace }}/github-pages
 
 
-  # Deployment job
   deploy:
+    # runs only for master brach push or workflow_dispatch
+    if: ${{ 'master' == github.ref_name }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
