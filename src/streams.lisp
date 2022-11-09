@@ -411,36 +411,101 @@ Change this variable if you want the previous behaviour.")
       (write-string proto s))))
 
 ;; fixme: free the context when errors happen in this function
-(defun make-ssl-client-stream
-    (socket &key certificate key password method external-format
-              close-callback (unwrap-stream-p *default-unwrap-stream-p*)
-              (cipher-list *default-cipher-list*)
-              (verify (if (ssl-check-verify-p)
-                          :optional
-                          *make-ssl-client-stream-verify-default*))
-              hostname
-              (buffer-size *default-buffer-size*)
-              (input-buffer-size buffer-size)
-              (output-buffer-size buffer-size)
-              alpn-protocols)
-  "Returns an SSL stream for the client socket descriptor SOCKET.
-CERTIFICATE is the path to a file containing the PEM-encoded certificate for
- your client. KEY is the path to the PEM-encoded key for the client, which
-may be associated with the passphrase PASSWORD.
+(defun make-ssl-client-stream (socket
+                               &key
+                                 (unwrap-stream-p *default-unwrap-stream-p*)
+                                 hostname
+                                 close-callback
+                                 external-format
+                                 (verify (if (ssl-check-verify-p)
+                                             :optional
+                                             *make-ssl-client-stream-verify-default*))
+                                 alpn-protocols
+                                 certificate key password
+                                 (cipher-list *default-cipher-list*)
+                                 method
+                                 (buffer-size *default-buffer-size*)
+                                 (input-buffer-size buffer-size)
+                                 (output-buffer-size buffer-size))
+  "Performs TLS/SSL handshake over the specified SOCKET using
+the SSL_connect OpenSSL function and returns a Lisp stream that
+uses OpenSSL library to encrypt the output data when sending
+it to the socket and to decrypt the input received.
 
-VERIFY can be specified either as NIL if no check should be performed,
-:OPTIONAL to verify the server's certificate if it presented one or
-:REQUIRED to verify the server's certificate and fail if an invalid
-or no certificate was presented.
+SOCKET - represents the socket to be wrapped into an SSL stream.
+Can be either a Lisp stream (of an implementation-dependent type) for that
+socket, or an integer file descriptor of that socket. If that's a
+stream, it will be closed automatically when the SSL stream
+is closed. Also, on CCL, (CCL:STREAM-DEADLINE SOCKET) will be used
+as a deadline for 'socket BIO' mode.
+See README.md / Usage / Timeouts and Deadlines for more information.
+If that's a file descriptor, it is not closed automatically
+(you can use CLOSE-CALLBACK to arrange for that).
+
+UNWRAP-STREAM-P - if true, (STREAM-FD SOCKET) will be attempted
+to extract the file descriptor. Otherwise the SOCKET
+is left as is. Anyway, if in result we end up with an integer
+file descriptor, a socket BIO is used; if we end up with a
+stream - Lisp BIO is used. This parameter defaults to
+*DEFAULT-UNWRAP-STREAM-P* which is initalized to true.
+See README.md / Usage for more information on BIO types.
 
 HOSTNAME if specified, will be sent by client during TLS negotiation,
 according to the Server Name Indication (SNI) extension to the TLS.
-When server handles several domain names, this extension enables the server
-to choose certificate for right domain. Also the HOSTNAME is used for
-hostname verification if verification is enabled by VERIFY.
+If we connect to a server handling multiple domain names,
+this extension enables such server to choose certificate for the
+right domain. Also the HOSTNAME is used for hostname verification
+(if verification is enabled by VERIFY).
+
+CLOSE-CALLBACK - a function to be called when the created
+ssl stream is CL:CLOSE'ed. The only argument is this ssl stream.
+
+EXTERNAL-FORMAT - if NIL (the default), a plain (UNSIGNED-BYTE 8)
+ssl stream is returned. With a non-NIL external-format, a flexi-stream
+capable of character I/O will be returned instead, with the specified
+value as its initial external format.
+
+VERIFY can be specified either as NIL if no check should be performed,
+:OPTIONAL to verify the server's certificate if server presents one or
+:REQUIRED to verify the server's certificate and fail if an invalid
+or no certificate was presented. Defaults to
+*MAKE-SSL-CLIENT-STREAM-VERIFY-DEFAULT* which is initialized
+to :REQUIRED.
 
 ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names such as
-\"h2\" that would be offered to the server."
+\"h2\" that would be offered to the server. The protocol selected by the
+server can be retrieved with GET-SELECTED-ALPN-PROTOCOL.
+
+CERTIFICATE is the path to a file containing a PEM-encoded certificate.
+Note, if one certificate will be used for multiple TLS connections,
+it's better to load it into a common CTX (context) object rather than
+reading it for every new connection.
+
+KEY is the path to a PEM-encoded private key file of that certificate.
+
+PASSWORD the password to use for decryptipon of the KEY (if encrypted).
+
+CIPHER-LIST - a string listing the OpenSSL ciphers to enable
+for the TLS connection (using the OpensSL function SSL_set_cipher_list).
+Defaults to *DEFAULT-CIPHER-LIST* which is initialized to ALL.
+
+METHOD - usually you want to leave the default value. It is used
+to compute the parameter for OpenSSL function SSL_CTX_new when
+creating the global CTX object for cl+ssl. This parameter only has
+effect on the first call, when the global CTX is not yet created.
+The default value is TLS_method on OpenSSL > 1.1.0 and SSLv23_method
+for older OpenSSL versions.
+
+BUFFER-SIZE - default value for both the INPUT-BUFFER-SIZE and
+OUTPUT-BUFFER-SIZE parameters. In turn defaults to the
+*DEFAULT-BUFFER-SIZE* special variable.
+
+INPUT-BUFFER-SIZE - size of the input buffer of the ssl stream.
+Defaults to the BUFFER-SIZE parameter.
+
+OUTPUT-BUFFER-SIZE - size of the output buffer of the ssl stream.
+Defaults to the BUFFER-SIZE parameter.
+"
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-stream
                                :socket socket
@@ -465,17 +530,25 @@ ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names such as
       (handle-external-format stream external-format))))
 
 ;; fixme: free the context when errors happen in this function
-(defun make-ssl-server-stream
-    (socket &key certificate key password method external-format
-                 close-callback (unwrap-stream-p *default-unwrap-stream-p*)
-                 (cipher-list *default-cipher-list*)
-                 (buffer-size *default-buffer-size*)
-                 (input-buffer-size buffer-size)
-                 (output-buffer-size buffer-size))
-  "Returns an SSL stream for the server socket descriptor SOCKET.
-CERTIFICATE is the path to a file containing the PEM-encoded certificate for
- your server. KEY is the path to the PEM-encoded key for the server, which
-may be associated with the passphrase PASSWORD."
+(defun make-ssl-server-stream (socket
+                               &key
+                                 (unwrap-stream-p *default-unwrap-stream-p*)
+                                 close-callback
+                                 external-format
+                                 certificate key password
+                                 (cipher-list *default-cipher-list*)
+                                 method
+                                 (buffer-size *default-buffer-size*)
+                                 (input-buffer-size buffer-size)
+                                 (output-buffer-size buffer-size))
+  "Performs server-side TLS handshake over the specified SOCKET using
+the SSL_accept OpenSSL function and returns a Lisp stream that
+uses OpenSSL library to encrypt the output data when sending
+it to the socket and to decrypt the input received.
+
+All parameters have the same meaning as documented
+for MAKE-SSL-CLIENT-STREAM.
+"
   (ensure-initialized :method method)
   (let ((stream (make-instance 'ssl-server-stream
                                :socket socket
