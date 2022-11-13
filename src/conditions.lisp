@@ -89,10 +89,25 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
                   :reader printed-queue)))
 
 (define-condition ssl-error/handle (ssl-error)
-  ((ret :initarg :ret
-        :reader ssl-error-ret)
+  (;; Misnamed, better to be called CODE :READER SSL-ERROR-CODE
+   ;; becuase OpenSSL docs use the term RET for return
+   ;; values of IO calls like SSL_Read, etc, while
+   ;; here we store explanation of such failures
+   ;; as returned by SSL_get_error called
+   ;; after the failure.
+   ;; Unfortunately, SSL-ERROR-CODE is already used
+   ;; by SSL-ERROR-VERIFY condition class below
+   ;; for return values of SSL_get_verify_result,
+   ;; and that's already exported from cl+ssl package.
+   ;; Using the same generic function for two different
+   ;; types of error codes is not the best approach.
+   ;; Keeping it as is for now.
+   (ret :initarg :ret
+        :reader ssl-error-ret
+        :documentation "The error code returned by SSL_get_error. " )
    (handle :initarg :handle
            :reader ssl-error-handle))
+  (:documentation "Base condition for lisp wrappers of SSL_get_error return values.")
   (:report (lambda (condition stream)
              (format stream "Unspecified error ~A on handle ~A. "
                      (ssl-error-ret condition)
@@ -246,8 +261,16 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
                      (ssl-error-ret condition))
              (format-ssl-error-queue stream condition))))
 
-(defun ssl-signal-error (handle syscall error-code original-error)
+(defun ssl-signal-error (handle syscall error-code ret)
+  "RET is return value of the failed SYSCALL (like SSL_read, SSL_connect,
+SSL_shutdown, etc - most of them designate failure by returning
+RET <= 0, althought SSL_shutdow fails with RET < 0.
+
+ERROR-CODE is return value of SSL_get_error - an explanation of the failure.
+"
   (let ((printed-queue (err-print-errors-to-string))
+        ;; FixMe: the error queue is emptied by (err-print-errors-to-string)
+        ;;        above so the QUEUE becomes an empty list.
         (queue (read-ssl-error-queue)))
     ;; BAD: The IF below is responsible to represent the "Unexpected EOF"
     ;; situation, which is when the remote peer closes
@@ -255,7 +278,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     ;; as a situation of normal close_notify alert received.
     ;;
     ;; OpenSSL before version 3.0 signals the Unexpected EOF
-    ;; as error-code = SSL_ERROR_SYSCALL and original-error = 0.
+    ;; as error-code = SSL_ERROR_SYSCALL and ret = 0.
     ;; Normal termination is signalled by error-code = SSL_ERROR_ZERO_RETURN.
     ;;
     ;; As you see below, the IF turns the former into the latter.
@@ -292,7 +315,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     ;; See one example of this, discussion and links in
     ;; https://github.com/cl-plus-ssl/cl-plus-ssl/issues/166
     (if (and (eql error-code #.+ssl-error-syscall+)
-             (not (zerop original-error)))
+             (not (zerop ret)))
         (error 'ssl-error-syscall
                :handle handle
                :ret error-code
@@ -361,7 +384,8 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
            :documentation "The SSL stream whose peer certificate didn't verify.")
    (error-code :initarg :error-code
                :reader ssl-error-code
-               :documentation "The peer certificate verification error code."))
+               :documentation "The peer certificate verification error code
+(as returned by functions like SSL_get_verify_result or X509_STORE_CTX_get_error)."))
   (:report (lambda (condition stream)
              (let ((code (ssl-error-code condition)))
                (format stream "SSL verify error: ~d~@[ ~a~]"
