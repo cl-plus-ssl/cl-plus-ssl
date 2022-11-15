@@ -362,13 +362,12 @@ MAKE-CONTEXT also allows to enab/disable verification."
                (unless (eql err 0)
                  (error 'ssl-error-verify :stream ssl-stream :error-code err)))
              (when (and hostname
-                        (not (cffi:null-pointer-p srv-cert))
-                        ;; Beware of the unusual protocol of verify-hostname:
-                        ;; it returns the verification result as true / false,
-                        ;; but also signals error for many verification failures.
-                        ;; TODO: refactor verify-hostname to simplify this protocol.
-                        (not (verify-hostname srv-cert hostname)))
-               (error 'ssl-unable-to-match-host-name :hostname hostname)))
+                        (not (cffi:null-pointer-p srv-cert)))
+               (or (verify-hostname srv-cert hostname)
+                   ;; verify-hostname must either return true
+                   ;; or signal an error
+                   (error "Unexpected NIL returned by CL+SSL:VERIFY-HOSTNAME for ~A"
+                          hostname))))
         (unless (cffi:null-pointer-p srv-cert)
           (x509-free srv-cert))))))
 

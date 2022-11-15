@@ -97,19 +97,10 @@
         when (try-match-hostname name hostname) do
            (return t)))
 
-
-(defun maybe-check-subject-cn (dns-names cert hostname)
-  (or (some (lambda (dns)
-              (try-match-hostname dns hostname))
-            dns-names)
-      (alexandria:if-let ((cns (certificate-subject-common-names cert)))
-        (or (some (lambda (cn)
-                    (try-match-hostname cn hostname))
-                  cns)
-            (error 'unable-to-match-common-name))
-        (error 'unable-to-decode-common-name))))
-
 (defun verify-hostname (cert hostname)
-  (let* ((dns-names (certificate-dns-alt-names cert)))
-    (or (try-match-hostnames dns-names hostname)
-        (maybe-check-subject-cn dns-names cert hostname))))
+  (or (try-match-hostnames (certificate-dns-alt-names cert)
+                           hostname)
+      (try-match-hostnames (or (certificate-subject-common-names cert)
+                               (error 'unable-to-decode-common-name))
+                           hostname)
+      (error 'unable-to-match-common-name)))
