@@ -469,7 +469,13 @@ VERIFY can be specified either as NIL if no check should be performed,
 :REQUIRED to verify the server's certificate and fail if an invalid
 or no certificate was presented. Defaults to
 *MAKE-SSL-CLIENT-STREAM-VERIFY-DEFAULT* which is initialized
-to :REQUIRED.
+to :REQUIRED
+
+The verification includes verifying the HOSTNAME against the server
+ceritificate, using the VERIFY-HOSTNAME function.
+
+An error is signalled in case of the certificate or hostname
+verification failure.
 
 ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names such as
 \"h2\" that would be offered to the server. The protocol selected by the
