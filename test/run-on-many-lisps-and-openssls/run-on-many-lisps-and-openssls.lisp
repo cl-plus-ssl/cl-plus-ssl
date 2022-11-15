@@ -35,8 +35,16 @@
            (sanitize-as-path (tg-agent::implementation-identifier lisp)))
    (fasl-root test-run-dir)))
 
-(defun so-path (openssl-releases-dir openssl-release so-name)
-  (merge-pathnames (format nil "~A/lib/~A" openssl-release so-name)
+(defun so-path (openssl-releases-dir openssl-release bitness so-name)
+  (merge-pathnames (format nil
+                           "~A-~Abit/lib~A/~A"
+                           openssl-release
+                           bitness
+                           (if (and (string= "64" bitness)
+                                    (search "openssl-3." openssl-release))
+                               "64"
+                               "")
+                           so-name)
                    openssl-releases-dir))
 
 (defun run (&key test-run-description
@@ -44,15 +52,17 @@
               quicklisp-dir
               lisps
               openssl-releases
+              (bitnesses '("64"))
               openssl-releases-dir
-              cl+ssl-location)
+              cl+ssl-location
+              verify-location)
   ;; (unless cl+ssl-location
   ;;   (error "cl+ssl-location parameter is not specified and *load-truename* was not available at the load time."))
 
   (ensure-directories-exist test-run-dir)
   
   (let ((lisp-exe:*temp-dir* test-run-dir))
-    (flet ((run-lib-test (lisp openssl-release)
+    (flet ((run-lib-test (lisp openssl-release bitness)
              (tg-agent::proc-run-libtest
               lisp
               :cl+ssl
@@ -69,20 +79,28 @@
                                           `(cl-user::fncall "add-asdf-output-translation"
                                                             ,cl+ssl-location
                                                             ,(merge-pathnames "cl+ssl/" (fasl-dir test-run-dir lisp))))
-                                   (cl-user::fncall "ql:quickload" :cffi)
-                                   (cl-user::fncall "cffi:load-foreign-library" 
-                                                    ,(so-path openssl-releases-dir openssl-release "libcrypto.so"))
-                                   (cl-user::fncall "cffi:load-foreign-library"
-                                                    ,(so-path openssl-releases-dir openssl-release "libssl.so"))
-                                   (pushnew :cl+ssl-foreign-libs-already-loaded *features*)))))
+
+                                   (cl-user::fncall "ql:quickload" :cl+ssl/config)
+                                   (eval (list (read-from-string "cl+ssl/config:define-libcrypto-path")
+                                               ,(so-path openssl-releases-dir openssl-release bitness "libcrypto.so")))
+                                   (eval (list (read-from-string "cl+ssl/config:define-libssl-path")
+                                               ,(so-path openssl-releases-dir openssl-release bitness "libssl.so")))
+
+                                   ,@(when verify-location
+                                       `((cl-user::fncall "ql:quickload" :cl+ssl)
+                                         (cl-user::fncall "cl+ssl:ensure-initialized") ; needed to set the *ssl-global-context*
+                                         (cl-user::fncall "cl+ssl::ssl-ctx-set-verify-location"
+                                                          (symbol-value (read-from-string "cl+ssl::*ssl-global-context*"))
+                                                          ,verify-location)))))))
       (tg-utils::write-to-file
-       (alexandria:map-product (lambda (lisp openssl-release)
+       (alexandria:map-product (lambda (lisp openssl-release bitness)
                                  (list (tg-agent::implementation-identifier lisp)
                                        openssl-release
-                                       (getf (run-lib-test lisp openssl-release)
+                                       (getf (run-lib-test lisp openssl-release bitness)
                                              :status)))
                                lisps
-                               openssl-releases)
+                               openssl-releases
+                               bitnesses)
        (merge-pathnames "results.lisp" test-run-dir)))))
 
 (defun clean-fasls (test-run-dir)
