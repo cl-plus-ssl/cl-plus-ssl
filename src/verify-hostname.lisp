@@ -98,6 +98,14 @@
            (return t)))
 
 (defun verify-hostname (cert hostname)
+  "Verifies the HOSTNAME against the specified
+CERT. Implemented for all OpenSSL versions,
+using custom Lisp code (without relying on the functions
+provided by newer OpenSSl versions, like SSL_set_verify).
+
+Signals an error in case of verification failure.
+
+Otherwise returns true"
   (or (try-match-hostnames (certificate-dns-alt-names cert)
                            hostname)
       (try-match-hostnames (or (certificate-subject-common-names cert)
