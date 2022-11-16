@@ -4,6 +4,11 @@
 (ql:quickload :alexandria)
 (ql:quickload :log4cl)
 
+(let ((*default-pathname-defaults*
+        (or *load-truename*
+            #P"/home/anton/my/prj/cl+ssl/cl-plus-ssl/test/run-on-many-lisps-and-openssls/")))
+  (load "openssl-releases.lisp"))
+
 (defpackage #:run-on-many-lisps-and-openssls
   (:use :common-lisp)
   (:export #:run
@@ -34,18 +39,6 @@
            "~(~A~)/"
            (sanitize-as-path (tg-agent::implementation-identifier lisp)))
    (fasl-root test-run-dir)))
-
-(defun so-path (openssl-releases-dir openssl-release bitness so-name)
-  (merge-pathnames (format nil
-                           "~A-~Abit/lib~A/~A"
-                           openssl-release
-                           bitness
-                           (if (and (string= "64" bitness)
-                                    (search "openssl-3." openssl-release))
-                               "64"
-                               "")
-                           so-name)
-                   openssl-releases-dir))
 
 (defun run (&key test-run-description
               test-run-dir
@@ -82,9 +75,15 @@
 
                                    (cl-user::fncall "ql:quickload" :cl+ssl/config)
                                    (eval (list (read-from-string "cl+ssl/config:define-libcrypto-path")
-                                               ,(so-path openssl-releases-dir openssl-release bitness "libcrypto.so")))
+                                               ,(my-openssl-releases:so-path openssl-releases-dir
+                                                                             openssl-release
+                                                                             bitness
+                                                                             "libcrypto.so")))
                                    (eval (list (read-from-string "cl+ssl/config:define-libssl-path")
-                                               ,(so-path openssl-releases-dir openssl-release bitness "libssl.so")))
+                                               ,(my-openssl-releases:so-path openssl-releases-dir
+                                                                             openssl-release
+                                                                             bitness
+                                                                             "libssl.so")))
 
                                    ,@(when verify-location
                                        `((cl-user::fncall "ql:quickload" :cl+ssl)
