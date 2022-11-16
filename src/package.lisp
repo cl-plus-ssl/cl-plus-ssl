@@ -14,36 +14,36 @@
 (defpackage :cl+ssl
   (:export
 
-   ;; Create TLS stream over TCP stream
+   ;;; Create TLS stream over TCP stream
    #:make-ssl-client-stream
    #:make-ssl-server-stream
 
-   ;; Custom CTX creation
+   ;;; Custom CTX creation
    #:make-context
    #:ssl-ctx-free
 
-   ;; Custom binding for the global CTX
+   ;;; Custom binding for the global CTX
    #:with-global-context
 
-   ;; Configure the global CTX
+   ;;; Configure the global CTX
    #:use-certificate-chain-file
    #:ssl-load-global-verify-locations
    #:ssl-set-global-default-verify-paths
 
-   ;; PEM file reading
+   ;;; PEM file reading
    #:with-pem-password
 
-   ;; Properties of an established TLS session
+   ;;; Properties of an established TLS session
    #:get-selected-alpn-protocol
 
-   ;; x509 Certificates
-   ;; Obtain
+   ;;; x509 Certificates
+   ;;; Obtain
    #:decode-certificate-from-file
    #:decode-certificate
    #:ssl-stream-x509-certificate
-   ;; Release
+   ;;; Release
    #:x509-free
-   ;; Accessors
+   ;;; Accessors
    #:certificate-not-after-time
    #:certificate-not-before-time
    #:certificate-subject-common-names
@@ -54,30 +54,31 @@
    ;; is passed in)
    #:verify-hostname
 
-   ;; Saving / loading Lisp image
+   ;;; Saving / loading Lisp image
    #:reload
 
-   ;; Various
+   ;;; Various
    #:stream-fd
    #:random-bytes
    #:ensure-initialized
 
-   ;; Default values
+   ;;; Default values
    #:*default-cipher-list*
    #:*default-buffer-size*
    #:*make-ssl-client-stream-verify-default*
    #:*default-unwrap-stream-p*
 
-   ;; Error conditions.
-   ;; Not full list, there are more non-exported,
-   ;; including the base classes.
-   ;; Should we export them all?
+   ;;; Error conditions.
+   ;;; Not full list, there are more non-exported,
+   ;;; including the base classes.
+   ;;; Should we export them all?
    #:ssl-error-verify
+   #:ssl-error-initialize
+   ;;; accessors of ssl-error-verify
    #:ssl-error-stream
    #:ssl-error-code
-   #:ssl-error-initialize
 
-   ;; OpenSSL API constants
+   ;;; OpenSSL API constants
    #:+ssl-verify-none+
    #:+ssl-verify-peer+
    #:+ssl-verify-fail-if-no-peer-cert+
