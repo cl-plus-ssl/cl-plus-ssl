@@ -81,6 +81,7 @@ jobs:
         run: |
           mkdir ${{ github.workspace }}/github-pages/
           cp ${{ github.workspace }}/docker-home/cl-plus-ssl/index.html ${{ github.workspace }}/github-pages/
+          cp ${{ github.workspace }}/docker-home/cl-plus-ssl/index.css ${{ github.workspace }}/github-pages/
           cp ${{ github.workspace }}/docker-home/cl-plus-ssl-api.html ${{ github.workspace }}/github-pages/
 
       - name: Package and upload GitHub Pages artifact
