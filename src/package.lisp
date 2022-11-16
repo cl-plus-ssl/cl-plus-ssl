@@ -11,6 +11,13 @@
 
 (in-package :cl-user)
 
+;; For convenient browsing from SLIME using
+;; slime-edit-definition (M-.) for the exported symbols.
+(when nil
+  ;; SLIME looks for the most recent in-package
+  ;; to guess the package for the unqualified symbols.
+  (in-package #:cl+ssl))
+
 (defpackage :cl+ssl
   (:export
 
