@@ -10,10 +10,15 @@ set -v
 
 DOCKER_HOME=$(realpath "$(dirname $0)/../../..")
 
-# do we have cached fasls?
-find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl+ssl' || true
 # remove the compiled .fasl files so that cl+ssl is recompiled every time
-find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl+ssl' | xargs rm -rf || true
+if [ ! -v KEEP_FASLS ]
+then
+    KEEP_FASLS=0
+fi
+if [ "$KEEP_FASLS" -eq "0" ]
+then
+    find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl-plus-ssl' | xargs --verbose rm -rf || true
+fi
 
 # Note, the M2_HOME below is for ABCL, see https://gitlab.common-lisp.net/cl-docker-images/cl-devel/-/issues/1
 
@@ -27,10 +32,10 @@ docker run -e LISP -e LIB_LOAD_MODE -e OPENSSL -e BITS \
 
 RESULT=$?
 
-# do we have cached fasls?
-echo "$DOCKER_HOME/.cache/common-lisp/"
-ls "$DOCKER_HOME/.cache/common-lisp/"
-find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl+ssl' || true
-find "$DOCKER_HOME/.cache/common-lisp/" || true
+# make sure the .fasl files are placed where we expect
+if [ $(find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl-plus-ssl' | wc -l) -eq "0" ]; then
+   echo ".fasl files are not found where expected!";
+   exit 1;
+fi
 
 exit $RESULT
