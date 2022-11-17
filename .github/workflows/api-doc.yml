@@ -8,11 +8,15 @@ on:
     paths-ignore:
       - 'README.md'
       - 'LICENSE'
+      - 'test/**'
+      - '.github/workflows/test*'
 
   pull_request:
     paths-ignore:
       - 'README.md'
       - 'LICENSE'
+      - 'test/**'
+      - '.github/workflows/test*'
 
 # This allows a subsequently queued workflow run to interrupt previous runs.
 # github.workflow is the name of the workflow.
