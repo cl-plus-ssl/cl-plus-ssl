@@ -10,6 +10,8 @@ set -v
 
 DOCKER_HOME=$(realpath "$(dirname $0)/../../..")
 
+# do we have cached fasls?
+find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl+ssl' || true
 # remove the compiled .fasl files so that cl+ssl is recompiled every time
 find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl+ssl' | xargs rm -rf || true
 
@@ -22,3 +24,9 @@ docker run -e LISP -e LIB_LOAD_MODE -e OPENSSL -e BITS \
        --mount type=bind,source="$DOCKER_HOME",target=/home/cl/ \
        clfoundation/cl-devel:2022-02-09 \
        -q /home/cl/cl-plus-ssl/test/run-for-ci.sh
+
+RESULT=$?
+# do we have cached fasls?
+find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl+ssl' || true
+
+exit $RESULT
