@@ -33,3 +33,9 @@ case $LISP in
     *)
         $LISP --eval "$MAIN";;
 esac
+
+RESULT=$?
+
+ls /home/cl/.cache/common-lisp
+
+exit $RESULT
