@@ -20,7 +20,8 @@ fi
 
 echo M2_HOME=$M2_HOME
 
-MAIN='(handler-case (load "run-for-ci.lisp") (serious-condition (c) (format t "~A: ~A~%" (type-of c) c) (uiop:quit 1)))'
+#MAIN='(handler-case (load "run-for-ci.lisp") (serious-condition (c) (format t "~A: ~A~%" (type-of c) c) (uiop:quit 1)))'
+MAIN='(load "run-for-ci.lisp")'
 
 #~/unpacked/ccl-1.11/lx86cl64 --load run-for-ci.lisp
 case $LISP in
