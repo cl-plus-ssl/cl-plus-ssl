@@ -29,6 +29,8 @@
 (format t "(lisp-implementation-version): ~A~%" (lisp-implementation-version))
 (format t "*features*: ~A~%" *features*)
 (format t "(asdf:asdf-version): ~A~%" (asdf:asdf-version))
+(format t "(funcall asdf::*output-translation-function* \"/a/b.lisp\"): ~A~%"
+        (funcall asdf::*output-translation-function* "/a/b.lisp"))
 
 ;;; make sure ASDF will find the cl+ssl version from this repository
 
