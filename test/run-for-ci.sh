@@ -10,8 +10,6 @@ set -euo pipefail
 # verbose
 set -v
 
-find ~/.cache/common-lisp/ -name 'cl+ssl' || true
-
 cd "`dirname $0`"
 
 if [ ! -v OPENSSL_RELEASES_BIN_DIR ]
@@ -33,11 +31,3 @@ case $LISP in
     *)
         $LISP --eval "$MAIN";;
 esac
-
-RESULT=$?
-
-ls /home/cl/.cache/common-lisp
-find /home/cl/.cache/common-lisp -name 'cl+ssl'
-find /home/cl/.cache/common-lisp
-
-exit $RESULT

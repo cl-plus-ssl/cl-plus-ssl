@@ -33,6 +33,7 @@ docker run -e LISP -e LIB_LOAD_MODE -e OPENSSL -e BITS \
 RESULT=$?
 
 # make sure the .fasl files are placed where we expect
+find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl-plus-ssl'
 if [ $(find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl-plus-ssl' | wc -l) -eq "0" ]; then
    echo ".fasl files are not found where expected!";
    exit 1;
