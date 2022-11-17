@@ -37,5 +37,7 @@ esac
 RESULT=$?
 
 ls /home/cl/.cache/common-lisp
+find /home/cl/.cache/common-lisp -name 'cl+ssl'
+find /home/cl/.cache/common-lisp
 
 exit $RESULT

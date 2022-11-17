@@ -26,7 +26,11 @@ docker run -e LISP -e LIB_LOAD_MODE -e OPENSSL -e BITS \
        -q /home/cl/cl-plus-ssl/test/run-for-ci.sh
 
 RESULT=$?
+
 # do we have cached fasls?
+echo "$DOCKER_HOME/.cache/common-lisp/"
+ls "$DOCKER_HOME/.cache/common-lisp/"
 find "$DOCKER_HOME/.cache/common-lisp/" -name 'cl+ssl' || true
+find "$DOCKER_HOME/.cache/common-lisp/" || true
 
 exit $RESULT
