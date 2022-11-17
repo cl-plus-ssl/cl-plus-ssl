@@ -72,6 +72,10 @@ jobs:
            LISP=sbcl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
         timeout-minutes: 2
         if: success() || failure()
+      - run: |
+           KEEP_FASLS=1 LISP=sbcl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
+        timeout-minutes: 2
+        if: success() || failure()
       - uses: nick-fields/retry@v2.8.2
         name: Run with retries LISP=ccl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
@@ -82,8 +86,22 @@ jobs:
           retry_on: error
           retry_on_exit_code: 137
         if: success() || failure()
+      - uses: nick-fields/retry@v2.8.2
+        name: Run with retries KEEP_FASLS=1 LISP=ccl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
+        with:
+          command: |
+             KEEP_FASLS=1 LISP=ccl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
+          timeout_minutes: 2
+          max_attempts: 3
+          retry_on: error
+          retry_on_exit_code: 137
+        if: success() || failure()
       - run: |
            LISP=abcl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
+        timeout-minutes: 2
+        if: success() || failure()
+      - run: |
+           KEEP_FASLS=1 LISP=abcl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=new docker-home/cl-plus-ssl/.github/workflows/test.sh
         timeout-minutes: 2
         if: success() || failure()
       - run: |
@@ -306,11 +324,25 @@ jobs:
            LISP=sbcl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
         timeout-minutes: 2
         if: success() || failure()
+      - run: |
+           KEEP_FASLS=1 LISP=sbcl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh
+        timeout-minutes: 2
+        if: success() || failure()
       - uses: nick-fields/retry@v2.8.2
         name: Run with retries LISP=ccl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
         with:
           command: |
              LISP=ccl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
+          timeout_minutes: 2
+          max_attempts: 3
+          retry_on: error
+          retry_on_exit_code: 137
+        if: success() || failure()
+      - uses: nick-fields/retry@v2.8.2
+        name: Run with retries KEEP_FASLS=1 LISP=ccl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
+        with:
+          command: |
+             KEEP_FASLS=1 LISP=ccl OPENSSL=openssl-3.0.4 BITS=64 LIB_LOAD_MODE=old docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null
           timeout_minutes: 2
           max_attempts: 3
           retry_on: error

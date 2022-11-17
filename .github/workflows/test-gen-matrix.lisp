@@ -1,13 +1,13 @@
 ;; TODO: enable CLISP after # https://github.com/cl-plus-ssl/cl-plus-ssl/issues/163 is fixed
-(flet ((format-test-step (lisp openssl lib-load-mode)
+(flet ((format-test-step (lisp openssl lib-load-mode &optional other-vars)
          (format t "      - run: |~%")
-         (format t "           LISP=~A OPENSSL=~A BITS=64 LIB_LOAD_MODE=~A docker-home/cl-plus-ssl/.github/workflows/test.sh~%"
-                 lisp openssl lib-load-mode)
+         (format t "           ~@[~A ~]LISP=~A OPENSSL=~A BITS=64 LIB_LOAD_MODE=~A docker-home/cl-plus-ssl/.github/workflows/test.sh~%"
+                 other-vars lisp openssl lib-load-mode)
          ;; Is 2 mins enough?
          (format t "        timeout-minutes: 2~%")
          (format t "        if: success() || failure()~%")
          )
-       (format-retrying-test-step (lisp openssl lib-load-mode)
+       (format-retrying-test-step (lisp openssl lib-load-mode &optional other-vars)
          ;; Note the `<  /dev/null` at the end of the cmd-line.
          ;; This is needed to prevent CCL to hang waiting
          ;; for user input when CCL Kernel Debugger is entered
@@ -17,8 +17,8 @@
          ;; But the nick-fields/retry step keeps it open,
          ;; so we need this workaround.
          ;; Reported this as a bug: https://github.com/nick-fields/retry/issues/98
-         (let ((cmd-line (format nil "LISP=~A OPENSSL=~A BITS=64 LIB_LOAD_MODE=~A docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null"
-                                 lisp openssl lib-load-mode)))
+         (let ((cmd-line (format nil "~@[~A ~]LISP=~A OPENSSL=~A BITS=64 LIB_LOAD_MODE=~A docker-home/cl-plus-ssl/.github/workflows/test.sh < /dev/null"
+                                 other-vars lisp openssl lib-load-mode)))
            (format t "      - uses: nick-fields/retry@v2.8.2~%")
            (format t "        name: Run with retries ~A~%" cmd-line)
            (format t "        with:~%")
@@ -56,17 +56,22 @@
                        "libressl-2.5.5"
                        ))
       (dolist (lisp '("sbcl" "ccl" "abcl"))
-        (unless (and (string= lisp "abcl")
-                     (string= lib-load-mode "old"))
+        (flet ((format-test-step-for-lisp (openssl lib-load-mode &optional other-vars)
+                 (if (string= lisp "ccl")
+                     ;; because of https://github.com/Clozure/ccl/issues/85
+                     (format-retrying-test-step lisp openssl lib-load-mode other-vars)
+                     (format-test-step lisp openssl lib-load-mode other-vars))))
+          (unless (and (string= lisp "abcl")
+                       (string= lib-load-mode "old"))
 
-          ;; TODO: COVERALLS=true for SBCL on the laest version of OpenSSL and the latest LibreSSL
-          ;;     after this cl-coveralls issue is fixed: https://github.com/fukamachi/cl-coveralls/issues/14
+            (format-test-step-for-lisp openssl lib-load-mode)
+            (when (and (string= openssl "openssl-3.0.4"))
+              (format-test-step-for-lisp openssl lib-load-mode "KEEP_FASLS=1"))
 
-          ;; TODO: repeat CCL test on the latest OpenSSL with READTABLE_CASE_INVERT=1
-          (if (string= lisp "ccl")
-              ;; because of https://github.com/Clozure/ccl/issues/85
-              (format-retrying-test-step lisp openssl lib-load-mode)
-              (format-test-step lisp openssl lib-load-mode))
+            ;; TODO: repeat CCL test on the latest OpenSSL with READTABLE_CASE_INVERT=1
 
-          )))))
+            ;; TODO: COVERALLS=true for SBCL on the laest version of OpenSSL and the latest LibreSSL
+            ;;     after this cl-coveralls issue is fixed: https://github.com/fukamachi/cl-coveralls/issues/14
+
+            ))))))
 
