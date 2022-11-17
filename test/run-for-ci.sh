@@ -10,6 +10,8 @@ set -euo pipefail
 # verbose
 set -v
 
+find ~/.cache/common-lisp/ -name 'cl+ssl' || true
+
 cd "`dirname $0`"
 
 if [ ! -v OPENSSL_RELEASES_BIN_DIR ]
