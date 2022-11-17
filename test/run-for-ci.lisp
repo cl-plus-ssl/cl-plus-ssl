@@ -38,7 +38,7 @@
   ;; Maybe getting parent dir this way is not not portable,
   ;; but should work for Linux.
   ;; TODO: probably use the portable code from cl-fad:pathname-parent-directory
-  ;;     https://github.com/edicl/cl-fad/blob/3f4d32d3aa1093966046d001411a852eb8f4b535/fad.lisp#L328  
+  ;;     https://github.com/edicl/cl-fad/blob/3f4d32d3aa1093966046d001411a852eb8f4b535/fad.lisp#L328
   (merge-pathnames "../" *this-dir*))
 (pushnew *parent-dir*  asdf:*central-registry* :test #'equal)
 
@@ -94,7 +94,7 @@
 (format t
         "Loading cl+ssl from ~A~%"
         (asdf:system-source-file (asdf:find-system :cl+ssl)))
-(ql:quickload :cl+ssl)
+(ql:quickload :cl+ssl :verbose t)
 (format t "cl+ssl loaded.~%")
 
 (when (uiop:getenvp "READTABLE_CASE_INVERT")
@@ -107,7 +107,7 @@
 ;; Since we load customly built openssl libs, it may not find the path
 ;; to trusted root serts on our system. Let's configure this path, as
 ;; we have it on my Ubunto and in the CI docker image.
-(cl+ssl:ensure-initialized) ; needed to set the *ssl-global-context* 
+(cl+ssl:ensure-initialized) ; needed to set the *ssl-global-context*
 (cl+ssl::ssl-ctx-set-verify-location cl+ssl::*ssl-global-context* "/etc/ssl/certs/")
 
 (let ((results
