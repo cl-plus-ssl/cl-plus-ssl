@@ -316,14 +316,14 @@ After RELOAD, you need to call this again."
 
 (defun ssl-check-verify-p ()
   "DEPRECATED. Use the (MAKE-SSL-CLIENT-STREAM .. :VERIFY ?) to enable/disable verification.
-MAKE-CONTEXT also allows to enab/disable verification.
+Also, MAKE-CONTEXT has :VERIFY-MODE option.
 
 Return true if SSL connections will error if the certificate doesn't verify."
   (and *ssl-check-verify-p* (not (eq *ssl-check-verify-p* :unspecified))))
 
 (defun (setf ssl-check-verify-p) (check-verify-p)
   "DEPRECATED. Use the (MAKE-SSL-CLIENT-STREAM .. :VERIFY ?) to enable/disable verification.
-MAKE-CONTEXT also allows to enab/disable verification.
+Also, MAKE-CONTEXT has :VERIFY-MODE option.
 
 If CHECK-VERIFY-P is true, signal connection errors if the server certificate doesn't verify."
   (setf *ssl-check-verify-p* (not (null check-verify-p))))
