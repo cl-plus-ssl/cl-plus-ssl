@@ -105,6 +105,73 @@
                           private-key-file
                           private-key-password
                           (private-key-file-type +ssl-filetype-pem+))
+  "Creates a new SSL_CTX using SSL_CTX_new and initializes it according to
+the specified parameters.
+
+After you're done using the context, don't forget to free it using SSL-CTX-FREE.
+
+Exceptions:
+
+    SSL-ERROR-INITIALIZE. When underlying SSL_CTX_new fails.
+
+Keyword arguments:
+
+    METHOD. Specifies which supported SSL/TLS to use.
+        If not specified then TLS_method is used on OpenSSL
+        versions supporing it (on legacy versions SSLv23_method is used).
+
+    DISABLED-PROTOCOLS. List of +SSL-OP-NO-* constants. Denotes
+        disabled SSL/TLS versions. When method not specified
+        defaults to (list +SSL-OP-NO-SSLv2+ +SSL-OP-NO-SSLv3+)
+
+    OPTIONS. SSL context options list. Defaults to (list +SSL-OP-ALL+)
+
+    SESSION-CACHE-MODE. Enable/Disable session caching.
+        Defaults to +SSL-SESS-CACHE-SERVER+
+
+    VERIFY-LOCATION. Location(s) to load CA from.
+
+        Possible values:
+            :DEFAULT OpenSSL default directory and file will be loaded
+            :DEFAULT-FILE OpenSSL default file will be loaded. Requires OpenSSL >= 1.1.0.
+            :DEFAULT-DIR OpenSSL default directory will be loaded. Requires OpenSSL >= 1.1.0.
+            STRING Directory or file path to be loaded
+            PATHNAME Directory or file path to be loaded
+            (LIST (OR STRING PATHNAME)) List of directories or files to be loaded
+
+    VERIFY-DEPTH. Sets the maximum depth for the certificate chain verification
+        that shall be allowed for context. Defaults to 100.
+
+    VERIFY-MODE. Sets the verification flags for context to be mode.
+        Available flags
+
+            +SSL-VERIFY-NONE+
+            +SSL-VERIFY-PEER+
+            +SSL-VERIFY-FAIL-IF-NO-PEER-CERT+
+            +SSL-VERIFY-CLIENT-ONCE+
+
+        Defaults to +VERIFY-PEER+
+
+    VERIFY-CALLBACK. The verify-callback is used to control the behaviour
+        when the +SSL-VERIFY-PEER+ flag is set.
+        Please note: this must be CFFI callback i.e. defined as
+        (DEFCALLBACK :INT ((OK :INT) (CTX :POINTER)) .. ).
+        Defaults to verify-peer-callback which converts chain errors
+        to ssl-error-verify.
+
+    CIPHER-LIST. Sets the list of available ciphers for context.
+        Possible values described here:
+        https://www.openssl.org/docs/manmaster/apps/ciphers.html.
+        Default is expected to change overtime to provide highest security level.
+        Do not rely on its exact value.
+
+    PEM-PASSWORD-CALLBACK. Sets the default password callback called when
+        loading/storing a PEM certificate with encryption.
+        Please note: this must be CFFI callback i.e. defined as
+        (CFFI:DEFCALLBACK :INT ((BUF :POINTER) (SIZE :INT) (RWFLAG :INT) (UNUSED :POINTER)) .. ).
+        Defaults to PEM-PASSWORD-CALLBACK which simply uses password
+        provided by WITH-PEM-PASSWORD.
+"
   (ensure-initialized)
   (let ((ctx (ssl-ctx-new (if method-supplied-p
                               method
