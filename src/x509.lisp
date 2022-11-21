@@ -267,7 +267,8 @@ we are going to pass them to CFFI:WITH-POINTER-TO-VECTOR-DATA)"))
 
 (defun certificate-not-after-time (certificate)
   "Returns a universal-time representing the time after
-which the certificate is not valid."
+which the CERTIFICATE is not valid. Signals an ERROR if the
+CERTIFICATE does not have a properly formatted time. "
 
   (when (or (openssl-is-not-even 1 1 0)
             (libresslp))
@@ -280,7 +281,8 @@ which the certificate is not valid."
 
 (defun certificate-not-before-time (certificate)
   "Returns a universal-time representing the time before
-which the certificate is not valid."
+which the CERTIFICATE is not valid. Signals an ERROR if
+the CERTIFICATE does not have a properly formatted time."
 
   (when (or (openssl-is-not-even 1 1 0)
             (libresslp))

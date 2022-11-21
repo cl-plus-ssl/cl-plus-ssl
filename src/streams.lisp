@@ -25,7 +25,7 @@
 (defvar *default-cipher-list* "ALL")
 
 (defparameter *default-buffer-size* 2048
-  "The default input and output buffers size of the SSL-STREAM objects")
+  "The default size for input and output buffers of the SSL-STREAM objects")
 
 (defclass ssl-stream
     (trivial-gray-stream-mixin
@@ -222,7 +222,7 @@
 ;;;
 
 (defvar *default-unwrap-stream-p* t
-  "Default value for UNWRAP-STREAM-P parameter.
+  "Default value for UNWRAP-STREAM-P function parameter.
 If true (the default), give OpenSSL the file descriptor of the stream, instead of a Lisp BIO.")
 
 (defun install-handle-and-bio (stream handle socket unwrap-stream-p)
@@ -572,10 +572,13 @@ for MAKE-SSL-CLIENT-STREAM.
       (ensure-ssl-funcall stream #'plusp #'ssl-accept handle)
       (handle-external-format stream external-format))))
 
-(defun get-selected-alpn-protocol (ssl)
-  "Alpn protocol agreed with the server (or nil)"
+(defun get-selected-alpn-protocol (ssl-stream)
+  "A wrapper around SSL_get0_alpn_selected.
+Returns the ALPN protocol selected by server, or NIL if none was selected.
+
+SSL-STREAM is the client ssl stream returned by make-ssl-client-stream. "
   (cffi:with-foreign-objects ((ptr :pointer) (len :pointer))
-    (ssl-get0-alpn-selected (ssl-stream-handle ssl) ptr len)
+    (ssl-get0-alpn-selected (ssl-stream-handle ssl-stream) ptr len)
     (cffi:foreign-string-to-lisp (cffi:mem-ref ptr :pointer)
                                  :count (cffi:mem-ref len :int))))
 
@@ -587,7 +590,11 @@ for MAKE-SSL-CLIENT-STREAM.
   nil)
 
 
-(defgeneric stream-fd (stream))
+(defgeneric stream-fd (stream)
+  (:documentation "The STREAM's file descriptor as an integer,
+if known / implemented for the current lisp.
+Otherwise the STREAM itself. The result of this function can be
+passed to MAKE-SSL-CLIENT-STREAM and MAKE-SSL-SERVER-STREAM."))
 (defmethod stream-fd (stream) stream)
 
 #+sbcl

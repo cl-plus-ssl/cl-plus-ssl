@@ -1317,16 +1317,33 @@ because the function usually returns predictable values."
       (initialize :method method :rand-seed rand-seed))))
 
 (defun use-certificate-chain-file (certificate-chain-file)
-  "Loads a PEM encoded certificate chain file CERTIFICATE-CHAIN-FILE
-and adds the chain to global context. The certificates must be sorted
-starting with the subject's certificate (actual client or server certificate),
-followed by intermediate CA certificates if applicable, and ending at
-the highest level (root) CA. Note: the RELOAD function clears the global
-context and in particular the loaded certificate chain."
+  "Applies OpenSSl function SSL_CTX_use_certificate_chain_file
+to the cl+ssl's global CTX object and the specified
+CERTIFICATE-CHAIN-FILE.
+
+OpenSSL requires the certificates in the file to be sorted
+starting with the subject's certificate (actual client or
+server certificate), followed by intermediate CA certificates
+if applicable, and ending at the highest level (root) CA.
+
+Note: the RELOAD function clears the global context and in particular
+the loaded certificate chain."
   (ensure-initialized)
   (ssl-ctx-use-certificate-chain-file *ssl-global-context* certificate-chain-file))
 
 (defun reload ()
+  "If you save your application as a Lisp image,
+call this function when that image is loaded,
+to perform the necessary CL+SSL re-initialization
+(unless your lisp implementation automatically
+re-loads foreign libraries and preserves their
+memory accross image reloads).
+
+This should work fine if the location and version of the
+OpenSSL shared libraries have not changed.
+If they have changed, you may get errors, as users report:
+https://github.com/cl-plus-ssl/cl-plus-ssl/issues/167
+"
   (detect-custom-openssl-installations-if-macos)
   (unless (member :cl+ssl-foreign-libs-already-loaded
                   *features*)

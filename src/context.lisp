@@ -121,8 +121,8 @@ Keyword arguments:
         versions supporing it (on legacy versions SSLv23_method is used).
 
     DISABLED-PROTOCOLS. List of +SSL-OP-NO-* constants. Denotes
-        disabled SSL/TLS versions. When method not specified
-        defaults to (list +SSL-OP-NO-SSLv2+ +SSL-OP-NO-SSLv3+)
+        disabled SSL/TLS versions. When METHOD not specified
+        defaults to (LIST +SSL-OP-NO-SSLV2+ +SSL-OP-NO-SSLV3+)
 
     OPTIONS. SSL context options list. Defaults to (list +SSL-OP-ALL+)
 
@@ -132,12 +132,14 @@ Keyword arguments:
     VERIFY-LOCATION. Location(s) to load CA from.
 
         Possible values:
-            :DEFAULT OpenSSL default directory and file will be loaded
-            :DEFAULT-FILE OpenSSL default file will be loaded. Requires OpenSSL >= 1.1.0.
-            :DEFAULT-DIR OpenSSL default directory will be loaded. Requires OpenSSL >= 1.1.0.
-            STRING Directory or file path to be loaded
-            PATHNAME Directory or file path to be loaded
-            (LIST (OR STRING PATHNAME)) List of directories or files to be loaded
+            :DEFAULT - SSL_CTX_set_default_verify_paths will be called.
+            :DEFAULT-FILE - SSL_CTX_set_default_verify_file will be called. Requires OpenSSL >= 1.1.0.
+            :DEFAULT-DIR - SSL_CTX_set_default_verify_dir will be called. Requires OpenSSL >= 1.1.0.
+            A STRING or a PATHNAME - will be passed to SSL_CTX_load_verify_locations
+                as file or dir argument depending wether it's readlly
+                a fire or dir. Must exist on the file system and be available.
+            A of LIST - each value assumed to be either a STRING or a PATHNAME and
+                will be passed to SSL_CTX_load_verify_locations as described above.
 
     VERIFY-DEPTH. Sets the maximum depth for the certificate chain verification
         that shall be allowed for context. Defaults to 100.
