@@ -33,12 +33,6 @@ You can only use literal values. This is dictated by CFFI.
 (defmacro define-libssl-path (path)
   "Define the path where libssl resides to be PATH (not evaluated). This
 macro should be used before loading CL+SSL.
-
-For instance, this defines libssl as /opt/local/lib/libssl.dylib:
-
-    (ql:quickload :cl+ssl/config)
-    (cl+ssl:define-libssl-path \"/opt/local/lib/libssl.dylib\")
-    (ql:quickload :cl+ssl)
 "
   `(progn
      (cffi:define-foreign-library libssl (t ,path))
@@ -47,12 +41,6 @@ For instance, this defines libssl as /opt/local/lib/libssl.dylib:
 (defmacro define-libcrypto-path (path)
   "Define the path where libcrypto resides to be PATH (not evaluated). This
 macro should be used before loading CL+SSL.
-
-For instance, this defines libcrypto as /opt/local/lib/libcrypto.dylib:
-
-    (ql:quickload :cl+ssl/config)
-    (cl+ssl/config:define-libcrypto-path \"/opt/local/lib/libcrypto.dylib\")
-    (ql:quickload :cl+ssl)
 "
   `(progn
      (cffi:define-foreign-library libcrypto (t ,path))
