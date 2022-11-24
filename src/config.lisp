@@ -8,6 +8,20 @@
 
 (defpackage :cl+ssl/config
   (:use :common-lisp)
+  (:documentation "By default cl+ssl searches for OpenSSL shared libraries
+in platform-dependent default locations.
+
+To explicitly specify what to load, use the cl+ssl/config
+module before loading cl+ssl:
+
+    (QL:QUICKLOAD \"cl+ssl/config\")
+    (CL+SSL/CONFIG:DEFINE-LIBSSL-PATH \"/opt/local/lib/libssl.dylib\")
+    (CL+SSL/CONFIG:DEFINE-LIBCRYPTO-PATH \"/opt/local/lib/libcrypto.dylib\")
+    (QL:QUICKLOAD \"cl+ssl\")
+
+Note, the PATH parameter of those two macros is not evaluated.
+You can only use literal values. This is dictated by CFFI.
+")
   (:export #:define-libssl-path
            #:define-libcrypto-path))
 
@@ -18,20 +32,58 @@
 
 (defmacro define-libssl-path (path)
   "Define the path where libssl resides to be PATH (not evaluated). This
-macroshould be used before loading CL+SSL.
+macro should be used before loading CL+SSL.
 
-For instance, this defines libssl as \"/opt/local/lib/libssl.dylib\":
+For instance, this defines libssl as /opt/local/lib/libssl.dylib:
 
     (ql:quickload :cl+ssl/config)
     (cl+ssl:define-libssl-path \"/opt/local/lib/libssl.dylib\")
-    (ql:quickload :cl+ssl)"
+    (ql:quickload :cl+ssl)
+"
   `(progn
      (cffi:define-foreign-library libssl (t ,path))
      (setq *libssl-override* t)))
 
 (defmacro define-libcrypto-path (path)
   "Define the path where libcrypto resides to be PATH (not evaluated). This
-macro should be used before loading CL+SSL."
+macro should be used before loading CL+SSL.
+
+For instance, this defines libcrypto as /opt/local/lib/libcrypto.dylib:
+
+    (ql:quickload :cl+ssl/config)
+    (cl+ssl/config:define-libcrypto-path \"/opt/local/lib/libcrypto.dylib\")
+    (ql:quickload :cl+ssl)
+"
   `(progn
      (cffi:define-foreign-library libcrypto (t ,path))
      (setq *libcrypto-override* t)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; The above package replaces now _deprecated_ *FEATURES* flag
+;; :CL+SSL-FOREIGN-LIBS-ALREADY-LOADED
+;;
+;; The flag allows user to load himself the
+;; libssl / libcrypto (and libeay32 on Windows),
+;; thus choosing the foreigh library(-ies) path and version to load.
+;;
+;; You will probably need to recompile CL+SSL for the feature to take
+;; effect.
+;;
+;; If specified, neither loading of the cl+ssl ASDF system nor
+;; (cl+ssl:reload) try to load the foreign libraries, assuming
+;; user has loaded them already.
+;;
+;; The _deprecated_ usage example:
+;;
+;;     (cffi:load-foreign-library "libssl.so.1.0.0")
+;;
+;;     (let ((*features* (cons :cl+ssl-foreign-libs-already-loaded
+;;                             *features*)))
+;;
+;;     (ql:quickload :a-system-which-depends-on-cl+ssl)
+;;
+;;     ;; or just load cl+ssl
+;;     (ql:quickload :cl+ssl))
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
