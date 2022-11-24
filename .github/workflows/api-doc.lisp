@@ -11,15 +11,18 @@
                   (asdf:system-relative-pathname "cl+ssl"
                                                  "src/package.lisp"))))
 
-(package-doc-dump:dump-html "cl+ssl"
-                            (asdf:system-relative-pathname "cl+ssl"
-                                                           "src/package.lisp")
-                            ;; Remove the implementation of cl+ssl:stream-fd,
-                            ;; like on CCL `stream-fd ((stream ccl::basic-stream))`,
-                            ;; so only the generic function reamins.
-                            :doc-node-filter (lambda (doc-node)
-                                               (not (and (typep doc-node
-                                                                'docparser:method-node)
-                                                         (string-equal (docparser:node-name doc-node)
-                                                                       "stream-fd"))))
-                            :output-file "/home/cl/cl-plus-ssl-api.html")
+(package-doc-dump:dump-html
+ "cl+ssl"
+ (list (asdf:system-relative-pathname "cl+ssl"
+                                      "src/config.lisp")
+       (asdf:system-relative-pathname "cl+ssl"
+                                      "src/package.lisp"))
+ ;; Remove the implementation of cl+ssl:stream-fd,
+ ;; like on CCL `stream-fd ((stream ccl::basic-stream))`,
+ ;; so only the generic function reamins.
+ :doc-node-filter (lambda (doc-node)
+                    (not (and (typep doc-node
+                                     'docparser:method-node)
+                              (string-equal (docparser:node-name doc-node)
+                                            "stream-fd"))))
+ :output-file "/home/cl/cl-plus-ssl-api.html")
