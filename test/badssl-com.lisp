@@ -13,11 +13,13 @@
 
 
 (defun test-connect (host &key (verify :required))
-  (usocket:with-client-socket (socket stream host 443
-                                      :element-type '(unsigned-byte 8))
-    (cl+ssl:make-ssl-client-stream stream
-                                   :hostname host
-                                   :verify verify)))
+  (let ((sock (usocket:socket-connect host 443
+                                      :element-type '(unsigned-byte 8))))
+    (unwind-protect
+         (cl+ssl:make-ssl-client-stream (usocket:socket-stream sock)
+                                        :hostname host
+                                        :verify verify)
+      (usocket:socket-close sock))))
 
 (defmacro modal-test (name &body body)
   "Defines two tests, with equal body, but first executed using file descriptor BIO,
