@@ -402,7 +402,7 @@ ERROR-CODE is return value of SSL_get_error - an explanation of the failure.
   (:report (lambda (condition stream)
              (format stream "A failure in OpenSSL library occurred~@[: ~A~]. "
                      (slot-value condition 'message))
-             (format-ssl-error-queue stream (ssl-error-queue condition)))))
+             (format-ssl-error-queue stream condition))))
 
 (define-condition asn1-error (cl+ssl-error)
   ()
