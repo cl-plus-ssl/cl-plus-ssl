@@ -477,6 +477,14 @@ it to the socket and to decrypt the input received.
         An error is signalled in case of the certificate or hostname
         verification failure.
 
+        Note, the VERIFY logic is intended for use with the global
+        CTX object that does not have the SSL_VERIFY_PEER verify mode
+        flag enabled - the default for the cl+ssl's global CTX.
+        If the current global CTX object has SSL_VERIFY_PEER enabled,
+        the SSL_Connect will perform certificate (but not hostname)
+        verification on its own, and an error will be signalled for a
+        bad certificate evern with :VERIFY NIL.
+
     ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names such as
         \"h2\" that would be offered to the server. The protocol selected by the
         server can be retrieved with GET-SELECTED-ALPN-PROTOCOL.
