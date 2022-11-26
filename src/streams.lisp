@@ -359,7 +359,7 @@ MAKE-CONTEXT also allows to enab/disable verification."
                (error 'server-certificate-missing
                       :format-control "The server didn't present a certificate."))
              (let ((err (ssl-get-verify-result handle)))
-               (unless (eql err 0)
+               (unless (eql err +x509-v-ok+)
                  (error 'ssl-error-verify :stream ssl-stream :error-code err)))
              (when (and hostname
                         (not (cffi:null-pointer-p srv-cert)))
@@ -538,7 +538,8 @@ it to the socket and to decrypt the input received.
         (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
       (with-pem-password (password)
         (install-key-and-cert handle key certificate))
-      (ensure-ssl-funcall stream #'plusp #'ssl-connect handle)
+      (collecting-verify-error (handle)
+        (ensure-ssl-funcall stream #'plusp #'ssl-connect handle))
       (maybe-verify-client-stream stream verify hostname)
       (handle-external-format stream external-format))))
 
@@ -577,7 +578,8 @@ for MAKE-SSL-CLIENT-STREAM.
         (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
       (with-pem-password (password)
         (install-key-and-cert handle key certificate))
-      (ensure-ssl-funcall stream #'plusp #'ssl-accept handle)
+      (collecting-verify-error (handle)
+        (ensure-ssl-funcall stream #'plusp #'ssl-accept handle))
       (handle-external-format stream external-format))))
 
 (defun get-selected-alpn-protocol (ssl-stream)

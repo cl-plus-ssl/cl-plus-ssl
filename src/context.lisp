@@ -84,12 +84,6 @@
             AES128-SHA256:~
             AES128-SHA") :test 'equal)
 
-(cffi:defcallback verify-peer-callback :int ((ok :int) (ctx :pointer))
-  (let ((error-code (x509-store-ctx-get-error ctx)))
-    (unless (= error-code 0)
-      (error 'ssl-error-verify  :error-code error-code))
-    ok))
-
 (defun make-context (&key (method nil method-supplied-p)
                           disabled-protocols
                           (options (list +SSL-OP-ALL+))
@@ -98,7 +92,7 @@
                           (verify-location :default)
                           (verify-depth 100)
                           (verify-mode +ssl-verify-peer+)
-                          (verify-callback nil verify-callback-supplied-p)
+                          verify-callback
                           (cipher-list +default-cipher-list+)
                           (pem-password-callback 'pem-password-callback)
                           certificate-chain-file
@@ -144,22 +138,12 @@ Keyword arguments:
     VERIFY-DEPTH. Sets the maximum depth for the certificate chain verification
         that shall be allowed for context. Defaults to 100.
 
-    VERIFY-MODE. Sets the verification flags for context to be mode.
-        Available flags
-
-            +SSL-VERIFY-NONE+
-            +SSL-VERIFY-PEER+
-            +SSL-VERIFY-FAIL-IF-NO-PEER-CERT+
-            +SSL-VERIFY-CLIENT-ONCE+
-
+    VERIFY-MODE. The mode parameter to SSL_CTX_set_verify.
         Defaults to +VERIFY-PEER+
 
-    VERIFY-CALLBACK. The verify-callback is used to control the behaviour
-        when the +SSL-VERIFY-PEER+ flag is set.
-        Please note: this must be CFFI callback i.e. defined as
+    VERIFY-CALLBACK. The verify_callback parameter to SSL_CTX_set_verify.
+        Please note: if specified, must be a CFFI callback i.e. defined as
         (DEFCALLBACK :INT ((OK :INT) (CTX :POINTER)) .. ).
-        Defaults to verify-peer-callback which converts chain errors
-        to ssl-error-verify.
 
     CIPHER-LIST. Sets the list of available ciphers for context.
         Possible values described here:
@@ -205,11 +189,7 @@ Keyword arguments:
       (ssl-ctx-set-verify-depth ctx verify-depth)
       (ssl-ctx-set-verify ctx verify-mode (if verify-callback
                                               (cffi:get-callback verify-callback)
-                                              (if verify-callback-supplied-p
-                                                  (cffi:null-pointer)
-                                                  (if (= verify-mode +ssl-verify-peer+)
-                                                      (cffi:callback verify-peer-callback)
-                                                      (cffi:null-pointer)))))
+                                              (cffi:null-pointer)))
       (ssl-ctx-set-cipher-list ctx cipher-list)
       (ssl-ctx-set-default-passwd-cb ctx (cffi:get-callback pem-password-callback))
       (when certificate-chain-file

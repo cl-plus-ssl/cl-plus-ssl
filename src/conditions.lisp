@@ -253,7 +253,43 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
 
 ;; SSL_ERROR_SSL
 (define-condition ssl-error-ssl (ssl-error/handle)
-  ()
+  ((;; When SSL_Connect or SSL_Accept fail due to
+    ;; the SSL_VERIFY_PEER flag and bad peer certificate,
+    ;; the error queue simply says "certificate verify failed"
+    ;; and the user needs to call SSL_get_verify_result
+    ;; to find our the exact verification error (expired cert,
+    ;; can't get issuer cert locally, etc).
+    ;;
+    ;; To facilitate debugging and logging, we
+    ;; automaticall store the SSL_get_verify_result
+    ;; in this slot and use it in the printed
+    ;; representation of the condition.
+    ;;
+    ;; Ideally, we should only collect the verification
+    ;; error if the error queue includes reason code
+    ;; SSL_R_CERTIFICATE_VERIFY_FAILED for library
+    ;; code ERR_LIB_SSL, but this would require
+    ;; us to implement the logic of OpenSSL macros
+    ;; ERR_raise, ERR_PACK, taking OpenSSL version into
+    ;; account - those macros produce different number
+    ;; for that reason code in different OpenSSL versions.
+    ;; Here are snippets of printed error queues, starting
+    ;; with error code:
+    ;;   openssl-0.9.8zh
+    ;;     14090086:SSL routines:SSL3_GET_SERVER_CERTIFICATE:certificate verify failed:s3_clnt.c:973:
+    ;;   openssl-1.1.1p
+    ;;     1416F086:SSL routines:tls_process_server_certificate:certificate verify failed:ssl/statem/statem_clnt.c:1919:
+    ;;   openssl-3.0.4
+    ;;     0A000086:SSL routines:tls_post_process_server_certificate:certificate verify failed:ssl/statem/statem_clnt.c:1887:
+    ;; Therefore we simply collect the verification
+    ;; error if it is present at the time of SSL_Connect
+    ;; or SSL_Accept failure - see how the
+    ;; collecting-verify-error macro is used.
+    ;; This approach, however, will not when help if cert
+    ;; verification fails not on the initial handshake,
+    ;; but during session renegotiation.
+    verify-error :type '(or null string)
+                 :accessor ssl-error-ssl-verify-error))
   (:documentation
    "A failure in the SSL library occurred, usually a protocol error. The
     OpenSSL error queue contains more information on the error.")
@@ -262,7 +298,26 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
                      "A failure in the SSL library occurred on handle ~A (return code: ~A). "
                      (ssl-error-handle condition)
                      (ssl-error-ret condition))
-             (format-ssl-error-queue stream condition))))
+             (format-ssl-error-queue stream condition)
+             (when (ssl-error-ssl-verify-error condition)
+               (format stream
+                       "~A"
+                       (ssl-error-ssl-verify-error condition))))))
+
+(defun collect-verify-error (ssl-error-ssl-condition handle)
+  (let ((code (ssl-get-verify-result handle)))
+    (unless (eql code +x509-v-ok+)
+      (setf (ssl-error-ssl-verify-error ssl-error-ssl-condition)
+            (format nil "SSL_get_verify_result: ~d~@[ ~a~]"
+                    code (ssl-verify-error-keyword code))))))
+
+(defun collecting-verify-error-impl (handle body-fn)
+  (handler-bind ((ssl-error-ssl (lambda (c)
+                                  (collect-verify-error c handle))))
+    (funcall body-fn)))
+
+(defmacro collecting-verify-error ((handle) &body body)
+  `(collecting-verify-error-impl ,handle (lambda () ,@body)))
 
 (defun ssl-signal-error (handle syscall error-code ret)
   "RET is return value of the failed SYSCALL (like SSL_read, SSL_connect,

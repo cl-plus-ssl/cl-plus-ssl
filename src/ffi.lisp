@@ -210,6 +210,8 @@ session-resume requests) would normally be copied into the local cache before pr
 (defconstant +SSL-VERIFY-FAIL-IF-NO-PEER-CERT+ #x02)
 (defconstant +SSL-VERIFY-CLIENT-ONCE+ #x04)
 
+(defconstant +x509-v-ok+ 0)
+
 (defconstant +SSL-OP-ALL+ #x80000BFF)
 
 (defconstant +SSL-OP-IGNORE-UNEXPECTED-EOF+ #b10000000)
