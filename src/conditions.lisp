@@ -102,6 +102,9 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
    ;; Using the same generic function for two different
    ;; types of error codes is not the best approach.
    ;; Keeping it as is for now.
+   ;; Or maybe the intention was for SSL-SIGNAL-ERROR
+   ;; to really pass RET here (the IO call return value)?
+   ;; Unlikely, RET is not very useful.
    (ret :initarg :ret
         :reader ssl-error-ret
         :documentation "The error code returned by SSL_get_error. " )
