@@ -289,6 +289,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     ;; verification fails not on the initial handshake,
     ;; but during session renegotiation.
     verify-error :type '(or null string)
+                 :initform nil
                  :accessor ssl-error-ssl-verify-error))
   (:documentation
    "A failure in the SSL library occurred, usually a protocol error. The
