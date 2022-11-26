@@ -145,9 +145,7 @@ Keyword arguments:
         Please note: if specified, must be a CFFI callback i.e. defined as
         (DEFCALLBACK :INT ((OK :INT) (CTX :POINTER)) .. ).
 
-    CIPHER-LIST. Sets the list of available ciphers for context.
-        Possible values described here:
-        https://www.openssl.org/docs/manmaster/apps/ciphers.html.
+    CIPHER-LIST. Will be passed to SSL_CTX_set_cipher_list.
         Default is expected to change overtime to provide highest security level.
         Do not rely on its exact value.
 
