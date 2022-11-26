@@ -13,10 +13,11 @@
 
 (package-doc-dump:dump-html
  "cl+ssl"
- (list (asdf:system-relative-pathname "cl+ssl"
-                                      "src/config.lisp")
-       (asdf:system-relative-pathname "cl+ssl"
-                                      "src/package.lisp"))
+ (mapcar (lambda (path)
+           (asdf:system-relative-pathname "cl+ssl"
+                                          path))
+         '("src/config.lisp"
+           "src/package.lisp"))
  ;; Remove the implementation of cl+ssl:stream-fd,
  ;; like on CCL `stream-fd ((stream ccl::basic-stream))`,
  ;; so only the generic function reamins.
