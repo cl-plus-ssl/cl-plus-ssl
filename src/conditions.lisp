@@ -285,8 +285,8 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     ;; error if it is present at the time of SSL_Connect
     ;; or SSL_Accept failure - see how the
     ;; collecting-verify-error macro is used.
-    ;; This approach, however, will not when help if cert
-    ;; verification fails not on the initial handshake,
+    ;; This approach, however, will not collect verification
+    ;; error if it happens not on the initial handshake,
     ;; but during session renegotiation.
     verify-error :type '(or null string)
                  :initform nil

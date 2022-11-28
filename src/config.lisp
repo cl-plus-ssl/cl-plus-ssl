@@ -14,10 +14,10 @@ in platform-dependent default locations.
 To explicitly specify what to load, use the cl+ssl/config
 module before loading cl+ssl:
 
-    (QL:QUICKLOAD \"cl+ssl/config\")
-    (CL+SSL/CONFIG:DEFINE-LIBSSL-PATH \"/opt/local/lib/libssl.dylib\")
-    (CL+SSL/CONFIG:DEFINE-LIBCRYPTO-PATH \"/opt/local/lib/libcrypto.dylib\")
-    (QL:QUICKLOAD \"cl+ssl\")
+    (ql:quickload \"cl+ssl/config\")
+    (cl+ssl/config:define-libssl-path \"/opt/local/lib/libssl.dylib\")
+    (cl+ssl/config:define-libcrypto-path \"/opt/local/lib/libcrypto.dylib\")
+    (ql:quickload \"cl+ssl\")
 
 Note, the PATH parameter of those two macros is not evaluated.
 You can only use literal values. This is dictated by CFFI.
