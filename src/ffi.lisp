@@ -1301,17 +1301,23 @@ is called automatically by all other functions. The only reason to
 call it explicitly is to supply the RAND-SEED parameter. In this case
 do it before calling any other functions.
 
-Just leave the default value for the METHOD parameter.
+Keyword arguments:
 
-RAND-SEED is an octet sequence to initialize OpenSSL random number generator.
-On many platforms, including Linux and Windows, it may be left NIL (default),
-because OpenSSL initializes the random number generator from OS specific service.
-But for example on Solaris it may be necessary to supply this value.
-The minimum length required by OpenSSL is 128 bits.
-See http://www.openssl.org/support/faq.html#USER1 for details.
+    METHOD - just leave the default value.
 
-Hint: do not use Common Lisp RANDOM function to generate the RAND-SEED,
-because the function usually returns predictable values."
+    RAND-SEED - an octet sequence to initialize OpenSSL random
+        number generator. On many platforms, including Linux and
+        Windows, it may be left NIL (default), because OpenSSL
+        initializes the random number generator from OS specific
+        service. But, for example, on Solaris it may be necessary
+        to supply this value. The minimum length required by OpenSSL
+        is 128 bits.
+        See http://www.openssl.org/support/faq.html#USER1 for details.
+
+        Hint: do not use Common Lisp RANDOM function to generate
+        the RAND-SEED, because the function usually returns
+        predictable values.
+"
   #+lispworks
   (check-cl+ssl-symbols)
   (bordeaux-threads:with-recursive-lock-held (*global-lock*)
