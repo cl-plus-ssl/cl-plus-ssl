@@ -19,8 +19,11 @@ module before loading cl+ssl:
     (cl+ssl/config:define-libcrypto-path \"/opt/local/lib/libcrypto.dylib\")
     (ql:quickload \"cl+ssl\")
 
-Note, the PATH parameter of those two macros is not evaluated.
+The PATH parameter of those two macros is not evaluated.
 You can only use literal values. This is dictated by CFFI.
+
+You may need to rebuild cl+ssl for the changed paths to have effect.
+This depends on CFFI and FFI implementation of the current Lisp.
 ")
   (:export #:define-libssl-path
            #:define-libcrypto-path))
