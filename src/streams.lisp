@@ -25,7 +25,7 @@
 (defvar *default-cipher-list* "ALL")
 
 (defparameter *default-buffer-size* 2048
-  "The default size for input and output buffers of the SSL-STREAM objects")
+  "The default size for input and output buffers of SSL-STREAM objects")
 
 (defclass ssl-stream
     (trivial-gray-stream-mixin
