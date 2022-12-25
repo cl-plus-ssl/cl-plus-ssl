@@ -223,7 +223,11 @@
 
 (defvar *default-unwrap-stream-p* t
   "Default value for UNWRAP-STREAM-P function parameter.
-If true (the default), give OpenSSL the file descriptor of the stream, instead of a Lisp BIO.")
+
+If true (the default), cl+ssl will try to extract file descriptor
+from the given TCP Lisp stream and tell OpenSSL to use a socket BIO
+based on that file descriptor;
+otherwise use a Lisp BIO wrapping the TCP Lisp stream.")
 
 (defun install-handle-and-bio (stream handle socket unwrap-stream-p)
   (setf (ssl-stream-handle stream) handle)
