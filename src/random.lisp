@@ -16,7 +16,7 @@
 (defun random-bytes (count)
   "Generates COUNT cryptographically strong pseudo-random bytes. Returns
 the bytes as a SIMPLE-ARRAY with ELEMENT-TYPE '(UNSIGNED-BYTE 8). Signals
-an ERROR in case of problems, for example when the OpenSSL random number
+an ERROR in case of problems; for example, when the OpenSSL random number
 generator has not been seeded with enough randomness to ensure an
 unpredictable byte sequence."
   (let* ((result (make-array count :element-type '(unsigned-byte 8)))
