@@ -1325,7 +1325,7 @@ Keyword arguments:
       (initialize :method method :rand-seed rand-seed))))
 
 (defun use-certificate-chain-file (certificate-chain-file)
-  "Applies OpenSSl function SSL_CTX_use_certificate_chain_file
+  "Applies OpenSSL function SSL_CTX_use_certificate_chain_file
 to the cl+ssl's global CTX object and the specified
 CERTIFICATE-CHAIN-FILE.
 
