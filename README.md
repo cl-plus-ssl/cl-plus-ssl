@@ -316,12 +316,7 @@ as users report:
 
 ## API
 
-See the API section at the old project homepage:
-<http://common-lisp.net/project/cl-plus-ssl/>
-
-Note, the docstrings are sometimes incomplete - if a function was not
-initially documented, and contributor introduces new parameter,
-he would often document only that new parameter.
+<http://cl-plus-ssl.github.io/cl-plus-ssl//cl-plus-ssl-api.html>
 
 ## Portability
 
