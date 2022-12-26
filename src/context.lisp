@@ -130,8 +130,8 @@ Keyword arguments:
             :DEFAULT-FILE - SSL_CTX_set_default_verify_file will be called. Requires OpenSSL >= 1.1.0.
             :DEFAULT-DIR - SSL_CTX_set_default_verify_dir will be called. Requires OpenSSL >= 1.1.0.
             A STRING or a PATHNAME - will be passed to SSL_CTX_load_verify_locations
-                as file or dir argument depending wether it's readlly
-                a fire or dir. Must exist on the file system and be available.
+                as file or dir argument depending on wether it's really
+                a file or a dir. Must exist on the file system and be available.
             A of LIST - each value assumed to be either a STRING or a PATHNAME and
                 will be passed to SSL_CTX_load_verify_locations as described above.
 
