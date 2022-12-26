@@ -20,7 +20,7 @@ License: MIT-style.
 
 The library is available via [Quicklisp](http://www.quicklisp.org/).
 
-The Git repository: <http://common-lisp.net/project/cl-plus-ssl/>.
+The Git repository: <https://github.com/cl-plus-ssl/cl-plus-ssl>.
 
 Send bug reports to the GitHub issue tracker. The old mailing list
 [cl-plus-ssl-devel@common-lisp.net](mailto:cl-plus-ssl-devel@common-lisp.net)
