@@ -316,7 +316,7 @@ as users report:
 
 ## API
 
-<http://cl-plus-ssl.github.io/cl-plus-ssl//cl-plus-ssl-api.html>
+<https://cl-plus-ssl.github.io/cl-plus-ssl//cl-plus-ssl-api.html>
 
 ## Portability
 
