@@ -435,6 +435,10 @@ the SSL_connect OpenSSL function and returns a Lisp stream that
 uses OpenSSL library to encrypt the output data when sending
 it to the socket and to decrypt the input received.
 
+Uses a global CTX instance, which can be overriden
+by WITH-GLOBAL-CONTEXT. (The global CTX is
+passed as a parameter to an internall call of SSL_new.)
+
     SOCKET - represents the socket to be wrapped into an SSL stream.
         Can be either a Lisp stream (of an implementation-dependent type) for that
         socket, or an integer file descriptor of that socket. If that's a
@@ -489,8 +493,8 @@ it to the socket and to decrypt the input received.
         verification on its own, and an error will be signalled for a
         bad certificate even with :VERIFY NIL.
 
-    ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names such as
-        \"h2\" that would be offered to the server. The protocol selected by the
+    ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names, such as
+        \"h2\", that will be offered to the server. The protocol selected by the
         server can be retrieved with GET-SELECTED-ALPN-PROTOCOL.
 
     CERTIFICATE is the path to a file containing a PEM-encoded certificate.
@@ -563,6 +567,10 @@ it to the socket and to decrypt the input received.
 the SSL_accept OpenSSL function and returns a Lisp stream that
 uses OpenSSL library to encrypt the output data when sending
 it to the socket and to decrypt the input received.
+
+Uses a global CTX instance, which can be overriden
+by WITH-GLOBAL-CONTEXT. (The global CTX is
+passed as a parameter to an internall call of SSL_new.)
 
 All parameters have the same meaning as documented
 for MAKE-SSL-CLIENT-STREAM.
