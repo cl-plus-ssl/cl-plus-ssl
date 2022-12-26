@@ -23,7 +23,7 @@ The PATH parameter of those two macros is not evaluated.
 This is dictated by CFFI.
 
 You may need to rebuild cl+ssl for the changed paths to have effect.
-This depends on CFFI and FFI implementation of the current Lisp.
+This depends on CFFI and the FFI implementation of your Lisp.
 ")
   (:export #:define-libssl-path
            #:define-libcrypto-path))
