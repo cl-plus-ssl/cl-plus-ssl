@@ -37,7 +37,7 @@ and very likely are already installed.
 
 ### Windows
 
-<https://wiki.openssl.org/index.php/Binaries> lists several soruces of binary distributions. For example, <http://www.slproweb.com/products/Win32OpenSSL.html> (slproweb.com is a 3rd party; if you have questions about the OpenSSL installer they provide, please ask in the mailing list specified on the linked page).
+<https://wiki.openssl.org/index.php/Binaries> lists several sources of binary distributions. For example, <http://www.slproweb.com/products/Win32OpenSSL.html> (slproweb.com is a 3rd party; if you have questions about the OpenSSL installer they provide, please ask in the mailing list specified on the linked page).
 
 If you chose to install the DLLs into the OpenSSL installation's "bin" directory (recommended), then be sure to add the bin directory to your PATH environment variable and restart your session. e.g. "C:\Program Files\OpenSSL-Win64\bin"
 
@@ -53,9 +53,9 @@ Slime session and try the examples as suggested in the comments at the
 top of the file.
 
 For more comfortable use learn some of OpenSSL API. In particular
-that SSL object represents a TLS session, CTX object is a
+that SSL object represents a TLS session, SSL_CTX object is a
 context multiple SSL objects can derive from thus sharing
-common parameters. BIO is a stream-like input/ouput abstraction
+common parameters. BIO is a stream-like input/output abstraction
 OpenSSL uses for actual data transfer.
 
 Knowing OpenSSL will also allow for more flexibility and control,
@@ -157,7 +157,7 @@ For example:
 ```
 
 Such a call can internally perform many primitive IO
-operationsd like `cl:read-byte` or `cl:read-sequence`.
+operations like `cl:read-byte` or `cl:read-sequence`.
 If executed with IO timeouts configured, every individual
 operation can take less then the the timeout, but overall
 duration may still be unpredictable. In contrast, when
@@ -343,7 +343,7 @@ as a part of the acl-compat portability layer of his
 [http://portableaserve.sourceforge.net/](http://portableaserve.sourceforge.net/).
 
 Development into CL+SSL was done by David Lichteblau. After that many
-peeple contributed patches, as can be seenn in the git history.
+people contributed patches, as can be seen in the git history.
 
 
 ## News (Old, not really maintained now)
