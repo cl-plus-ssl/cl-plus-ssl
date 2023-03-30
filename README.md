@@ -59,7 +59,14 @@ For more comfortable use learn some of OpenSSL API. In particular
 that SSL object represents a TLS session, SSL_CTX object is a
 context multiple SSL objects can derive from thus sharing
 common parameters. BIO is a stream-like input/output abstraction
-OpenSSL uses for actual data transfer.
+OpenSSL uses for actual data transfer. That OpenSSL API
+uses reference counting; therefore, for example, if an SSL
+object is derived from an SSL_CTX, we can apply SSL_CTX_free
+to the SSL_CTX when the SSL is still being used - our call
+will just decrement the reference count so if the SSL
+holds another reference to the SSL_CTX, the SSL_CTX will remain
+alive and will only be destroyed after the SSL releases
+this reference.
 
 Knowing OpenSSL will also allow for more flexibility and control,
 as cl+ssl high-level functions do not cover all possible approaches.
