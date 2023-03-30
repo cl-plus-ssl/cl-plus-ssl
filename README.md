@@ -305,6 +305,17 @@ deadlines or timeouts for socket BIO in all implementations:
 [#146](https://github.com/cl-plus-ssl/cl-plus-ssl/issues/146)
 [#69](https://github.com/cl-plus-ssl/cl-plus-ssl/pull/69)
 
+One more idea for timeout implementation is to set
+socket option SO_RCVTIMEO and SO_SNDTIMEO
+for the TCP socket. OpenSSL will probably respect
+those options. But that is not tested. (Even if
+supported by OpenSSL, we may have problems, for example,
+because on several Lisps the socket file descriptor
+is used in non-blocking mode; if OpenSSL functions
+signall the sockopt timeout by returning
+SSL_ERROR_WANT_READ / SSL_ERROR_WANT_WRITE,
+cl+ssl code will simply repeat the function call.)
+
 ### Saved Lisp Image
 
 If you save your application as a Lisp image, call `(cl+ssl:reload)`
