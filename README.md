@@ -41,6 +41,9 @@ and very likely are already installed.
 
 If you chose to install the DLLs into the OpenSSL installation's "bin" directory (recommended), then be sure to add the bin directory to your PATH environment variable and restart your session. e.g. "C:\Program Files\OpenSSL-Win64\bin"
 
+## API
+
+<https://cl-plus-ssl.github.io/cl-plus-ssl/cl-plus-ssl-api.html>
 
 ## Usage
 
@@ -313,10 +316,6 @@ of the OpenSSL shared libraries have *not* changed.
 If they have changed, you may get errors,
 as users report:
 [#167](https://github.com/cl-plus-ssl/cl-plus-ssl/issues/167)
-
-## API
-
-<https://cl-plus-ssl.github.io/cl-plus-ssl//cl-plus-ssl-api.html>
 
 ## Portability
 
