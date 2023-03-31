@@ -197,7 +197,7 @@ has no effect on clients.")
   "Depending on the presence of +SSL-SESS-CACHE-CLIENT+ and/or +SSL-SESS-CACHE-SERVER+, sessions
 negotiated in an SSL/TLS handshake may be cached for possible reuse. Normally a new session is
 added to the internal cache as well as any external session caching (callback) that is configured
-for the SSL-CTX. This flag will prevent sessions being stored in the internal cache (though the
+for the SSL_CTX. This flag will prevent sessions being stored in the internal cache (though the
 application can add them manually using SSL-CTX-ADD-SESSION). Note: in any SSL/TLS servers where
 external caching is configured, any successful session lookups in the external cache (ie. for
 session-resume requests) would normally be copied into the local cache before processing continues
@@ -1326,7 +1326,7 @@ Keyword arguments:
 
 (defun use-certificate-chain-file (certificate-chain-file)
   "Applies OpenSSL function SSL_CTX_use_certificate_chain_file
-to the cl+ssl's global CTX object and the specified
+to the cl+ssl's global SSL_CTX object and the specified
 CERTIFICATE-CHAIN-FILE.
 
 OpenSSL requires the certificates in the file to be sorted

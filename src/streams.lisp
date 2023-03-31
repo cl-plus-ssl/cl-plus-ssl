@@ -435,8 +435,8 @@ the SSL_connect OpenSSL function and returns a Lisp stream that
 uses OpenSSL library to encrypt the output data when sending
 it to the socket and to decrypt the input received.
 
-Uses a global CTX instance, which can be overriden
-by WITH-GLOBAL-CONTEXT. (The global CTX is
+Uses a global SSL_CTX instance, which can be overriden
+by WITH-GLOBAL-CONTEXT. (The global SSL_CTX is
 passed as a parameter to an internall call of SSL_new.)
 
     SOCKET - represents the socket to be wrapped into an SSL stream.
@@ -486,21 +486,22 @@ passed as a parameter to an internall call of SSL_new.)
         verification failure.
 
         Note, the VERIFY logic expects that the global
-        CTX object does not have the SSL_VERIFY_PEER
-        flag enabled - the default for the cl+ssl's global CTX.
-        If the current global CTX object has SSL_VERIFY_PEER enabled,
+        SSL_CTX object does not have the SSL_VERIFY_PEER
+        flag enabled - the default for the cl+ssl's global SSL_CTX.
+        If the current global SSL_CTX object has SSL_VERIFY_PEER enabled,
         the SSL_Connect will perform certificate (but not hostname)
         verification on its own, and an error will be signalled for a
         bad certificate even with :VERIFY NIL.
 
-    ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names, such as
-        \"h2\", that will be offered to the server. The protocol selected by the
-        server can be retrieved with GET-SELECTED-ALPN-PROTOCOL.
+    ALPN-PROTOCOLS, if specified, should be a list of alpn protocol names,
+        such as \"h2\", that will be offered to the server. The protocol
+        selected by the server can be retrieved with
+        GET-SELECTED-ALPN-PROTOCOL.
 
     CERTIFICATE is the path to a file containing a PEM-encoded certificate.
         Note, if one certificate will be used for multiple TLS connections,
-        it's better to load it into a common CTX (context) object rather than
-        reading it for every new connection.
+        it's better to load it into a common SSL_CTX (context) object rather
+        than reading it for every new connection.
 
     KEY is the path to a PEM-encoded private key file of that certificate.
 
@@ -512,8 +513,8 @@ passed as a parameter to an internall call of SSL_new.)
 
     METHOD - usually you want to leave the default value. It is used
         to compute the parameter for OpenSSL function SSL_CTX_new when
-        creating the global CTX object for cl+ssl. This parameter only has
-        effect on the first call, when the global CTX is not yet created.
+        creating the global SSL_CTX object for cl+ssl. This parameter only has
+        effect on the first call, when the global SSL_CTX is not yet created.
         The default value is TLS_method on OpenSSL > 1.1.0 and SSLv23_method
         for older OpenSSL versions.
 
@@ -568,8 +569,8 @@ the SSL_accept OpenSSL function and returns a Lisp stream that
 uses OpenSSL library to encrypt the output data when sending
 it to the socket and to decrypt the input received.
 
-Uses a global CTX instance, which can be overriden
-by WITH-GLOBAL-CONTEXT. (The global CTX is
+Uses a global SSL_CTX instance, which can be overriden
+by WITH-GLOBAL-CONTEXT. (The global SSL_CTX is
 passed as a parameter to an internall call of SSL_new.)
 
 All parameters have the same meaning as documented
