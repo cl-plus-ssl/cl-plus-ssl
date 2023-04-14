@@ -25,14 +25,14 @@
    #:make-ssl-client-stream
    #:make-ssl-server-stream
 
-   ;;; Custom binding for the global CTX
+   ;;; Custom binding for the global SSL_CTX
    #:with-global-context
 
-   ;;; Custom CTX creation
+   ;;; Custom SSL_CTX creation
    #:make-context
    #:ssl-ctx-free
 
-   ;;; Configure the global CTX
+   ;;; Configure the global SSL_CTX
    #:use-certificate-chain-file
    #:ssl-load-global-verify-locations
    #:ssl-set-global-default-verify-paths
