@@ -91,6 +91,7 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
 (unless cl+ssl/config::*libcrypto-override*
   (cffi:define-foreign-library libcrypto
     (:windows (:or #+(and windows x86-64) "libcrypto-1_1-x64.dll"
+                   #+(and windows x86-64) "libcrypto-3-x64.dll" ;;DJC
                    #+(and windows x86) "libcrypto-1_1.dll"
                    "libeay32.dll"))
     ;; Unlike some other systems, OpenBSD linker,
