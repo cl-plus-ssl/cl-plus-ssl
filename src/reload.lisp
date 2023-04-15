@@ -142,6 +142,7 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
 (unless cl+ssl/config::*libssl-override*
   (cffi:define-foreign-library libssl
     (:windows (:or #+(and windows x86-64) "libssl-1_1-x64.dll"
+                   #+(and windows x86-64) "libcrypto-3-x64.dll" ;;DJC
                    #+(and windows x86) "libssl-1_1.dll"
                    "libssl32.dll"
                    "ssleay32.dll"))
