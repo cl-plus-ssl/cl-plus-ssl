@@ -96,9 +96,9 @@
                             (cert-chain-file "certificate.pem")
                             (key-file "private-key.pem")
                             (key-password "1234"))
-  (let ((ctx (cl+ssl:make-context :certificate-chain-file cert-chain-file
-                                  :private-key-file key-file
-                                  :private-key-password key-password)))
+  (let ((ssl-ctx (cl+ssl:make-context :certificate-chain-file cert-chain-file
+                                      :private-key-file key-file
+                                      :private-key-password key-password)))
     (unwind-protect
          (trivial-sockets:with-server (server (:port port))
            (format t "~&SSL server listening on port ~d~%" port)
@@ -107,7 +107,7 @@
                  (let* ((client-sock (trivial-sockets:accept-connection
                                       server
                                       :element-type '(unsigned-byte 8)))
-                        (client-stream (cl+ssl:with-global-context (ctx)
+                        (client-stream (cl+ssl:with-global-context (ssl-ctx)
                                          (cl+ssl:make-ssl-server-stream
                                           client-sock
                                           :external-format '(:utf-8 :eol-style :crlf))))
@@ -136,7 +136,7 @@
                      (close client-stream)))
                (error (e) (format t "ERROR handling a connection: ~A~%" e))))
            (format t "Server exiting~%"))
-      (cl+ssl:ssl-ctx-free ctx))))
+      (cl+ssl:ssl-ctx-free ssl-ctx))))
 
 
 ;; Connect to an NNTP server, upgrade connection to TLS
