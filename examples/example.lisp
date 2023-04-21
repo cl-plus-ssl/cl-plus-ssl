@@ -132,8 +132,8 @@
                               (lisp-implementation-type)
                               (lisp-implementation-version))
                       (when quit (return)))
-                 (close client))))))
-    (cl+ssl:ssl-ctx-free ctx)))
+                 (close client)))))
+      (cl+ssl:ssl-ctx-free ctx))))
 
 
 ;; Connect to an NNTP server, upgrade connection to TLS
