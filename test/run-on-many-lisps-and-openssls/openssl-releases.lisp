@@ -1,6 +1,6 @@
 (defpackage #:my-openssl-releases
-  (:use :common-lisp)
-  (:export #:so-path))
+  (:export #:so-path)
+  (:use :common-lisp))
 
 (in-package #:my-openssl-releases)
 
