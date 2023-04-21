@@ -103,36 +103,39 @@
          (trivial-sockets:with-server (server (:port port))
            (format t "~&SSL server listening on port ~d~%" port)
            (loop
-             (let* ((socket (trivial-sockets:accept-connection
-                             server
-                             :element-type '(unsigned-byte 8)))
-                    (client (cl+ssl:with-global-context (ctx)
-                              (cl+ssl:make-ssl-server-stream
-                               socket
-                               :external-format '(:utf-8 :eol-style :crlf))))
-                    (quit nil))
-               (unwind-protect
-                    (progn
-                      ;; Read and log the request with its headers
-                      (loop :for line = (read-line client nil)
-                            :while line
-                            :do (format t "HTTPS> ~a~%" line)
-                                (when (search "/quit" line)
-                                  (setf quit t))
-                            :while (plusp (length line)))
-                      ;; Write a response
-                      (format client "HTTP/1.0 200 OK~%")
-                      (format client "Server: cl+ssl/examples/example.lisp~%")
-                      (format client "Content-Type: text/plain~%")
-                      (terpri client)
-                      (format client "~:[G'day~;Bye~] at ~A!~%"
-                              quit
-                              (multiple-value-list (get-decoded-time)))
-                      (format client "CL+SSL running in ~A ~A~%"
-                              (lisp-implementation-type)
-                              (lisp-implementation-version))
-                      (when quit (return)))
-                 (close client)))))
+             (handler-case
+                 (let* ((client-sock (trivial-sockets:accept-connection
+                                      server
+                                      :element-type '(unsigned-byte 8)))
+                        (client-stream (cl+ssl:with-global-context (ctx)
+                                         (cl+ssl:make-ssl-server-stream
+                                          client-sock
+                                          :external-format '(:utf-8 :eol-style :crlf))))
+                        (quit nil))
+                   (unwind-protect
+                        (progn
+                          ;; Read and log the request with its headers
+                          (loop :for line = (read-line client-stream nil)
+                                :while line
+                                :do (format t "HTTPS> ~a~%" line)
+                                    (when (search "/quit" line)
+                                      (setf quit t))
+                                :while (plusp (length line)))
+                          ;; Write a response
+                          (format client-stream "HTTP/1.0 200 OK~%")
+                          (format client-stream "Server: cl+ssl/examples/example.lisp~%")
+                          (format client-stream "Content-Type: text/plain~%")
+                          (terpri client-stream)
+                          (format client-stream "~:[G'day~;Bye~] at ~A!~%"
+                                  quit
+                                  (multiple-value-list (get-decoded-time)))
+                          (format client-stream "CL+SSL running in ~A ~A~%"
+                                  (lisp-implementation-type)
+                                  (lisp-implementation-version))
+                          (when quit (return)))
+                     (close client-stream)))
+               (error (e) (format t "ERROR handling a connection: ~A~%" e))))
+           (format t "Server exiting~%"))
       (cl+ssl:ssl-ctx-free ctx))))
 
 
