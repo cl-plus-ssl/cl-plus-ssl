@@ -20,7 +20,8 @@ module before loading cl+ssl:
     (ql:quickload \"cl+ssl\")
 
 The PATH parameter of those two macros is not evaluated.
-This is dictated by CFFI.
+This is dictated by CFFI. So either use a literal
+or compute it at the macro-expansion time.
 
 You may need to rebuild cl+ssl for the changed paths to have effect.
 This depends on CFFI and the FFI implementation of your Lisp.
