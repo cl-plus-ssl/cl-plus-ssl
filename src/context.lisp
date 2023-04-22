@@ -192,7 +192,8 @@ Keyword arguments:
       (ssl-ctx-set-verify ssl-ctx verify-mode (if verify-callback
                                                   (cffi:get-callback verify-callback)
                                                   (cffi:null-pointer)))
-      (ssl-ctx-set-cipher-list ssl-ctx cipher-list)
+      (when cipher-list
+        (ssl-ctx-set-cipher-list ssl-ctx cipher-list))
       (ssl-ctx-set-default-passwd-cb ssl-ctx (cffi:get-callback pem-password-callback))
       (when certificate-chain-file
         (ssl-ctx-use-certificate-chain-file ssl-ctx certificate-chain-file))
