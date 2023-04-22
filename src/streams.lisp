@@ -108,7 +108,7 @@
       (setf (ssl-stream-peeked-byte stream)
             (let* ((buf (ssl-stream-input-buffer stream))
                    (handle (ssl-stream-handle stream))
-                   (*blockp* nil) ;; for the Lisp-BIO
+                   (*bio-blockp* nil) ;; for the Lisp-BIO
                    (n (with-pointer-to-vector-data (ptr buf)
                         (nonblocking-ssl-funcall
                          stream #'plusp #'ssl-read handle ptr 1))))

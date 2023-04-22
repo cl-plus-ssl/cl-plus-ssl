@@ -11,7 +11,7 @@
 
 (in-package cl+ssl)
 
-(defparameter *blockp* t)
+(defparameter *bio-blockp* t)
 (defvar *bio-socket*)
 
 (defvar *bio-is-opaque*
@@ -261,7 +261,7 @@
               (clear-retry-flags bio)
               (loop
                 while (and (< i n)
-                           (or *blockp* (listen *bio-socket*)))
+                           (or *bio-blockp* (listen *bio-socket*)))
                 do
                    (setf (cffi:mem-ref buf :unsigned-char i)
                          (read-byte *bio-socket*))
@@ -296,7 +296,7 @@
               and exit = nil
               while (and (< i max-chars)
                          (null exit)
-                         (or *blockp* (listen *bio-socket*)))
+                         (or *bio-blockp* (listen *bio-socket*)))
               do
                  (setf char (read-byte *bio-socket*)
                        exit (= char 10))
