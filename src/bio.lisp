@@ -12,7 +12,7 @@
 (in-package cl+ssl)
 
 (defparameter *blockp* t)
-(defvar *socket*)
+(defvar *bio-socket*)
 
 (defvar *bio-is-opaque*
   "Since openssl 1.1.0, bio properties should be accessed using
@@ -245,8 +245,8 @@
 (cffi:defcallback lisp-write :int ((bio :pointer) (buf :pointer) (n :int))
   (handler-case
       (progn (dotimes (i n)
-               (write-byte (cffi:mem-ref buf :unsigned-char i) *socket*))
-             (finish-output *socket*)
+               (write-byte (cffi:mem-ref buf :unsigned-char i) *bio-socket*))
+             (finish-output *bio-socket*)
              n)
     (serious-condition (c)
       (clear-retry-flags bio)
@@ -261,10 +261,10 @@
               (clear-retry-flags bio)
               (loop
                 while (and (< i n)
-                           (or *blockp* (listen *socket*)))
+                           (or *blockp* (listen *bio-socket*)))
                 do
                    (setf (cffi:mem-ref buf :unsigned-char i)
-                         (read-byte *socket*))
+                         (read-byte *bio-socket*))
                    (incf i))
               (when (zerop i) (set-retry-read bio)))
           (end-of-file ()
@@ -296,9 +296,9 @@
               and exit = nil
               while (and (< i max-chars)
                          (null exit)
-                         (or *blockp* (listen *socket*)))
+                         (or *blockp* (listen *bio-socket*)))
               do
-                 (setf char (read-byte *socket*)
+                 (setf char (read-byte *bio-socket*)
                        exit (= char 10))
                  (setf (cffi:mem-ref buf :unsigned-char i) char)
                  (incf i))
@@ -314,7 +314,8 @@
 (cffi:defcallback lisp-puts :int ((bio :pointer) (buf :string))
   (handler-case
       (progn
-        (write-line buf (flex:make-flexi-stream *socket* :external-format :ascii))
+        (write-line buf (flex:make-flexi-stream *bio-socket*
+                                                :external-format :ascii))
         ;; puts is not specified to return length, but BIO expects it :(
         (1+ (length buf)))
     (serious-condition (c)
@@ -390,21 +391,28 @@
       0)))
 
 ;;; Convenience macros
-(defmacro with-bio-output-to-string ((bio &key (element-type ''character) (transformer '#'code-char)) &body body)
+(defmacro with-bio-output-to-string ((bio &key
+                                            (element-type ''character)
+                                            (transformer '#'code-char))
+                                     &body body)
   "Evaluate BODY with BIO bound to a SSL BIO structure that writes to a
 Common Lisp string.  The string is returned."
-  `(let ((*socket* (flex:make-in-memory-output-stream :element-type ,element-type :transformer ,transformer))
+  `(let ((*bio-socket* (flex:make-in-memory-output-stream :element-type ,element-type
+                                                          :transformer ,transformer))
 	 (,bio (bio-new-lisp)))
      (unwind-protect
           (progn ,@body)
        (bio-free ,bio))
-     (flex:get-output-stream-sequence *socket*)))
+     (flex:get-output-stream-sequence *bio-socket*)))
 
-(defmacro with-bio-input-from-string ((bio string &key (transformer '#'char-code))
+(defmacro with-bio-input-from-string ((bio
+                                       string
+                                       &key (transformer '#'char-code))
 				      &body body)
   "Evaluate BODY with BIO bound to a SSL BIO structure that reads from
 a Common Lisp STRING."
-  `(let ((*socket* (flex:make-in-memory-input-stream ,string :transformer ,transformer))
+  `(let ((*bio-socket* (flex:make-in-memory-input-stream ,string
+                                                         :transformer ,transformer))
 	 (,bio (bio-new-lisp)))
      (unwind-protect
           (progn ,@body)
