@@ -78,7 +78,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
    ;; be empty, most likely, because ERR_print_errors cleans the queue).
    ;;
    ;; That's the preferred way, becuase it includes more info
-   ;; the printing we implemented in Lisp. In particualr, in includes
+   ;; than the printing we implemented in Lisp. In particualr, in includes
    ;; the optional string added by ERR_add_error_data, which
    ;; we use to provide error details of unexpected lisp errors
    ;; in Lisp BIO. Consider migrating all the code to PRINTED-QUEUE,
