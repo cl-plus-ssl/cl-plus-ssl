@@ -159,6 +159,9 @@
     (incf (ssl-stream-output-pointer stream)))
   b)
 
+(defmacro while (cond &body body)
+  `(do () ((not ,cond)) ,@body))
+
 (defmethod stream-write-sequence ((stream ssl-stream) seq start end &key)
   (let ((buf (ssl-stream-output-buffer stream)))
     (when (> (+ (- end start) (ssl-stream-output-pointer stream)) (buffer-length buf))
@@ -610,14 +613,6 @@ SSL-STREAM is the client ssl stream returned by make-ssl-client-stream. "
     (ssl-get0-alpn-selected (ssl-stream-handle ssl-stream) ptr len)
     (cffi:foreign-string-to-lisp (cffi:mem-ref ptr :pointer)
                                  :count (cffi:mem-ref len :int))))
-
-#+openmcl
-(defmethod stream-deadline ((stream ccl::basic-stream))
-  (ccl::ioblock-deadline (ccl::stream-ioblock stream t)))
-#+openmcl
-(defmethod stream-deadline ((stream t))
-  nil)
-
 
 (defgeneric stream-fd (stream)
   (:documentation "The STREAM's file descriptor as an integer,

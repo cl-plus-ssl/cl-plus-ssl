@@ -11,6 +11,16 @@
 
 (in-package cl+ssl)
 
+(defparameter *blockp* t)
+(defvar *socket*)
+
+(defvar *bio-is-opaque*
+  "Since openssl 1.1.0, bio properties should be accessed using
+ functions, not directly using C structure slots.
+ Intialized to T for such openssl versions.")
+(defvar *lisp-bio-type*)
+(defvar *bio-lisp-method* nil)
+
 (defconstant +BIO_TYPE_SOURCE_SINK+ #x0400)
 (defconstant +BIO_TYPE_DESCRIPTOR+ #x0100)
 
@@ -102,8 +112,17 @@
       (make-bio-lisp-method-opaque)
       (make-bio-lisp-method-slots)))
 
+(defun bio-init ()
+  (setf *bio-is-opaque*
+        ;; (openssl-is-at-least 1 1) - this is not precise in case of LibreSSL,
+        ;; therefore use the following:
+        (not (null (cffi:foreign-symbol-pointer "BIO_get_new_index"
+                                                :library 'libcrypto)))
+        *lisp-bio-type* (lisp-bio-type)
+        *bio-lisp-method* (make-bio-lisp-method)))
+
 (defun bio-new-lisp ()
-  (unless *bio-lisp-method* (initialize))
+  (unless *bio-lisp-method* (bio-init))
   (let ((new (bio-new *bio-lisp-method*)))
     (if (or (null new) (cffi:null-pointer-p new))
         (error "Cannot create bio method: ~a"
@@ -391,10 +410,6 @@ a Common Lisp STRING."
           (progn ,@body)
        (bio-free ,bio))))
 
-;; TODO: Refactor dependendies, err-print-error-to-sting is used
-;;       in conditions.lisp, earlier than it is defined in the bio.lisp.
-;;       Becuase we can only define it after BIO functionality is implemented.
-;;       And bio.lisp depends on ffi.lisp, and ffi.lisp depends on conditions.lisp.
 (defun err-print-errors-to-string ()
   (with-bio-output-to-string (bio)
     (err-print-errors bio)))
