@@ -545,7 +545,9 @@ passed as a parameter to an internall call of SSL_new.)
       (ssl-set-connect-state handle)
       (when (and cipher-list
                  (zerop (ssl-set-cipher-list handle cipher-list)))
-        (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
+        (error 'ssl-error-initialize
+               :reason
+               "Can't set SSL cipher list: SSL_set_cipher_list returned 0"))
       (with-pem-password (password)
         (install-key-and-cert handle key certificate))
       (collecting-verify-error (handle)
@@ -590,7 +592,9 @@ for MAKE-SSL-CLIENT-STREAM.
       (ssl-set-accept-state handle)
       (when (and cipher-list
                  (zerop (ssl-set-cipher-list handle cipher-list)))
-        (error 'ssl-error-initialize :reason "Can't set SSL cipher list"))
+        (error 'ssl-error-initialize
+               :reason
+               "Can't set SSL cipher list: SSL_set_cipher_list returned 0"))
       (with-pem-password (password)
         (install-key-and-cert handle key certificate))
       (collecting-verify-error (handle)
