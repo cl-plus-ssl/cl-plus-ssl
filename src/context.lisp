@@ -197,7 +197,8 @@ Keyword arguments:
                  (zerop (ssl-ctx-set-cipher-list ssl-ctx cipher-list)))
         (error 'ssl-error-initialize
                :reason
-               "Can't set SSL cipher list: SSL_CTX_set_cipher_list returned 0"))
+               "Can't set SSL cipher list: SSL_CTX_set_cipher_list returned 0"
+               :queue (read-ssl-error-queue)))
       (ssl-ctx-set-default-passwd-cb ssl-ctx (cffi:get-callback pem-password-callback))
       (when certificate-chain-file
         (ssl-ctx-use-certificate-chain-file ssl-ctx certificate-chain-file))

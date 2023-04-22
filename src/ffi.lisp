@@ -679,14 +679,10 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
   (ssl-ctx-ctrl ctx +SSL-CTRL-SET-MIN-PROTO-VERSION+ version (cffi:null-pointer)))
 (defun ssl-ctx-set-max-proto-version (ctx version)
   (ssl-ctx-ctrl ctx +SSL-CTRL-SET-MAX-PROTO-VERSION+ version (cffi:null-pointer)))
-(define-ssl-function ("SSL_CTX_set_cipher_list" ssl-ctx-set-cipher-list%)
+(define-ssl-function ("SSL_CTX_set_cipher_list" ssl-ctx-set-cipher-list)
     :int
   (ctx :pointer)
-  (ciphers :pointer))
-(defun ssl-ctx-set-cipher-list (ctx ciphers)
-  (cffi:with-foreign-string (ciphers* ciphers)
-    (when (= 0 (ssl-ctx-set-cipher-list% ctx ciphers*))
-      (error 'ssl-error-initialize :reason "Can't set SSL cipher list" :queue (read-ssl-error-queue)))))
+  (ciphers :string))
 (define-ssl-function ("SSL_CTX_use_certificate_chain_file" ssl-ctx-use-certificate-chain-file)
     :int
   (ctx ssl-ctx)
