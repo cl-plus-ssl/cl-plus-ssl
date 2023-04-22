@@ -62,28 +62,6 @@
     (location
      (error "Invalid location ~a" location))))
 
-(alexandria:define-constant +default-cipher-list+
-    (format nil
-            "ECDHE-RSA-AES256-GCM-SHA384:~
-            ECDHE-RSA-AES256-SHA384:~
-            ECDHE-RSA-AES256-SHA:~
-            ECDHE-RSA-AES128-GCM-SHA256:~
-            ECDHE-RSA-AES128-SHA256:~
-            ECDHE-RSA-AES128-SHA:~
-            ECDHE-RSA-RC4-SHA:~
-            DHE-RSA-AES256-GCM-SHA384:~
-            DHE-RSA-AES256-SHA256:~
-            DHE-RSA-AES256-SHA:~
-            DHE-RSA-AES128-GCM-SHA256:~
-            DHE-RSA-AES128-SHA256:~
-            DHE-RSA-AES128-SHA:~
-            AES256-GCM-SHA384:~
-            AES256-SHA256:~
-            AES256-SHA:~
-            AES128-GCM-SHA256:~
-            AES128-SHA256:~
-            AES128-SHA") :test 'equal)
-
 (defun make-context (&key (method nil method-supplied-p)
                           disabled-protocols
                           (options (list +SSL-OP-ALL+))
@@ -93,7 +71,7 @@
                           (verify-depth 100)
                           (verify-mode +ssl-verify-peer+)
                           verify-callback
-                          (cipher-list +default-cipher-list+)
+                          cipher-list
                           (pem-password-callback 'pem-password-callback)
                           certificate-chain-file
                           private-key-file
@@ -145,9 +123,8 @@ Keyword arguments:
         Please note: if specified, must be a CFFI callback i.e. defined as
         (DEFCALLBACK :INT ((OK :INT) (SSL-CTX :POINTER)) .. ).
 
-    CIPHER-LIST. Will be passed to SSL_CTX_set_cipher_list.
-        Default is expected to change overtime to provide highest security level.
-        Do not rely on its exact value.
+    CIPHER-LIST. If specified, must be a string to pass to SSL_CTX_set_cipher_list.
+        An ERROR is signalled if SSL_CTX_set_cipher_list fails.
 
     PEM-PASSWORD-CALLBACK. Sets the default password callback called when
         loading/storing a PEM certificate with encryption.

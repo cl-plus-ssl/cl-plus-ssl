@@ -22,7 +22,7 @@
 (in-package :cl+ssl)
 
 ;; Default Cipher List
-(defvar *default-cipher-list* "ALL")
+(defvar *default-cipher-list* nil)
 
 (defparameter *default-buffer-size* 2048
   "The default size for input and output buffers of SSL-STREAM objects")
@@ -507,9 +507,9 @@ passed as a parameter to an internall call of SSL_new.)
 
     PASSWORD the password to use for decryptipon of the KEY (if encrypted).
 
-    CIPHER-LIST - a string listing the OpenSSL ciphers to enable
-        for the TLS connection (using the OpensSL function SSL_set_cipher_list).
-        Defaults to *DEFAULT-CIPHER-LIST* which is initialized to ALL.
+    CIPHER-LIST - If not NIL, must be a string to pass to SSL_set_cipher_list.
+        An ERROR is signalled if SSL_CTX_set_cipher_list fails.
+        Defaults to *DEFAULT-CIPHER-LIST* which is initialized to NIL.
 
     METHOD - usually you want to leave the default value. It is used
         to compute the parameter for OpenSSL function SSL_CTX_new when
