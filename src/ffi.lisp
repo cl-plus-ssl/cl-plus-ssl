@@ -612,6 +612,11 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :int
   (ssl ssl-pointer)
   (str :string))
+(define-ssl-function-ex (:since "1.1.1") ("SSL_set_ciphersuites" ssl-set-ciphersuites)
+    :int
+  (ssl ssl-pointer)
+  (str :string))
+
 (define-ssl-function ("SSL_use_RSAPrivateKey_file" ssl-use-rsa-privatekey-file)
     :int
   (ssl ssl-pointer)
@@ -683,6 +688,10 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :int
   (ctx :pointer)
   (ciphers :string))
+(define-ssl-function-ex (:since "1.1.1") ("SSL_CTX_set_ciphersuites" ssl-ctx-set-ciphersuites)
+    :int
+  (ctx :pointer)
+  (ciphersuites :string))
 (define-ssl-function ("SSL_CTX_use_certificate_chain_file" ssl-ctx-use-certificate-chain-file)
     :int
   (ctx ssl-ctx)
