@@ -418,8 +418,4 @@ a Common Lisp STRING."
           (progn ,@body)
        (bio-free ,bio))))
 
-(defun err-print-errors-to-string ()
-  (with-bio-output-to-string (bio)
-    (err-print-errors bio)))
-
 (setf *bio-lisp-method* nil)    ;force reinit if anything changed here

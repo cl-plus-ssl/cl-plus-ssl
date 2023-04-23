@@ -320,6 +320,10 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
 (defmacro collecting-verify-error ((handle) &body body)
   `(collecting-verify-error-impl ,handle (lambda () ,@body)))
 
+(defun err-print-errors-to-string ()
+  (with-bio-output-to-string (bio)
+    (err-print-errors bio)))
+
 (defun ssl-signal-error (handle syscall error-code ret)
   "RET is return value of the failed SYSCALL (like SSL_read, SSL_connect,
 SSL_shutdown, etc - most of them designate failure by returning
