@@ -7,7 +7,6 @@
 (in-package :cl-user)
 
 (defpackage :cl+ssl/config
-  (:use :common-lisp)
   (:documentation "By default cl+ssl searches for OpenSSL shared libraries
 in platform-dependent default locations.
 
@@ -27,7 +26,8 @@ You may need to rebuild cl+ssl for the changed paths to have effect.
 This depends on CFFI and the FFI implementation of your Lisp.
 ")
   (:export #:define-libssl-path
-           #:define-libcrypto-path))
+           #:define-libcrypto-path)
+  (:use :common-lisp))
 
 (in-package :cl+ssl/config)
 
