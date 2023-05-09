@@ -34,8 +34,6 @@
 ;;;; on clisp under this patch. But you weren't relying on cl+ssl
 ;;;; internals anyway, now were you?
 
-#+xcvb (module (:depends-on ("package" "reload" "conditions" "ffi" "ffi-buffer-all")))
-
 (in-package :cl+ssl)
 
 (defclass clisp-ffi-buffer ()

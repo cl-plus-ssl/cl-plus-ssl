@@ -7,8 +7,6 @@
 ;;;
 ;;; See LICENSE for details.
 
-#+xcvb (module (:depends-on ((:when (:featurep :sbcl) (:require :sb-posix)))))
-
 (in-package :cl-user)
 
 ;; For convenient browsing from SLIME using

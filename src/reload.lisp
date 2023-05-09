@@ -13,8 +13,6 @@
 ;;;   - but not every time ffi.lisp is re-loaded as would happen if we
 ;;;     put this directly into ffi.lisp
 
-#+xcvb (module (:depends-on ("package")))
-
 (in-package :cl+ssl)
 
 ;; The default OS-X libssl seems have had insufficient crypto algos

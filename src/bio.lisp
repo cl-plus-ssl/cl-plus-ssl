@@ -7,8 +7,6 @@
 ;;;
 ;;; See LICENSE for details.
 
-#+xcvb (module (:depends-on ("package")))
-
 (in-package cl+ssl)
 
 (defparameter *bio-blockp* t)
