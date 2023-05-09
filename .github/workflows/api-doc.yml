@@ -80,12 +80,16 @@ jobs:
       - run: |
           docker run -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 unpack-default-home-dir
 
-      # run package-doc-dump
-      - run: |    
+      - name: run package-doc-dump
+        run: |
           docker run -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 -q ccl --batch --load /home/cl/cl-plus-ssl/.github/workflows/api-doc.lisp
 
-      # run browsable-colorize
-      - run: |
+      - name: Update quicklisp (needed for fixed "colorize" version)
+        run: |
+          docker run -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 -q ccl --batch --eval '(ql-dist:install-dist "http://beta.quicklisp.org/dist/quicklisp/2023-02-15/distinfo.txt" :replace t :prompt nil)'
+
+      - name: run browsable-colorize
+        run: |
           docker run -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 -q ccl --batch --load /home/cl/cl-plus-ssl/.github/workflows/browsable-package-files.lisp
       - name: List files in the repository
         run: |
