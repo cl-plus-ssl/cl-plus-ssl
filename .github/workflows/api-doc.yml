@@ -134,7 +134,7 @@ jobs:
       name: github-pages
       # Display the resulting GitHub Pages URL at this
       # job box in the visualization graph for the workflow run
-      url: ${{ steps.deployment.outputs.page_url }}/cl-plus-ssl-api.html
+      url: ${{ steps.deployment.outputs.page_url }}cl-plus-ssl-api.html
     runs-on: ubuntu-latest
     needs: build-api-doc
     steps:
