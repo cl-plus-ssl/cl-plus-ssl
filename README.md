@@ -43,6 +43,13 @@ If you chose to install the DLLs into the OpenSSL installation's "bin" directory
 
 ## API
 
+Browable package definitions - click on a symbol to navigate
+to the definition and read docstring:
+  - <https://cl-plus-ssl.github.io/cl-plus-ssl/package.html>
+  - <https://cl-plus-ssl.github.io/cl-plus-ssl/config.html>
+
+A single HTML page dump of all exported symbols with
+their docstrings and parameters:
 <https://cl-plus-ssl.github.io/cl-plus-ssl/cl-plus-ssl-api.html>
 
 ## Usage
