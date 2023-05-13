@@ -100,12 +100,13 @@ jobs:
         run: |
           mkdir ${{ github.workspace }}/github-pages/
           # package-doc-dump results
-          cp ${{ github.workspace }}/docker-home/cl-plus-ssl/index.html ${{ github.workspace }}/github-pages/
-          cp ${{ github.workspace }}/docker-home/cl-plus-ssl/index.css ${{ github.workspace }}/github-pages/
           cp ${{ github.workspace }}/docker-home/cl-plus-ssl-api.html ${{ github.workspace }}/github-pages/
           # browsable-colorize results
           cp ${{ github.workspace }}/docker-home/cl-plus-ssl/src/package.html ${{ github.workspace }}/github-pages/
           cp ${{ github.workspace }}/docker-home/cl-plus-ssl/src/config.html ${{ github.workspace }}/github-pages/
+          # the legacy index.html
+          cp ${{ github.workspace }}/docker-home/cl-plus-ssl/index.html ${{ github.workspace }}/github-pages/
+          cp ${{ github.workspace }}/docker-home/cl-plus-ssl/index.css ${{ github.workspace }}/github-pages/
 
       - name: Package and upload GitHub Pages artifact
         if: |
