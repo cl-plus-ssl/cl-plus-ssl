@@ -110,7 +110,7 @@ Keyword arguments:
             A STRING or a PATHNAME - will be passed to SSL_CTX_load_verify_locations
                 as file or dir argument depending on wether it's really
                 a file or a dir. Must exist on the file system and be available.
-            A of LIST - each value assumed to be either a STRING or a PATHNAME and
+            A LIST - each value assumed to be either a STRING or a PATHNAME and
                 will be passed to SSL_CTX_load_verify_locations as described above.
 
     VERIFY-DEPTH. Sets the maximum depth for the certificate chain verification
