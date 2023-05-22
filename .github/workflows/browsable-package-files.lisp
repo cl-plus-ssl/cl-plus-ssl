@@ -12,8 +12,7 @@
                                                  "src/package.lisp"))))
 
 (browsable-colorize:with-browsable-context
-    (;; a list of package designators to try when locating
-     ;; unqualified symbols
+    (;; package designators to try when locating unqualified symbols
      '(#:cl+ssl #:cl+ssl/config)
      ;; an alist mapping from local source code directories
      ;; to base github URI
