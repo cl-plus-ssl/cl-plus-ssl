@@ -19,10 +19,13 @@
      ;; to base github URI
      (list (cons (asdf:system-source-directory "cl+ssl")
                  "https://github.com/cl-plus-ssl/cl-plus-ssl/tree/master/")))
-  
-  (colorize:colorize-file :common-lisp-browsable
-                          (asdf:system-relative-pathname :cl+ssl
-                                                         "src/package.lisp"))
-  (colorize:colorize-file :common-lisp-browsable
-                          (asdf:system-relative-pathname :cl+ssl
-                                                         "src/config.lisp")))
+
+  ;; use the better CSS
+  (let ((colorize:*coloring-css* (browsable-colorize:better-css)))
+
+    (colorize:colorize-file :common-lisp-browsable
+                            (asdf:system-relative-pathname :cl+ssl
+                                                           "src/package.lisp"))
+    (colorize:colorize-file :common-lisp-browsable
+                            (asdf:system-relative-pathname :cl+ssl
+                                                           "src/config.lisp"))))
