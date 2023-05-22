@@ -7,11 +7,13 @@ on:
       - 'README.md'
       - 'LICENSE'
       - '.github/workflows/api-doc.*'
+      - '.github/workflows/browsable-package-files.lisp'
   pull_request:
     paths-ignore:
       - 'README.md'
       - 'LICENSE'
       - '.github/workflows/api-doc.*'
+      - '.github/workflows/browsable-package-files.lisp'
 
 # This allows a subsequently queued workflow run to interrupt previous runs.
 # github.workflow is the name of the workflow.
