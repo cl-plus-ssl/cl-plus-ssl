@@ -44,7 +44,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - run: |
+      - name: Print debug info header
+        run: |
           echo concurrency group: '${{ github.workflow }} @ ${{ github.head_ref || github.ref }}'
           echo github.workflow: ${{ github.workflow }}
           echo github.event_name: ${{ github.event_name }}
@@ -77,7 +78,8 @@ jobs:
           pwd
           ls ${{ github.workspace }}/docker-home/
 
-      - run: |
+      - name: Ask the clfoundation/cl-devel docker image to fill the directory we mount to it as /home/cl with default config (init files for lisps, quiclisp, etc)
+        run: |
           docker run -u "$(id -u):$(id -g)" -i --mount type=bind,source=${{ github.workspace }}/docker-home,target=/home/cl/ clfoundation/cl-devel:2022-02-09 unpack-default-home-dir
 
       - name: run package-doc-dump
