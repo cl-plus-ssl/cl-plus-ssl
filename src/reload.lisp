@@ -102,8 +102,16 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
 
     ((:and :darwin :cl+ssl-macports-found) "/opt/local/lib/libcrypto.dylib")
     ((:and :darwin :cl+ssl-fink-found) "/sw/lib/libcrypto.dylib")
-    ((:and :darwin :x86-64 :cl+ssl-homebrew-found) "/usr/local/opt/openssl/lib/libcrypto.dylib")
     ((:and :darwin :arm64 :cl+ssl-homebrew-arm64-found) "/opt/homebrew/opt/openssl/lib/libcrypto.dylib")
+    ((:and :darwin
+           ;; despite Homebriew currently only
+           ;; supports :arm64 and :x86-64,
+           ;; we don't use the :x86-64 feature,
+           ;; because the same directory prefix
+           ;; seems to be used by Tigerbiew,
+           ;; which supports PPC and :x86.
+           (:not :arm64)
+           :cl+ssl-homebrew-found) "/usr/local/opt/openssl/lib/libcrypto.dylib")
     ((:and :darwin :cl+ssl-personalized-install-found) "/usr/local/lib/libcrypto.dylib")
     (:darwin (:or ;; System-provided libraries. Must be loaded from files with
                   ;; names that include version explicitly, instead of any
