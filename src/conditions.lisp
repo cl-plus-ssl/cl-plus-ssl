@@ -286,7 +286,7 @@ by READ-SSL-ERROR-QUEUE) or an SSL-ERROR condition."
     ;; This approach, however, will not collect verification
     ;; error if it happens not on the initial handshake,
     ;; but during session renegotiation.
-    verify-error :type '(or null string)
+    verify-error :type (or null string)
                  :initform nil
                  :accessor ssl-error-ssl-verify-error))
   (:documentation
