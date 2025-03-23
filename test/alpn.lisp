@@ -19,7 +19,9 @@
                (is
                 (equal expected
                        (cl+ssl:get-selected-alpn-protocol
-                        (cl+ssl:make-ssl-client-stream stream :alpn-protocols proposed)))))))
+                        (cl+ssl:make-ssl-client-stream stream
+                                                       :hostname target
+                                                       :alpn-protocols proposed)))))))
       (test-alpn-result "example.com" nil nil)
       (test-alpn-result "example.com" '( "should-not-exist" "h2" "also-should-not-exist")
                         "h2"))))
