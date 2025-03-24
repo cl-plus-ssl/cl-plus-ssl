@@ -193,7 +193,18 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
                                     "libssl.so.1.0.0"
                                     "libssl.so.0.9.8ze"
                                     "libssl.so.0.9.8"
+                                    ;; That's probably version 1.0.
+                                    ;; Added by https://github.com/lispnik
+                                    ;; on Mar 20, 2016
+                                    ;; (commit 4124b73) with comment saying
+                                    ;; "(Fedora 23 requirement)"
                                     "libssl.so.10"
+                                    ;; That's not version 4.0.
+                                    ;; Added in on Sep 17, 2009
+                                    ;; (commit 26774a0)
+                                    ;; after Stian Sletner <stian@copyleft.no>
+                                    ;; reported that it's needed to make it work
+                                    ;; under FreeBSD 7.2.
                                     "libssl.so.4"
                                     "libssl.so.3"
                                     "libssl.so"))
