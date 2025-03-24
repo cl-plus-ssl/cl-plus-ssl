@@ -115,7 +115,7 @@ jobs:
           'master' == github.ref_name
               && ( 'workflow_dispatch' == github.event_name
                   || 'push' == github.event_name )
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ github.workspace }}/github-pages
 
