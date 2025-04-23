@@ -154,7 +154,7 @@ reading or writing if their duration exceeds some limit.
 
 For example, when making an HTTP request, if it is stuck,
 we want to interrupt it instead of leaving the thread hanging
-forever. Similarly, a server can encourage some very slow
+forever. Similarly, a server can encounter some very slow
 or stuck clients, who do not timely send their requests or
 read responses, and keep connection, and possibly a connection
 handling thread, occupied. We want to interrupt server handling
