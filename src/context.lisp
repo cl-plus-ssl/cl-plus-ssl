@@ -141,48 +141,51 @@ Keyword arguments:
                                       (setf disabled-protocols
                                             (list +SSL-OP-NO-SSLv2+
                                                   +SSL-OP-NO-SSLv3+)))
-                                    (funcall (default-ssl-method)))))))
+                                    (funcall (default-ssl-method))))))
+        (normal-exit nil))
     (when (cffi:null-pointer-p ssl-ctx)
       (error 'ssl-error-initialize :reason "Can't create new SSL-CTX"
                                    :queue (read-ssl-error-queue)))
-    (handler-bind ((error (lambda (_)
-                            (declare (ignore _))
-                            (ssl-ctx-free ssl-ctx))))
-      (ssl-ctx-set-options ssl-ctx
-                           (apply #'logior
-                                  (append disabled-protocols options)))
-      ;; Older OpenSSL versions might not have this SSL_ctrl call.
-      ;; Having them error out is a sane default - it's better than to keep
-      ;; on running with insecure values.
-      ;; People that _have_ to use much too old OpenSSL versions will
-      ;; have to call MAKE-CONTEXT with :MIN-PROTO-VERSION nil.
-      ;;
-      ;; As an aside: OpenSSL had the "SSL_OP_NO_TLSv1_2" constant since
-      ;;   7409d7ad517    2011-04-29 22:56:51 +0000
-      ;; so requiring a "new"er OpenSSL to match CL+SSL's defauls shouldn't be a problem.
-      (if min-proto-version
-        (if (zerop (ssl-ctx-set-min-proto-version ssl-ctx min-proto-version))
-          (error "Couldn't set minimum SSL protocol version!")))
-      (ssl-ctx-set-session-cache-mode ssl-ctx session-cache-mode)
-      (ssl-ctx-set-verify-location ssl-ctx verify-location)
-      (ssl-ctx-set-verify-depth ssl-ctx verify-depth)
-      (ssl-ctx-set-verify ssl-ctx verify-mode (if verify-callback
-                                                  (cffi:get-callback verify-callback)
-                                                  (cffi:null-pointer)))
+    (unwind-protect
+         (progn
+           (ssl-ctx-set-options ssl-ctx
+                                (apply #'logior
+                                       (append disabled-protocols options)))
+           ;; Older OpenSSL versions might not have this SSL_ctrl call.
+           ;; Having them error out is a sane default - it's better than to keep
+           ;; on running with insecure values.
+           ;; People that _have_ to use much too old OpenSSL versions will
+           ;; have to call MAKE-CONTEXT with :MIN-PROTO-VERSION nil.
+           ;;
+           ;; As an aside: OpenSSL had the "SSL_OP_NO_TLSv1_2" constant since
+           ;;   7409d7ad517    2011-04-29 22:56:51 +0000
+           ;; so requiring a "new"er OpenSSL to match CL+SSL's defauls shouldn't be a problem.
+           (if min-proto-version
+               (if (zerop (ssl-ctx-set-min-proto-version ssl-ctx min-proto-version))
+                   (error "Couldn't set minimum SSL protocol version!")))
+           (ssl-ctx-set-session-cache-mode ssl-ctx session-cache-mode)
+           (ssl-ctx-set-verify-location ssl-ctx verify-location)
+           (ssl-ctx-set-verify-depth ssl-ctx verify-depth)
+           (ssl-ctx-set-verify ssl-ctx verify-mode (if verify-callback
+                                                       (cffi:get-callback verify-callback)
+                                                       (cffi:null-pointer)))
 
-      (when (and cipher-list
-                 (zerop (ssl-ctx-set-cipher-list ssl-ctx cipher-list)))
-        (error 'ssl-error-initialize
-               :reason
-               "Can't set SSL cipher list: SSL_CTX_set_cipher_list returned 0"
-               :queue (read-ssl-error-queue)))
-      (ssl-ctx-set-default-passwd-cb ssl-ctx (cffi:get-callback pem-password-callback))
-      (when certificate-chain-file
-        (ssl-ctx-use-certificate-chain-file ssl-ctx certificate-chain-file))
-      (when private-key-file
-        (with-pem-password (private-key-password)
-          (ssl-ctx-use-privatekey-file ssl-ctx private-key-file private-key-file-type)))
-      ssl-ctx)))
+           (when (and cipher-list
+                      (zerop (ssl-ctx-set-cipher-list ssl-ctx cipher-list)))
+             (error 'ssl-error-initialize
+                    :reason
+                    "Can't set SSL cipher list: SSL_CTX_set_cipher_list returned 0"
+                    :queue (read-ssl-error-queue)))
+           (ssl-ctx-set-default-passwd-cb ssl-ctx (cffi:get-callback pem-password-callback))
+           (when certificate-chain-file
+             (ssl-ctx-use-certificate-chain-file ssl-ctx certificate-chain-file))
+           (when private-key-file
+             (with-pem-password (private-key-password)
+               (ssl-ctx-use-privatekey-file ssl-ctx private-key-file private-key-file-type)))
+           (setq normal-exit t)
+           ssl-ctx)
+      (unless normal-exit
+        (ssl-ctx-free ssl-ctx)))))
 
 (defun call-with-global-context (ssl-ctx auto-free-p body-fn)
   (let* ((*ssl-global-context* ssl-ctx))
