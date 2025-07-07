@@ -379,13 +379,15 @@ MAKE-CONTEXT also allows to enab/disable verification."
 (defmacro with-new-ssl ((var) &body body)
   (alexandria:with-gensyms (ssl)
     `(let* ((,ssl (ssl-new *ssl-global-context*))
-            (,var ,ssl))
+            (,var ,ssl)
+            (normal-exit nil))
        (when (cffi:null-pointer-p ,ssl)
          (error 'ssl-error-call :message "Unable to create SSL structure" :queue (read-ssl-error-queue)))
-       (handler-bind ((error (lambda (_)
-                               (declare (ignore _))
-                               (ssl-free ,ssl))))
-         ,@body))))
+       (unwind-protect
+            (multiple-value-prog1 (progn ,@body)
+              (setq normal-exit t))
+         (unless normal-exit
+           (ssl-free ,ssl))))))
 
 (defvar *make-ssl-client-stream-verify-default*
   (if (member :windows *features*) ; by trivial-features
