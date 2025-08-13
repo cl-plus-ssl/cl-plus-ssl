@@ -376,15 +376,24 @@ MAKE-CONTEXT also allows to enab/disable verification."
       (flexi-streams:make-flexi-stream stream :external-format ef)
       stream))
 
+(defmacro abort-protect ((&body cleanup-forms) &body body)
+  "Executes the BODY, and if during the exuecution any non-local
+exit happens, executes the CLEANUP-FORMS"
+  (alexandria:with-gensyms (normal-exit)
+    `(let* ((,normal-exit nil))
+       (unwind-protect
+            (multiple-value-prog1 (progn ,@body)
+              (setq ,normal-exit t))
+         (unless ,normal-exit
+           ,@cleanup-forms)))))
+
 (defmacro with-new-ssl ((var) &body body)
   (alexandria:with-gensyms (ssl)
     `(let* ((,ssl (ssl-new *ssl-global-context*))
             (,var ,ssl))
        (when (cffi:null-pointer-p ,ssl)
          (error 'ssl-error-call :message "Unable to create SSL structure" :queue (read-ssl-error-queue)))
-       (handler-bind ((error (lambda (_)
-                               (declare (ignore _))
-                               (ssl-free ,ssl))))
+       (abort-protect ((ssl-free ,ssl))
          ,@body))))
 
 (defvar *make-ssl-client-stream-verify-default*

@@ -145,9 +145,7 @@ Keyword arguments:
     (when (cffi:null-pointer-p ssl-ctx)
       (error 'ssl-error-initialize :reason "Can't create new SSL-CTX"
                                    :queue (read-ssl-error-queue)))
-    (handler-bind ((error (lambda (_)
-                            (declare (ignore _))
-                            (ssl-ctx-free ssl-ctx))))
+    (abort-protect ((ssl-ctx-free ssl-ctx))
       (ssl-ctx-set-options ssl-ctx
                            (apply #'logior
                                   (append disabled-protocols options)))
