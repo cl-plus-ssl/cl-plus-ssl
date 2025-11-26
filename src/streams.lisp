@@ -87,6 +87,8 @@
      (setf (ssl-stream-handle stream) nil)
      (when (streamp (ssl-stream-socket stream))
        (close (ssl-stream-socket stream) :abort abort))
+     (release-buffer (ssl-stream-output-buffer stream))
+     (release-buffer (ssl-stream-input-buffer  stream))
      (when (ssl-close-callback stream)
        (funcall (ssl-close-callback stream)))
      t)
@@ -137,7 +139,8 @@
                     (with-pointer-to-vector-data (ptr buf)
                       (ensure-ssl-funcall
                        stream #'plusp #'ssl-read handle ptr length))))
-               (s/b-replace seq buf :start1 start :end1 (+ start read-bytes))
+               (s/b-replace seq buf :start1 start :end1 (+ start read-bytes)
+                                    :start2 0     :end2 read-bytes)
                (incf start read-bytes))
            (ssl-error-zero-return ()   ;SSL_read returns 0 on end-of-file
              (return))))
@@ -152,26 +155,17 @@
     (incf (ssl-stream-output-pointer stream)))
   b)
 
-(defmacro while (cond &body body)
-  `(do () ((not ,cond)) ,@body))
-
 (defmethod stream-write-sequence ((stream ssl-stream) seq start end &key)
-  (let ((buf (ssl-stream-output-buffer stream)))
-    (when (> (+ (- end start) (ssl-stream-output-pointer stream)) (buffer-length buf))
-      ;; not enough space left?  flush buffer.
-      (force-output stream)
-      ;; still doesn't fit?
-      (while (> (- end start) (buffer-length buf))
-        (b/s-replace buf seq :start2 start)
-        (incf start (buffer-length buf))
-        (setf (ssl-stream-output-pointer stream) (buffer-length buf))
-        (force-output stream)))
-    (b/s-replace buf seq
-                 :start1 (ssl-stream-output-pointer stream)
-                 :start2 start
-                 :end2 end)
-    (incf (ssl-stream-output-pointer stream) (- end start)))
-  seq)
+  (let* ((buf (ssl-stream-output-buffer stream))
+         (len (buffer-length buf)))
+    (do () ((>= start end) seq)
+      (when (= (ssl-stream-output-pointer stream) len)
+        (force-output stream))
+      (b/s-replace buf seq :start1 (ssl-stream-output-pointer stream) :end1 len
+                           :start2 start :end2 end)
+      (let ((n (min (- end start) (- len (ssl-stream-output-pointer stream)))))
+        (incf start n)
+        (incf (ssl-stream-output-pointer stream) n)))))
 
 (defmethod stream-finish-output ((stream ssl-stream))
   (stream-force-output stream))
