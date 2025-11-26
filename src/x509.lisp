@@ -164,16 +164,25 @@ ASN1 string validation references:
               (second (get-element-after-year 8)))
           (encode-universal-time second minute hour day month year 0))))))
 
-(defgeneric decode-certificate (format buffer)
-  (:documentation
-   "The BUFFER must be created by MAKE-BUFFER (because
-we are going to pass it to WITH-POINTER-TO-VECTOR-DATA)"))
+(defun slurp-stream (stream)
+  "Returns a sequence containing the STREAM bytes; the
+sequence is created by CFFI:MAKE-SHAREABLE-BYTE-VECTOR,
+therefore it can safely be passed to
+ CFFI:WITH-POINTER-TO-VECTOR-DATA."
+  (let ((seq (cffi:make-shareable-byte-vector (file-length stream))))
+    (read-sequence seq stream)
+    seq))
 
-(defmethod decode-certificate ((format (eql :der)) buffer)
-  (with-pointer-to-vector-data (buf* buffer)
+(defgeneric decode-certificate (format bytes)
+  (:documentation
+   "The BYTES must be created by CFFI:MAKE-SHAREABLE-BYTE-VECTOR (because
+we are going to pass them to CFFI:WITH-POINTER-TO-VECTOR-DATA)"))
+
+(defmethod decode-certificate ((format (eql :der)) bytes)
+  (cffi:with-pointer-to-vector-data (buf* bytes)
     (cffi:with-foreign-object (buf** :pointer)
       (setf (cffi:mem-ref buf** :pointer) buf*)
-      (let ((cert (d2i-x509 (cffi:null-pointer) buf** (buffer-length buffer))))
+      (let ((cert (d2i-x509 (cffi:null-pointer) buf** (length bytes))))
         (when (cffi:null-pointer-p cert)
           (error 'ssl-error-call :message "d2i-X509 failed" :queue (read-ssl-error-queue)))
         cert))))
@@ -185,17 +194,10 @@ we are going to pass it to WITH-POINTER-TO-VECTOR-DATA)"))
       :pem))
 
 (defun decode-certificate-from-file (path &key format)
-  (unless format
-    (setf format (cert-format-from-path path)))
-  (with-open-file (stream path :element-type '(unsigned-byte 8))
-    (let* ((file-len (file-length stream))
-           (tmp (make-array file-len :element-type '(unsigned-byte 8)))
-           (buf (make-buffer file-len)))
-      (unwind-protect
-        (progn
-          (assert (= (read-sequence tmp stream) file-len))
-          (decode-certificate format (b/s-replace buf tmp)))
-        (release-buffer buf)))))
+  (let ((bytes (with-open-file (stream path :element-type '(unsigned-byte 8))
+                 (slurp-stream stream)))
+        (format (or format (cert-format-from-path path))))
+    (decode-certificate format bytes)))
 
 (defun certificate-alt-names (cert)
   #|
