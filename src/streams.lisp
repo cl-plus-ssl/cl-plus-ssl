@@ -44,6 +44,8 @@
     :accessor ssl-stream-output-pointer)
    (input-buffer
     :accessor ssl-stream-input-buffer)
+   (input-buffer-small
+    :accessor ssl-stream-input-buffer-small)
    (peeked-byte
     :initform nil
     :accessor ssl-stream-peeked-byte)))
@@ -54,10 +56,9 @@
                                        (input-buffer-size buffer-size)
                                        (output-buffer-size buffer-size)
                                        &allow-other-keys)
-  (setf (ssl-stream-output-buffer stream)
-        (make-buffer output-buffer-size))
-  (setf (ssl-stream-input-buffer stream)
-        (make-buffer input-buffer-size)))
+  (setf (ssl-stream-output-buffer stream) (make-buffer output-buffer-size)
+        (ssl-stream-input-buffer stream) (make-buffer input-buffer-size)
+        (ssl-stream-input-buffer-small stream) (make-buffer 1)))
 
 (defmethod print-object ((object ssl-stream) stream)
   (print-unreadable-object (object stream :type t)
@@ -89,6 +90,7 @@
        (close (ssl-stream-socket stream) :abort abort))
      (release-buffer (ssl-stream-output-buffer stream))
      (release-buffer (ssl-stream-input-buffer  stream))
+     (release-buffer (ssl-stream-input-buffer-small stream))
      (when (ssl-close-callback stream)
        (funcall (ssl-close-callback stream)))
      t)
@@ -101,7 +103,7 @@
 (defmethod stream-listen ((stream ssl-stream))
   (or (ssl-stream-peeked-byte stream)
       (setf (ssl-stream-peeked-byte stream)
-            (let* ((buf (ssl-stream-input-buffer stream))
+            (let* ((buf (ssl-stream-input-buffer-small stream))
                    (handle (ssl-stream-handle stream))
                    (*bio-blockp* nil) ;; for the Lisp-BIO
                    (n (with-pointer-to-vector-data (ptr buf)
@@ -114,7 +116,7 @@
           (ssl-stream-peeked-byte stream)
         (setf (ssl-stream-peeked-byte stream) nil))
       (handler-case
-          (let ((buf (ssl-stream-input-buffer stream))
+          (let ((buf (ssl-stream-input-buffer-small stream))
                 (handle (ssl-stream-handle stream)))
             (with-pointer-to-vector-data (ptr buf)
               (ensure-ssl-funcall
