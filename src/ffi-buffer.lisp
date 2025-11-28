@@ -6,7 +6,7 @@
 
 (in-package :cl+ssl)
 
-(declaim (inline s/b-replace b/s-replace))
+(declaim (inline s/b-replace b/s-replace release-buffer))
 
 (defun make-buffer (size)
   (cffi:make-shareable-byte-vector size))
