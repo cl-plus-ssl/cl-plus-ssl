@@ -1,3 +1,9 @@
+;;;; -*- Mode: LISP; Syntax: COMMON-LISP; indent-tabs-mode: nil; coding: utf-8; show-trailing-whitespace: t -*-
+;;;
+;;; Copyright (C) contributors as per cl+ssl git history
+;;;
+;;; See LICENSE for details.
+
 (eval-when (:compile-toplevel)
   (declaim
    (optimize (speed 3) (space 1) (safety 1) (debug 0) (compilation-speed 0))))
