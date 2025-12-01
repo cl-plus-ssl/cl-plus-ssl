@@ -14,6 +14,13 @@
     (unless (equal (aref expected-vec i) (buffer-elt buf i))
       (return nil))))
 
+;; Temporarily definitions for the symbols from the new
+;; ffi-buffer-clisp code, that are reffered by the test.
+;; To make it compilable agains the olc cl+ssl.
+(defvar *mem-max* 1024)
+(defun release-buffer (buf)
+  (ffi:foreign-free (clisp-ffi-buffer-pointer buf)))
+
 (defun test-b/s-replace ()
   (mapc #'(lambda (vec expected-buf)
             (mapc #'(lambda (seq)
@@ -55,3 +62,5 @@
 (defun test-ffi-buffer-clisp ()
   (test-b/s-replace)
   (test-s/b-replace))
+
+(test-ffi-buffer-clisp)
