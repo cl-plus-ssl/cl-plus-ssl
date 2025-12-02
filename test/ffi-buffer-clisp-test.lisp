@@ -1,8 +1,21 @@
-;;;; tests cl+ssl's ffi-buffer-clisp.lisp's s/b-replace and b/s-replace.
-;;;; a successful run is when (test-ffi-buffer-clisp) raises no errors.
+(defpackage #:cl+ssl.test.ffi-buffer-clisp
+  (:use #:common-lisp #:5am))
+(in-package #:cl+ssl.test.ffi-buffer-clisp)
 
-(in-package "CL+SSL")
-(export '(TEST-FFI-BUFFER-CLISP))
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (import'(cl+ssl::make-buffer
+           cl+ssl::buffer-length
+           cl+ssl::buffer-elt
+           cl+ssl::clisp-ffi-buffer
+           cl+ssl::clisp-ffi-buffer-pointer
+           cl+ssl::clisp-ffi-buffer-size
+           cl+ssl::b/s-replace
+           cl+ssl::s/b-replace)))
+
+(def-suite :cl+ssl.ffi-buffer-clisp :in :cl+ssl
+  :description "Tests ffi-buffer-clisp.lisp's s/b-replace and b/s-replace")
+
+(in-suite :cl+ssl.ffi-buffer-clisp)
 
 ;; The number of extra bytes allocated in the end of the buffer.
 ;; The bytes are zeroed, and after each test case we
@@ -85,12 +98,12 @@
                 (buf-view #(1 2 3))))
 
 (defun assert-buf-equal (expected-vec buf)
-  (assert (buffer-equal expected-vec buf)
-          () "padded buffer is not exqual to~%~S:~%~S"
-          (buf-view expected-vec)
-          (buf-view buf)))
+  (is (buffer-equal expected-vec buf)
+      "padded buffer is not exqual to~%~S:~%~S"
+      (buf-view expected-vec)
+      (buf-view buf)))
 
-(defun test-b/s-replace ()
+(test test-b/s-replace
   (mapc #'(lambda (vec expected-buf)
             (mapc #'(lambda (seq)
                       (mapc #'(lambda (*mem-max*)
@@ -105,12 +118,12 @@
                                                        :start2 0 :end2 (length seq))
                                   (assert-buf-equal expected-buf buf)))
                             (list *mem-max* 2)))
-                  (list vec (map 'list #'identity vec))))
+                  (list vec (coerce vec 'list))))
         (list #(0 1 2)   #(0 1 2 3) #(0 1 2 3 4))
         (list #(0 1 2 0) #(0 1 2 3) #(0 1 2 3)))
   (values))
 
-(defun test-s/b-replace ()
+(test test-s/b-replace
   (mapc #'(lambda (vec-len buf-data expected-vec)
             (mapc #'(lambda (*mem-max*)
                       (let ((buf (create-test-buffer (length buf-data)
@@ -122,16 +135,10 @@
                           (let ((end (min (buffer-length buf) (length vec))))
                             (s/b-replace vec buf :start1 0 :end1 end
                                                  :start2 0 :end2 end)
-                            (assert (equalp expected-vec vec)))
+                            (is (equalp expected-vec vec)))
                           (release-buffer buf))))
                   (list *mem-max* 2)))
         (list 2          4          6)
         (list #(0 1 2 3) #(0 1 2 3) #(0 1 2 3))
         (list #(0 1)     #(0 1 2 3) #(0 1 2 3 0 0)))
   (values))
-
-(defun test-ffi-buffer-clisp ()
-  (test-b/s-replace)
-  (test-s/b-replace))
-
-(test-ffi-buffer-clisp)

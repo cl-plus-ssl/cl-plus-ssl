@@ -23,6 +23,7 @@
                 ((:file "package")
                  (:file "dummy")
                  (:file "version")
+                 (:file "ffi-buffer-clisp-test" :if-feature :clisp)
                  (:file "sni")
                  (:file "cert-utilities")
                  (:file "validity-dates")
