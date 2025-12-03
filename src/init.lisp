@@ -192,7 +192,7 @@ https://github.com/cl-plus-ssl/cl-plus-ssl/issues/167
   (detect-custom-openssl-installations-if-macos)
   (unless (member :cl+ssl-foreign-libs-already-loaded
                   *features*)
-    (cffi:use-foreign-library libcrypto)
+    (cffi:load-foreign-library 'libcrypto)
     (cffi:load-foreign-library 'libssl))
   (setf *ssl-global-context* nil)
   (setf *ssl-global-method* nil)
