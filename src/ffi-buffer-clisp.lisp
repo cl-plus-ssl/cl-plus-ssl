@@ -89,7 +89,7 @@ Improvements: In this updated version of the file:
   (setf (ffi:memory-as (clisp-ffi-buffer-pointer buf) 'ffi:uint8 index) val))
 (defsetf buffer-elt set-buffer-elt)
 
-(defparameter *mem-max* 1024 "so *-REPLACE require the expected O(1) memory")
+(defconstant +mem-max+ 1024 "so *-REPLACE require the expected O(1) memory")
 
 (defun s/b-replace (seq buf &key (start1 0) end1 (start2 0) end2)
   (when (null end1) (setf end1 (length seq)))
@@ -98,7 +98,7 @@ Improvements: In this updated version of the file:
     (do* ((remainder n (- remainder m))
           (s1 start1 (+ s1 m))
           (s2 start2 (+ s2 m))
-          (m (min remainder *mem-max*) (min remainder *mem-max*)))
+          (m (min remainder +mem-max+) (min remainder +mem-max+)))
          ((zerop m) seq)
       (replace
         seq
@@ -126,12 +126,12 @@ Improvements: In this updated version of the file:
       (cond ((typep seq 'vector) (replace-buf start1 n seq start2))
             (t
              (assert (consp seq))
-             (let ((vec2 (make-array (min n *mem-max*)
-                                    :element-type '(unsigned-byte 8)))
+             (let ((vec2 (make-array (min n +mem-max+)
+                                     :element-type '(unsigned-byte 8)))
                    (seq2 (nthcdr start2 seq)))
                (do* ((remainder n (- remainder m))
                      (s1 start1 (+ s1 m))
-                     (m (min remainder *mem-max*) (min remainder *mem-max*)))
+                     (m (min remainder +mem-max+) (min remainder +mem-max+)))
                     ((zerop m))
                  (dotimes (i m)
                    (setf (aref vec2 i) (car seq2)
