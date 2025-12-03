@@ -79,7 +79,7 @@
   (cond
     ((ssl-stream-handle stream)
      (unless abort
-       (force-output stream)
+       (stream-force-output stream)
        (ensure-ssl-funcall stream
                            (complement #'minusp)
                            #'ssl-shutdown
@@ -152,7 +152,7 @@
 (defmethod stream-write-byte ((stream ssl-stream) b)
   (let ((buf (ssl-stream-output-buffer stream)))
     (when (eql (buffer-length buf) (ssl-stream-output-pointer stream))
-      (force-output stream))
+      (stream-force-output stream))
     (setf (buffer-elt buf (ssl-stream-output-pointer stream)) b)
     (incf (ssl-stream-output-pointer stream)))
   b)
@@ -162,7 +162,7 @@
          (len (buffer-length buf)))
     (do () ((>= start end) seq)
       (when (= (ssl-stream-output-pointer stream) len)
-        (force-output stream))
+        (stream-force-output stream))
       (b/s-replace buf seq :start1 (ssl-stream-output-pointer stream) :end1 len
                            :start2 start :end2 end)
       (let ((n (min (- end start) (- len (ssl-stream-output-pointer stream)))))
