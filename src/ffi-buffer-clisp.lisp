@@ -132,22 +132,21 @@ Improvements: In this updated version of the file:
   (let ((ptr (clisp-ffi-buffer-pointer buf))
         (c-type (make-array 3 :initial-contents #(ffi:c-array ffi:uint8 0)))
         (n (min (- end1 start1) (- end2 start2))))
-    (labels ((replace-buf-mem (s1 count vec s2)
+    (labels ((set-buf-mem (s1 count vec s2)
                "replaces exactly COUNT elts of BUF starting at S1 with elts of
                 VEC starting at S2"
                (declare (type vector vec))
                (setf (svref c-type 2) count)
                (setf (ffi:memory-as ptr c-type s1)
                      (cond ((and (zerop s2) (= count (length vec))) vec)
-                           (t
-                            (make-array count
-                                        :element-type (array-element-type vec)
-                                        :displaced-to vec
-                                        :displaced-index-offset s2))))))
+                           (t (make-array count
+                                          :element-type (array-element-type vec)
+                                          :displaced-to vec
+                                          :displaced-index-offset s2))))))
       (etypecase seq
         (vector
          (assert (<= end2 (length seq)))
-         (replace-buf-mem start1 n seq start2))
+         (set-buf-mem start1 n seq start2))
         (list
          (do* ((tmp (make-array (min n +mem-max+)
                                 :element-type '(unsigned-byte 8)))
@@ -160,7 +159,7 @@ Improvements: In this updated version of the file:
              (assert seq2)
              (setf (aref tmp i) (car seq2)
                    seq2 (cdr seq2)))
-           (replace-buf-mem s1 m tmp 0))))))
+           (set-buf-mem s1 m tmp 0))))))
   buf)
 
 (defmacro with-pointer-to-vector-data ((ptr buf) &body body)
