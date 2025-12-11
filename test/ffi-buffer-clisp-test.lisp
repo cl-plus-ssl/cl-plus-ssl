@@ -104,43 +104,80 @@
       (buf-view expected-vec)
       (buf-view buf)))
 
-(defun expect-b/s-replace (expected-buf buf-len vec &key start1 end1 start2 end2)
+(defun expect-b/s-replace (expected-buf buf-len vec &rest rest &key start1 end1 start2 end2)
   (dolist (*mem-max* (list *mem-max* 2))
     (dolist (seq (list vec (coerce vec 'list)))
       (with-test-buffer (buf buf-len)
-        (b/s-replace buf seq :start1 start1 :end1 end1
-                             :start2 start2 :end2 end2)
+        (apply #'b/s-replace buf seq rest)
         (assert-buf-equal expected-buf buf)))))
 
-(defmacro b/s-replace-test ((buf-len vec &key (start1 0) end1 (start2 0) end2)
+(defmacro b/s-replace-test ((buf-len
+                             vec
+                             &key (start1 0 start1-supplied-p)
+                               (end1 nil end1-supplied-p)
+                               (start2 0 start2-supplied-p)
+                               (end2 nil end2-supplied-p))
                             expected-buf)
-  (let* ((test-name (format nil "b/s-replace-buf-~A-seq-~A-start1-~A-end1-~A-start2-~A-end2-~A"
-                            buf-len (length vec) start1 end1 start2 end2))
+  (let* ((test-name
+           ;; (format nil
+           ;;                  "b/s-replace-buf-~A-seq-~A-start1-~A-end1-~A-start2-~A-end2-~A"
+           ;;                  buf-len (length vec) start1 end1 start2 end2)
+                    (format nil
+                            "b/s-replace-buf-~A-seq-~A~:[~*~;-start1-~A~]~:[~*~;-end1-~A~]~:[~*~;-start2-~A~]~:[~*~;-end2-~A~]"
+                            buf-len (length vec)
+                            start1-supplied-p start1
+                            end1-supplied-p end1
+                            start2-supplied-p start2
+                            end2-supplied-p end2)
+
+                    )
          (test-name-sym (intern test-name)))
     `(test ,test-name-sym
-       (expect-b/s-replace ,expected-buf ,buf-len ,vec :start1 ,start1 :end1 ,end1 :start2 ,start2 :end2 ,end2))))
+       (expect-b/s-replace ,expected-buf ,buf-len ,vec
+                           ,@(when start1-supplied-p `(:start1 ,start1))
+                           ,@(when end1-supplied-p `(:end1 ,end1))
+                           ,@(when start2-supplied-p `(:start2 ,start2))
+                           ,@(when end2-supplied-p `(:end2 ,end2))))))
 
 ;;; buf is larger than seq
-(b/s-replace-test (4 #(1 2 3) :start1 0 :end1 3 :start2 0 :end2 3)
-                  #(1 2 3 0))
-(b/s-replace-test (4 #(1 2 3) :start1 0 :end1 4 :start2 0 :end2 3)
+(b/s-replace-test (4 #(1 2 3))
                   #(1 2 3 0))
 (b/s-replace-test (4 #(1 2 3) :start1 0 :start2 0)
                   #(1 2 3 0))
+(b/s-replace-test (4 #(1 2 3) :start1 0 :end1 4 :start2 0 :end2 3)
+                  #(1 2 3 0))
+(b/s-replace-test (4 #(1 2 3) :start1 0 :end1 3 :start2 0 :end2 3)
+                  #(1 2 3 0))
+(b/s-replace-test (4 #(1 2 3) :start1 1 :end1 4 :start2 0 :end2 3)
+                  #(0 1 2 3))
+(b/s-replace-test (4 #(1 2 3) :start1 0 :end1 2 :start2 1 :end2 3)
+                  #(2 3 0 0))
 
 ;;; same length
-(b/s-replace-test (4 #(1 2 3 4) :start1 0 :end1 4 :start2 0 :end2 4)
-                  #(1 2 3 4))
+(b/s-replace-test (4 #(1 2 3 4))
+                   #(1 2 3 4))
 (b/s-replace-test (4 #(1 2 3 4) :start1 0 :start2 0)
                    #(1 2 3 4))
+(b/s-replace-test (4 #(1 2 3 4) :start1 0 :end1 4 :start2 0 :end2 4)
+                  #(1 2 3 4))
+(b/s-replace-test (4 #(1 2 3 4) :start1 1 :end1 4 :start2 1 :end2 4)
+                  #(0 2 3 4))
+(b/s-replace-test (4 #(1 2 3 4) :start1 1 :end1 4)
+                  #(0 1 2 3))
 
 ;;; buf is smaller than seq
-(b/s-replace-test (4 #(1 2 3 4 5) :start1 0 :end1 4 :start2 0 :end2 4)
-                   #(1 2 3 4))
-(b/s-replace-test (4 #(1 2 3 4 5) :start2 0 :end2 6)
+(b/s-replace-test (4 #(1 2 3 4 5))
                   #(1 2 3 4))
 (b/s-replace-test (4 #(1 2 3 4 5) :start1 0 :start2 0)
                   #(1 2 3 4))
+(b/s-replace-test (4 #(1 2 3 4 5) :start1 0 :end1 4 :start2 0 :end2 5)
+                  #(1 2 3 4))
+(b/s-replace-test (4 #(1 2 3 4 5) :start1 0 :end1 4 :start2 0 :end2 4)
+                   #(1 2 3 4))
+(b/s-replace-test (4 #(1 2 3 4 5) :start1 2 :end1 3 :start2 1 :end2 5)
+                  #(0 0 2 0))
+(b/s-replace-test (4 #(1 2 3 4 5) :start2 3 :end2 5)
+                  #(4 5 0 0))
 
 (test test-s/b-replace
   (mapc #'(lambda (vec-len buf-data expected-vec)
