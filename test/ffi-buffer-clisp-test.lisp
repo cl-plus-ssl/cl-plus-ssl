@@ -209,22 +209,40 @@
       (signals serious-condition
         (s/b-replace seq buf :start2 -1)))))
 
-(test test-s/b-replace
-  (mapc #'(lambda (vec-len buf-data expected-vec)
-            (mapc #'(lambda (*mem-max*)
-                      (let ((buf (create-test-buffer (length buf-data)
-                                                     buf-data))
-                            (vec (make-array vec-len
-                                             :element-type '(unsigned-byte 8)
-                                             :initial-element 0)))
-                        (unwind-protect
-                          (let ((end (min (buffer-length buf) (length vec))))
-                            (s/b-replace vec buf :start1 0 :end1 end
-                                                 :start2 0 :end2 end)
-                            (is (equalp expected-vec vec)))
-                          (release-buffer buf))))
-                  (list *mem-max* 2)))
-        (list 2          4          6)
-        (list #(0 1 2 3) #(0 1 2 3) #(0 1 2 3))
-        (list #(0 1)     #(0 1 2 3) #(0 1 2 3 0 0)))
-  (values))
+(defun expect-s/b-replace (expected-seq-data seq-len buf-data &rest rest &key start1 end1 start2 end2)
+  (dolist (*mem-max* (list *mem-max* 2))
+    (dolist (seq-type '(list (vector (unsigned-byte 8))))
+      (with-test-buffer (buf (length buf-data) buf-data)
+        (let ((seq (make-sequence seq-type seq-len :initial-element 0)))
+          (apply #'s/b-replace seq buf rest)
+          (is (equalp (coerce expected-seq-data seq-type)
+                      seq)))))))
+
+(defmacro s/b-replace-test ((seq-len
+                             buf-data
+                             &key (start1 0 start1-supplied-p)
+                               (end1 nil end1-supplied-p)
+                               (start2 0 start2-supplied-p)
+                               (end2 nil end2-supplied-p))
+                            expected-seq-data)
+  (let* ((test-name (format nil
+                            "s/b-replace-seq-~A-buf-~A~:[~*~;-start1-~A~]~:[~*~;-end1-~A~]~:[~*~;-start2-~A~]~:[~*~;-end2-~A~]"
+                            seq-len (length buf-data)
+                            start1-supplied-p start1
+                            end1-supplied-p end1
+                            start2-supplied-p start2
+                            end2-supplied-p end2))
+         (test-name-sym (intern test-name)))
+    `(test ,test-name-sym
+       (expect-s/b-replace ,expected-seq-data ,seq-len ,buf-data
+                           ,@(when start1-supplied-p `(:start1 ,start1))
+                           ,@(when end1-supplied-p `(:end1 ,end1))
+                           ,@(when start2-supplied-p `(:start2 ,start2))
+                           ,@(when end2-supplied-p `(:end2 ,end2))))))
+
+(s/b-replace-test (2 #(0 1 2 3) :start1 0 :end1 2 :start2 0 :end2 2)
+                  #(0 1))
+(s/b-replace-test (4 #(0 1 2 3) :start1 0 :end1 4 :start2 0 :end2 4)
+                  #(0 1 2 3))
+(s/b-replace-test (6 #(0 1 2 3) :start1 0 :end1 4 :start2 0 :end2 4)
+                  #(0 1 2 3 0 0))
