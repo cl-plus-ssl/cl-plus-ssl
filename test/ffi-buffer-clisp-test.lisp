@@ -179,6 +179,36 @@
 (b/s-replace-test (4 #(1 2 3 4 5) :start2 3 :end2 5)
                   #(4 5 0 0))
 
+;;; empty seq
+(b/s-replace-test (4 #() :start1 0 :end1 0 :start2 0 :end2 0)
+                  #(0 0 0 0))
+(b/s-replace-test (0 #() :start1 0 :end1 0 :start2 0 :end2 0)
+                  #())
+
+(test b/s-replace-boundary-errors
+  (dolist (seq (list '() #()))
+    (with-test-buffer (buf 2)
+      (signals serious-condition
+        (b/s-replace buf seq :end1 4))
+      (signals serious-condition
+        (b/s-replace buf seq :end2 2))
+      (signals serious-condition
+        (b/s-replace buf seq :start1 -1))
+      (signals serious-condition
+        (b/s-replace buf seq :start2 -1)))))
+
+(test s/b-replace-boundary-errors
+  (dolist (seq (list '(1 2 3 4) #(1 2 3 4)))
+    (with-test-buffer (buf 8)
+      (signals serious-condition
+        (s/b-replace seq buf :end1 6))
+      (signals serious-condition
+        (s/b-replace seq buf :end2 10))
+      (signals serious-condition
+        (s/b-replace seq buf :start1 -1))
+      (signals serious-condition
+        (s/b-replace seq buf :start2 -1)))))
+
 (test test-s/b-replace
   (mapc #'(lambda (vec-len buf-data expected-vec)
             (mapc #'(lambda (*mem-max*)
