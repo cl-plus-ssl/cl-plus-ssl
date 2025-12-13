@@ -37,6 +37,9 @@
   (text :string))
 
 (test bio-read
+  (if (member :clisp *features*)
+      (skip "Skipping the BIO-READ test on CLISP, because it hangs. See https://github.com/cl-plus-ssl/cl-plus-ssl/issues/163")
+
   (is (equalp
        '("Hel" "lo")
        (cl+ssl::with-bio-input-from-string (bio "Hello")
@@ -48,11 +51,12 @@
                       (cffi:foreign-string-to-lisp array))))
              (list
               (bio-read-to-string 3)
-              (bio-read-to-string 32))))))))
+              (bio-read-to-string 32)))))))))
 
 (test bio-gets
   (if (member :clisp *features*)
       (skip "Skipping the BIO-WRITE-GETS test on CLISP, because it hangs. See https://github.com/cl-plus-ssl/cl-plus-ssl/issues/163")
+
   (cffi:with-foreign-object (array :char 32)
     (is (equalp
          '(6 "Hello
