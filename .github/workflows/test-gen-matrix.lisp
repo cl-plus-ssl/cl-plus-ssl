@@ -55,7 +55,7 @@
                        "libressl-2.6.5"
                        "libressl-2.5.5"
                        ))
-      (dolist (lisp '("sbcl" "ccl" "abcl"))
+      (dolist (lisp '("sbcl" "ccl" "abcl" "clisp"))
         (flet ((format-test-step-for-lisp (openssl lib-load-mode &optional other-vars)
                  (if (string= lisp "ccl")
                      ;; because of https://github.com/Clozure/ccl/issues/85
