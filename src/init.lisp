@@ -84,44 +84,6 @@ will use this value.")
     (cffi:with-pointer-to-vector-data (ptr buf)
       (rand-seed ptr length))))
 
-(defvar *locks*)
-
-;; zzz as of early 2011, bxthreads is totally broken on SBCL wrt. explicit
-;; locking of recursive locks.  with-recursive-lock works, but acquire/release
-;; don't.  Hence we use non-recursize locks here (but can use a recursive
-;; lock for the global lock).
-
-(cffi:defcallback locking-callback :void
-    ((mode :int)
-     (n :int)
-     (file :pointer) ;; could be (file :string), but we don't use FILE, so avoid the conversion
-     (line :int))
-  (declare (ignore file line))
-  ;; (assert (logtest mode (logior +CRYPTO-READ+ +CRYPTO-WRITE+)))
-  (let ((lock (elt *locks* n)))
-    (cond
-      ((logtest mode +CRYPTO-LOCK+)
-       (bt:acquire-lock lock))
-      ((logtest mode +CRYPTO-UNLOCK+)
-       (bt:release-lock lock))
-      (t
-       (error "fell through")))))
-
-(defvar *threads* (trivial-garbage:make-weak-hash-table :weakness :key))
-(defvar *thread-counter* 0)
-
-(defparameter *global-lock*
-  (bordeaux-threads:make-recursive-lock "SSL initialization"))
-
-;; zzz BUG: On a 32-bit system and under non-trivial load, this counter
-;; is likely to wrap in less than a year.
-(cffi:defcallback threadid-callback :unsigned-long ()
-  (bordeaux-threads:with-recursive-lock-held (*global-lock*)
-    (let ((self (bt:current-thread)))
-      (or (gethash self *threads*)
-          (setf (gethash self *threads*)
-                (incf *thread-counter*))))))
-
 (defvar *ssl-check-verify-p* :unspecified
   "DEPRECATED.
 Use the (MAKE-SSL-CLIENT-STREAM .. :VERIFY ?) to enable/disable verification.
@@ -140,11 +102,7 @@ MAKE-CONTEXT also allows to enab/disable verification.")
             ;; new versions keep this API backwards
             ;; compatible so we can call it too.
             (libresslp))
-    (setf *locks* (loop
-                     repeat (crypto-num-locks)
-                     collect (bt:make-lock)))
-    (crypto-set-locking-callback (cffi:callback locking-callback))
-    (crypto-set-id-callback (cffi:callback threadid-callback))
+    (threading-initialize)
     (ssl-load-error-strings)
     (ssl-library-init)
     ;; However, for OpenSSL_add_all_digests the LibreSSL breaks
@@ -199,7 +157,7 @@ Keyword arguments:
 "
   #+lispworks
   (check-cl+ssl-symbols)
-  (bordeaux-threads:with-recursive-lock-held (*global-lock*)
+  (threading-with-global-lock-held
     (unless (ssl-initialized-p)
       (initialize :method method :rand-seed rand-seed))))
 
@@ -234,7 +192,7 @@ https://github.com/cl-plus-ssl/cl-plus-ssl/issues/167
   (detect-custom-openssl-installations-if-macos)
   (unless (member :cl+ssl-foreign-libs-already-loaded
                   *features*)
-    (cffi:use-foreign-library libcrypto)
+    (cffi:load-foreign-library 'libcrypto)
     (cffi:load-foreign-library 'libssl))
   (setf *ssl-global-context* nil)
   (setf *ssl-global-method* nil)

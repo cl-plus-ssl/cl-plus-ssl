@@ -15,8 +15,8 @@
                :cffi
                :trivial-gray-streams
                :flexi-streams
-               :bordeaux-threads
-               :trivial-garbage
+               (:feature (:or (:not :clisp) :mt) :bordeaux-threads)
+               (:feature (:or (:not :clisp) :mt) :trivial-garbage)
                :uiop
                :usocket
                :alexandria
@@ -33,6 +33,8 @@
                  (:file "bio")
                  (:file "conditions")
                  (:file "ssl-funcall")
+                 (:file "threads-impossible"  :if-feature (:and :clisp (:not :mt)))
+                 (:file "threads-conceivable" :if-feature (:or (:not :clisp) :mt))
                  (:file "init")
                  (:file "ffi-buffer-all")
                  (:file "ffi-buffer" :if-feature (:not :clisp))
