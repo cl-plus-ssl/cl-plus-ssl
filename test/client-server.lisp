@@ -17,7 +17,9 @@ Includes a simple echo test and deadline tests.")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (when bordeaux-threads:*supports-threads-p*
-    (push :lisp-with-threads *features*)))
+    (if (member :clisp *features*)
+        (format t "Skipping mulithreaded client-server tests on CLISP, because it hangs at least in GitHub Actions CI with the CLISP version coming in the clfoundation/cl-devel:2022-02-09 Docker image we currently use. (Maybe we should wrap *please-quite* into a conditional variable, or that CLISP (or bordeaus-threads) is broken in some way). Investigation is needed~%")
+        (push :lisp-with-threads *features*))))
 
 (defvar *port* 8080)
 
