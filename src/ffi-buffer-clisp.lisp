@@ -58,40 +58,78 @@
   (setf (ffi:memory-as (clisp-ffi-buffer-pointer buf) 'ffi:uint8 index) val))
 (defsetf buffer-elt set-buffer-elt)
 
-(declaim
- (inline calc-buf-end))
-
-;; to calculate non NIL value of the buffer end index
-(defun calc-buf-end (buf-start seq seq-start seq-end)
-  (+ buf-start
-     (- (or seq-end (length seq))
-        seq-start)))
+(defconstant +mem-max+ 1024 "so *-REPLACE require the expected O(1) memory")
 
 (defun s/b-replace (seq buf &key (start1 0) end1 (start2 0) end2)
-  (when (null end2)
-    (setf end2 (calc-buf-end start2 seq start1 end1)))
-  (replace
-   seq
-   (ffi:memory-as (clisp-ffi-buffer-pointer buf)
-                  (ffi:parse-c-type `(ffi:c-array ffi:uint8 ,(- end2 start2)))
-                  start2)
-   :start1 start1
-   :end1 end1))
-
-(defun as-vector (seq)
-  (if (typep seq 'vector)
-      seq
-      (make-array (length seq) :initial-contents seq :element-type '(unsigned-byte 8))))
+  (when (null end1) (setf end1 (length seq)))
+  (when (null end2) (setf end2 (buffer-length buf)))
+  (assert (<= 0 start1 end1)) ;length expensive. code deals correctly.
+  (assert (<= 0 start2 end2 (buffer-length buf)))
+  (let ((ptr (clisp-ffi-buffer-pointer buf))
+        (c-type (make-array 3 :initial-contents #(ffi:c-array ffi:uint8 0)))
+        (n (min (- end1 start1) (- end2 start2))))
+    (labels ((buf-mem (s2 count)
+               "returns exactly COUNT elts of BUF starting at S2"
+               (setf (svref c-type 2) count)
+               (ffi:memory-as ptr c-type s2)))
+      (etypecase seq
+        (vector
+         (do* ((remainder n (- remainder m))
+               (s1 start1 e1)
+               (s2 start2 (+ s2 m))
+               (m (min remainder +mem-max+) (min remainder +mem-max+))
+               (e1 (+ s1 m) (+ s1 m)))
+              ((zerop m))
+           (replace seq (buf-mem s2 m) :start1 s1 :end1 e1)))
+        (list
+         (do* ((remainder n (- remainder m))
+               (s2 start2 (+ s2 m))
+               (seq1 (nthcdr start1 seq))
+               (m (min remainder +mem-max+) (min remainder +mem-max+)))
+              ((zerop m))
+           (let ((tmp (buf-mem s2 m)))
+             (dotimes (i m)
+               (setf (car seq1) (aref tmp i)
+                     seq1 (cdr seq1)))))))))
+  seq)
 
 (defun b/s-replace (buf seq &key (start1 0) end1 (start2 0) end2)
-  (when (null end1)
-    (setf end1 (calc-buf-end start1 seq start2 end2)))
-  (setf
-   (ffi:memory-as (clisp-ffi-buffer-pointer buf)
-                  (ffi:parse-c-type `(ffi:c-array ffi:uint8 ,(- end1 start1)))
-                  start1)
-   (as-vector (subseq seq start2 end2)))
-  seq)
+  (when (null end1) (setf end1 (buffer-length buf)))
+  (when (null end2) (setf end2 (length seq)))
+  (assert (<= 0 start1 end1 (buffer-length buf)))
+  (assert (<= 0 start2 end2)) ;length expensive. code deals correctly.
+  (let ((ptr (clisp-ffi-buffer-pointer buf))
+        (c-type (make-array 3 :initial-contents #(ffi:c-array ffi:uint8 0)))
+        (n (min (- end1 start1) (- end2 start2))))
+    (labels ((set-buf-mem (s1 count vec s2)
+               "replaces exactly COUNT elts of BUF starting at S1 with elts of
+                VEC starting at S2"
+               (declare (type vector vec))
+               (setf (svref c-type 2) count)
+               (setf (ffi:memory-as ptr c-type s1)
+                     (cond ((and (zerop s2) (= count (length vec))) vec)
+                           (t (make-array count
+                                          :element-type (array-element-type vec)
+                                          :displaced-to vec
+                                          :displaced-index-offset s2))))))
+      (etypecase seq
+        (vector
+         (assert (<= end2 (length seq)))
+         (set-buf-mem start1 n seq start2))
+        (list
+         (do* ((tmp (make-array (min n +mem-max+)
+                                :element-type '(unsigned-byte 8)))
+               (remainder n (- remainder m))
+               (s1 start1 (+ s1 m))
+               (seq2 (nthcdr start2 seq))
+               (m (min remainder +mem-max+) (min remainder +mem-max+)))
+              ((zerop m))
+           (dotimes (i m)
+             (assert seq2)
+             (setf (aref tmp i) (car seq2)
+                   seq2 (cdr seq2)))
+           (set-buf-mem s1 m tmp 0))))))
+  buf)
 
 (defmacro with-pointer-to-vector-data ((ptr buf) &body body)
   `(let ((,ptr (clisp-ffi-buffer-pointer ,buf)))
