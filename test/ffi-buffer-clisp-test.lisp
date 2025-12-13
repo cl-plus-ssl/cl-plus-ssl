@@ -22,7 +22,7 @@
 ;; verify if they stay zeroed to detect buffer overflow.
 (defparameter *buf-extra-len* 10)
 
-(defun create-test-buffer (length &optional data)
+(defun make-test-buffer (length &optional data)
   (let ((result (make-buffer (+ length *buf-extra-len*))))
     (dotimes (i (buffer-length result))
       (setf (buffer-elt result i)
@@ -32,16 +32,6 @@
     (setf (clisp-ffi-buffer-size result) length)
     result))
 
-(defun buffer-equal (expected-vec buf)
-  (and (= (length expected-vec) (buffer-length buf))
-       (dotimes (i (length expected-vec) t)
-         (unless (equal (aref expected-vec i) (buffer-elt buf i))
-           (return nil)))
-       (dotimes (i *buf-extra-len* t)
-         (let ((pos (+ (buffer-length buf) i)))
-           (unless (equal 0 (buffer-elt buf pos))
-             (return nil))))))
-
 ;; Temporary definitions for the symbols from the new
 ;; ffi-buffer-clisp code, that are reffered by the test.
 ;; To make it compilable agains the olc cl+ssl.
@@ -50,14 +40,14 @@
 (defun release-buffer (buf)
   (ffi:foreign-free (clisp-ffi-buffer-pointer buf)))
 
-(defun with-test-buffer-impl (length data body-fn)
-  (let ((buf (create-test-buffer length data)))
+(defun call-with-test-buffer (length data body-fn)
+  (let ((buf (make-test-buffer length data)))
     (unwind-protect
          (funcall body-fn buf)
       (release-buffer buf))))
 
 (defmacro with-test-buffer ((buf-var length &optional data) &body body)
-  `(with-test-buffer-impl ,length ,data (lambda (,buf-var) ,@body)))
+  `(call-with-test-buffer ,length ,data (lambda (,buf-var) ,@body)))
 
 (with-test-buffer (buf 3 #(1 2 3))
   (assert (= (buffer-elt buf 1))))
@@ -99,12 +89,16 @@
                 (buf-view #(1 2 3))))
 
 (defun assert-buf-equal (expected-vec buf)
-  (is (buffer-equal expected-vec buf)
-      "padded buffer is not exqual to the expected value:~%~S, the actual buffer:~%~S"
-      (buf-view expected-vec)
-      (buf-view buf)))
+  (let ((buf-view (buf-view buf))
+        (expected-view (buf-view expected-vec)))
+    (is (equalp expected-view buf-view)
+        "padded buffer is not exqual to the expected value:~%~S, the actual buffer:~%~S"
+        expected-view
+        buf-view)))
 
-(defun expect-b/s-replace (expected-buf buf-len vec &rest rest &key start1 end1 start2 end2)
+(defun expect-b/s-replace (expected-buf buf-len vec
+                           &rest rest &key start1 end1 start2 end2)
+  (declare (ignore start1 end1 start2 end2))
   (dolist (*mem-max* (list *mem-max* 2))
     (dolist (seq (list vec (coerce vec 'list)))
       (with-test-buffer (buf buf-len)
@@ -118,20 +112,14 @@
                                (start2 0 start2-supplied-p)
                                (end2 nil end2-supplied-p))
                             expected-buf)
-  (let* ((test-name
-           ;; (format nil
-           ;;                  "b/s-replace-buf-~A-seq-~A-start1-~A-end1-~A-start2-~A-end2-~A"
-           ;;                  buf-len (length vec) start1 end1 start2 end2)
-                    (format nil
+  (let* ((test-name (format nil
                             "b/s-replace-buf-~A-seq-~A~:[~*~;-start1-~A~]~:[~*~;-end1-~A~]~:[~*~;-start2-~A~]~:[~*~;-end2-~A~]"
                             buf-len (length vec)
                             start1-supplied-p start1
                             end1-supplied-p end1
                             start2-supplied-p start2
-                            end2-supplied-p end2)
-
-                    )
-         (test-name-sym (intern test-name)))
+                            end2-supplied-p end2))
+         (test-name-sym (intern test-name '#:cl+ssl.test.ffi-buffer-clisp)))
     `(test ,test-name-sym
        (expect-b/s-replace ,expected-buf ,buf-len ,vec
                            ,@(when start1-supplied-p `(:start1 ,start1))
@@ -209,7 +197,9 @@
       (signals serious-condition
         (s/b-replace seq buf :start2 -1)))))
 
-(defun expect-s/b-replace (expected-seq-data seq-len buf-data &rest rest &key start1 end1 start2 end2)
+(defun expect-s/b-replace (expected-seq-data seq-len buf-data
+                           &rest rest &key start1 end1 start2 end2)
+  (declare (ignore start1 end1 start2 end2))
   (dolist (*mem-max* (list *mem-max* 2))
     (dolist (seq-type '(list (vector (unsigned-byte 8))))
       (with-test-buffer (buf (length buf-data) buf-data)
@@ -232,7 +222,7 @@
                             end1-supplied-p end1
                             start2-supplied-p start2
                             end2-supplied-p end2))
-         (test-name-sym (intern test-name)))
+         (test-name-sym (intern test-name '#:cl+ssl.test.ffi-buffer-clisp)))
     `(test ,test-name-sym
        (expect-s/b-replace ,expected-seq-data ,seq-len ,buf-data
                            ,@(when start1-supplied-p `(:start1 ,start1))
