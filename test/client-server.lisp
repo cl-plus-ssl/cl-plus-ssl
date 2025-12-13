@@ -17,9 +17,7 @@ Includes a simple echo test and deadline tests.")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (when bordeaux-threads:*supports-threads-p*
-    (if (member :clisp *features*)
-        (format t "Skipping mulithreaded client-server tests on CLISP, because it hangs at least in GitHub Actions CI with the CLISP version coming in the clfoundation/cl-devel:2022-02-09 Docker image we currently use. (Maybe we should wrap *please-quite* into a conditional variable, or that CLISP (or bordeaus-threads) is broken in some way). Investigation is needed~%")
-        (push :lisp-with-threads *features*))))
+    (push :lisp-with-threads *features*)))
 
 (defvar *port* 8080)
 
@@ -499,6 +497,11 @@ Includes a simple echo test and deadline tests.")
               (error "read-char-no-hang hangs"))))))))
 
 (5am:test all-tests
+  (if (and (member :clisp *features*)
+           (member :lisp-with-threads *features*))
+
+      (skip "Skipping mulithreaded client-server tests on CLISP (even though the current CLISP supports threads), because it hangs at least in GitHub Actions CI with the CLISP version coming in the Docker image we currently use - clfoundation/cl-devel:2022-02-09. (Maybe we should wrap *please-quit* into a conditional variable, or that CLISP (or bordeaux-threads?) is broken in some way). Investigation is needed.~%")
+
       (multiple-value-bind (passed total)
           (run-all-tests)
-        (5am:is (= passed total))))
+        (5am:is (= passed total)))))
