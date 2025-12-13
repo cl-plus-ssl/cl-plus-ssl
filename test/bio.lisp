@@ -78,10 +78,12 @@ bar")
     (is (= 0 (cffi:mem-ref array :unsigned-char 0)))))
 
 (test bio-write-puts
-  (is (equalp
-       "Hello Hi
+  (if (member :clisp *features*)
+      (skip "Skipping the BIO-WRITE-PUTS test on CLISP, because it hangs. See https://github.com/cl-plus-ssl/cl-plus-ssl/issues/163")
+      (is (equalp
+           "Hello Hi
 Hallo"
-       (cl+ssl::with-bio-output-to-string (bio)
-         (bio-write bio  #1="Hello " (length #1#))
-         (bio-puts bio "Hi")
-         (bio-write bio  #2="Hallo" (length #2#))))))
+           (cl+ssl::with-bio-output-to-string (bio)
+             (bio-write bio  #1="Hello " (length #1#))
+             (bio-puts bio "Hi")
+             (bio-write bio  #2="Hallo" (length #2#)))))))
