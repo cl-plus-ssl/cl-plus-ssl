@@ -10,7 +10,8 @@
            cl+ssl::clisp-ffi-buffer-pointer
            cl+ssl::clisp-ffi-buffer-size
            cl+ssl::b/s-replace
-           cl+ssl::s/b-replace)))
+           cl+ssl::s/b-replace
+           cl+ssl::*mem-max*)))
 
 (def-suite :cl+ssl.ffi-buffer-clisp :in :cl+ssl
   :description "Tests ffi-buffer-clisp.lisp's s/b-replace and b/s-replace")
@@ -31,11 +32,6 @@
                 0)))
     (setf (clisp-ffi-buffer-size result) length)
     result))
-
-;; Temporary definitions for the symbols from the new
-;; ffi-buffer-clisp code, that are reffered by the test.
-;; To make it compilable agains the olc cl+ssl.
-(defvar *mem-max* 1024)
 
 (defun release-buffer (buf)
   (ffi:foreign-free (clisp-ffi-buffer-pointer buf)))
