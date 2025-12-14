@@ -105,6 +105,12 @@
         (apply #'b/s-replace buf seq rest)
         (assert-buf-equal expected-buf buf)))))
 
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (defun intern-test-name (test-name-str)
+    ;; like INTERN but respects the current readtable case
+    (let ((*package* (find-package '#:cl+ssl.test.ffi-buffer-clisp)))
+      (read-from-string test-name-str))))
+
 (defmacro b/s-replace-test ((buf-len
                              vec
                              &key (start1 0 start1-supplied-p)
@@ -119,7 +125,7 @@
                             end1-supplied-p end1
                             start2-supplied-p start2
                             end2-supplied-p end2))
-         (test-name-sym (intern test-name '#:cl+ssl.test.ffi-buffer-clisp)))
+         (test-name-sym (intern-test-name test-name)))
     `(test ,test-name-sym
        (expect-b/s-replace ,expected-buf ,buf-len ,vec
                            ,@(when start1-supplied-p `(:start1 ,start1))
@@ -222,7 +228,7 @@
                             end1-supplied-p end1
                             start2-supplied-p start2
                             end2-supplied-p end2))
-         (test-name-sym (intern test-name '#:cl+ssl.test.ffi-buffer-clisp)))
+         (test-name-sym (intern-test-name test-name)))
     `(test ,test-name-sym
        (expect-s/b-replace ,expected-seq-data ,seq-len ,buf-data
                            ,@(when start1-supplied-p `(:start1 ,start1))
