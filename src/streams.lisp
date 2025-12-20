@@ -154,15 +154,20 @@
 
 (defmethod stream-write-sequence ((stream ssl-stream) seq start end &key)
   (let* ((buf (ssl-stream-output-buffer stream))
-         (len (buffer-length buf)))
+         (buf-len (buffer-length buf)))
     (do () ((>= start end) seq)
-      (when (= (ssl-stream-output-pointer stream) len)
+      (when (= (ssl-stream-output-pointer stream) buf-len)
         (stream-force-output stream))
-      (b/s-replace buf seq :start1 (ssl-stream-output-pointer stream) :end1 len
-                           :start2 start :end2 end)
-      (let ((n (min (- end start) (- len (ssl-stream-output-pointer stream)))))
-        (incf start n)
-        (incf (ssl-stream-output-pointer stream) n)))))
+      (b/s-replace buf seq :start1 (ssl-stream-output-pointer stream)
+                           :end1 buf-len
+                           :start2 start
+                           :end2 end)
+      (let (;; according to the b/s-replace contract:
+            (bytes-written (min (- end start)
+                                (- buf-len
+                                   (ssl-stream-output-pointer stream)))))
+        (incf start bytes-written)
+        (incf (ssl-stream-output-pointer stream) bytes-written)))))
 
 (defmethod stream-finish-output ((stream ssl-stream))
   (stream-force-output stream))
