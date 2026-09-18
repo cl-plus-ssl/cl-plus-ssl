@@ -89,9 +89,18 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
 (unless cl+ssl/config::*libcrypto-override*
   (cffi:define-foreign-library libcrypto
     (:windows (:or #+(and windows x86-64) "libcrypto-3-x64.dll"
-                   #+(and windows x86) "libcrypto-3.dll"
                    #+(and windows x86-64) "libcrypto-1_1-x64.dll"
-                   #+(and windows x86) "libcrypto-1_1.dll"
+                   ;; The -x64 suffix marks x86-64 specifically; no other
+                   ;; architecture has a suffix convention, so a Windows build
+                   ;; that is neither x86 nor x86-64 installs the plain name.
+                   ;; MSYS2 is the same distribution on both sides of that line:
+                   ;; its ucrt64 and mingw64 trees carry libcrypto-3-x64.dll,
+                   ;; its clangarm64 tree carries libcrypto-3.dll. The plain
+                   ;; names therefore belong here unconditionally -- after the
+                   ;; suffixed ones, which x86-64 still matches first, and they
+                   ;; are what x86 used already.
+                   "libcrypto-3.dll"
+                   "libcrypto-1_1.dll"
                    "libeay32.dll"))
     ;; Unlike some other systems, OpenBSD linker,
     ;; when passed library name without versions at the end,
@@ -149,9 +158,10 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
 (unless cl+ssl/config::*libssl-override*
   (cffi:define-foreign-library libssl
     (:windows (:or #+(and windows x86-64) "libssl-3-x64.dll"
-                   #+(and windows x86) "libssl-3.dll"
                    #+(and windows x86-64) "libssl-1_1-x64.dll"
-                   #+(and windows x86) "libssl-1_1.dll"
+                   ;; See the libcrypto definition above.
+                   "libssl-3.dll"
+                   "libssl-1_1.dll"
                    "libssl32.dll"
                    "ssleay32.dll"))
 
