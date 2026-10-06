@@ -88,7 +88,7 @@
      (when (streamp (ssl-stream-socket stream))
        (close (ssl-stream-socket stream) :abort abort))
      (when (ssl-close-callback stream)
-       (funcall (ssl-close-callback stream)))
+       (funcall (ssl-close-callback stream) stream))
      t)
     (t
      nil)))
