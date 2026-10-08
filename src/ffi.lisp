@@ -888,9 +888,19 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
     :void
   (general-names :pointer))
 
-(define-crypto-function ("ASN1_STRING_data" asn1-string-data)
+(define-crypto-function-ex (:vanished "4.0.0") ("ASN1_STRING_data" asn1-string-data-legacy)
     :pointer
   (asn1-string :pointer))
+
+(define-crypto-function-ex (:since "1.1.0") ("ASN1_STRING_get0_data" asn1-string-get0-data)
+    :pointer
+  (asn1-string :pointer))
+
+(defun asn1-string-data (asn1-string)
+  (if (and (not (libresslp))
+           (openssl-is-at-least 1 1))
+      (asn1-string-get0-data asn1-string)
+      (asn1-string-data-legacy asn1-string)))
 
 (define-crypto-function ("ASN1_STRING_length" asn1-string-length)
     :int
