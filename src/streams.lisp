@@ -466,7 +466,7 @@ passed as a parameter to an internall call of SSL_new.)
         (if verification is enabled by VERIFY).
 
     CLOSE-CALLBACK - a function to be called when the created
-        ssl stream is CL:CLOSE'ed. The only argument is this ssl stream.
+        ssl stream is CL:CLOSE'ed. It takes no arguments.
 
     EXTERNAL-FORMAT - if NIL (the default), a plain (UNSIGNED-BYTE 8)
         ssl stream is returned. With a non-NIL external-format, a flexi-stream
