@@ -13,82 +13,6 @@
 
 (in-package :cl+ssl)
 
-;;; Some lisps (CMUCL) fail when we try to define
-;;; a foreign function which is absent in the loaded
-;;; foreign library. CMUCL fails when the compiled .fasl
-;;; file is loaded, and the failure can not be
-;;; captured even by CL condition handlers, i.e.
-;;; wrapping (defcfun "removed-function" ...)
-;;; into (ignore-errors ...) doesn't help.
-;;;
-;;; See https://gitlab.common-lisp.net/cmucl/cmucl/issues/74
-;;;
-;;; As OpenSSL often changs API (removes / adds functions)
-;;; we need to solve this problem for CMUCL.
-;;;
-;;; We do this on CMUCL by calling functions which exists
-;;; not in all OpenSSL versions through a pointer
-;;; received with cffi:foreign-symbol-pointer.
-;;; So a lisp wrapper function for such foreign function
-;;; looks up a pointer to the required foreign function
-;;; in a hash table.
-
-(defparameter *late-bound-foreign-function-pointers*
-  (make-hash-table :test 'equal))
-
-(defmacro defcfun-late-bound (name-and-options &body body)
-  (assert (not (eq (alexandria:lastcar body)
-                   '&rest))
-          (body)
-          "The BODY format is implemented in a limited way
-comparing to CFFI:DEFCFUN - we don't support the &REST which specifies vararg
-functions. Feel free to implement the support if you have a use case.")
-  (assert (and (>= (length name-and-options) 2)
-               (stringp (first name-and-options))
-               (symbolp (second name-and-options)))
-          (name-and-options)
-          "Unsupported NAME-AND-OPTIONS format: ~S.
-\(Of all the NAME-AND-OPTIONS variants allowed by CFFI:DEFCFUN we have only
-implemented support for (FOREIGN-NAME LISP-NAME ...) where FOREIGN-NAME is a
-STRING and LISP-NAME is a SYMBOL. Fell free to implement support the remaining
-variants if you have use cases for them.)"
-          name-and-options)
-
-  (let ((foreign-name-str (first name-and-options))
-        (lisp-name (second name-and-options))
-        (docstring (when (stringp (car body)) (pop body)))
-        (return-type (first body))
-        (arg-names (mapcar #'first (rest body)))
-        (arg-types (mapcar #'second (rest body)))
-        (library (getf (cddr name-and-options) :library))
-        (convention (getf (cddr name-and-options) :convention))
-        (ptr-var (gensym (string 'ptr))))
-    `(progn
-       (setf (gethash ,foreign-name-str *late-bound-foreign-function-pointers*)
-             (or (cffi:foreign-symbol-pointer ,foreign-name-str
-                                              ,@(when library `(:library ',library)))
-                 'foreign-symbol-not-found))
-       (defun ,lisp-name (,@arg-names)
-         ,@(when docstring (list docstring))
-         (let ((,ptr-var (gethash ,foreign-name-str *late-bound-foreign-function-pointers*)))
-           (when (null ,ptr-var)
-             (error "Unexpacted state, no value in *late-bound-foreign-function-pointers* for ~A"
-                    ,foreign-name-str))
-           (when (eq ,ptr-var 'foreign-symbol-not-found)
-             (error "The current version of OpenSSL libcrypto doesn't provide ~A"
-                    ,foreign-name-str))
-           (cffi:foreign-funcall-pointer ,ptr-var
-                                         ,(when convention (list convention))
-                                         ,@(mapcan #'list arg-types arg-names)
-                                         ,return-type))))))
-
-(defmacro defcfun-versioned ((&key since vanished) name-and-options &body body)
-  (if (and (or since vanished)
-           (member :cmucl *features*))
-      `(defcfun-late-bound ,name-and-options ,@body)
-      `(cffi:defcfun ,name-and-options ,@body)))
-
-
 ;;; Code for checking that we got the correct foreign symbols right.
 ;;; Implemented only for LispWorks for now.
 (defvar *cl+ssl-ssl-foreign-function-names* nil)
@@ -102,6 +26,9 @@ variants if you have use cases for them.)"
   (dolist (crypto-symbol *cl+ssl-crypto-foreign-function-names*)
     (when (fli:null-pointer-p (fli:make-pointer :symbol-name crypto-symbol :module 'libcrypto :errorp nil))
       (format *error-output* "cl+ssl can not locate symbol ~s in the module 'libcrypto~%" crypto-symbol))))
+
+(defmacro defcfun-versioned ((&key since vanished) name-and-options &body body)
+  `(cffi:defcfun ,name-and-options ,@body))
 
 (defmacro define-ssl-function-ex ((&key since vanished) name-and-options &body body)
   `(progn
@@ -954,4 +881,3 @@ Note: the _really_ old formats (<= 0.9.4) are not supported."
 (defconstant +CRYPTO-UNLOCK+ 2)
 (defconstant +CRYPTO-READ+ 4)
 (defconstant +CRYPTO-WRITE+ 8)
-
