@@ -155,6 +155,8 @@
                          (ssl-get-fd handle)
                          (ssl-stream-deadline stream)))
            (t
+            (when (member error '(#.+ssl-error-ssl+ #.+ssl-error-syscall+))
+              (setf (slot-value stream 'fatal-error-p) t))
             (ssl-signal-error handle func error ret)))))))
 
 (declaim (inline nonblocking-ssl-funcall))
@@ -170,5 +172,7 @@
            ((#.+ssl-error-want-read+ #.+ssl-error-want-write+)
             (return ret))
            (t
+            (when (member error '(#.+ssl-error-ssl+ #.+ssl-error-syscall+))
+              (setf (slot-value stream 'fatal-error-p) t))
             (ssl-signal-error handle func error ret)))))))
 

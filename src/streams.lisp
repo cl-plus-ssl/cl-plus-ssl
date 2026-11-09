@@ -46,7 +46,13 @@
     :accessor ssl-stream-input-buffer)
    (peeked-byte
     :initform nil
-    :accessor ssl-stream-peeked-byte)))
+    :accessor ssl-stream-peeked-byte)
+   (fatal-error-p
+    :initform nil
+    :accessor ssl-stream-fatal-error-p
+    :documentation "Set when an OpenSSL call on this stream failed with
+SSL_ERROR_SSL or SSL_ERROR_SYSCALL. SSL_shutdown must not be called
+after such an error, see the SSL_shutdown(3) man page.")))
 
 (defmethod initialize-instance :after ((stream ssl-stream)
                                        &key
@@ -77,7 +83,7 @@
 (defmethod close ((stream ssl-stream) &key abort)
   (cond
     ((ssl-stream-handle stream)
-     (unless abort
+     (unless (or abort (ssl-stream-fatal-error-p stream))
        (force-output stream)
        (ensure-ssl-funcall stream
                            (complement #'minusp)
