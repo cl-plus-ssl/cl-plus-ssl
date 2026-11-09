@@ -140,7 +140,8 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
                   ;; https://github.com/cl-plus-ssl/cl-plus-ssl/pull/115
                   "libcrypto.dylib"
                   "/usr/lib/libcrypto.dylib"))
-    ((and :unix (not :cygwin)) (:or "libcrypto.so.3"
+    ((and :unix (not :cygwin)) (:or "libcrypto.so.4"
+                                    "libcrypto.so.3"
                                     "libcrypto.so.1.1"
                                     "libcrypto.so.1.0.0"
                                     "libcrypto.so"))
@@ -180,7 +181,8 @@ sudo rm /usr/local/lib/libcrypto.dylib /usr/local/lib/libssl.dylib
     ;; so we can just use just "libssl.so".
     ;; More info at https://github.com/cl-plus-ssl/cl-plus-ssl/pull/2.
     (:openbsd "libssl.so")
-    ((and :unix (not :cygwin)) (:or "libssl.so.3"
+    ((and :unix (not :cygwin)) (:or "libssl.so.4"
+                                    "libssl.so.3"
                                     "libssl.so.1.1"
                                     "libssl.so.1.0.2m"
                                     "libssl.so.1.0.2k"
